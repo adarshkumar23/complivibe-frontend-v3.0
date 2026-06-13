@@ -9,6 +9,8 @@ import type { Severity } from "@/lib/api/types";
 
 export type NormalizedAiSystem = {
   id: string;
+  /** the real backend id, or null when the API did not provide one (never link without it) */
+  rawId: string | null;
   name: string;
   owner: string | null;
   useCase: string | null;
@@ -24,8 +26,10 @@ const LIST_PATHS = ["", "data", "result", "items", "results", "systems", "ai_sys
 export function normalizeAiSystems(value: unknown): NormalizedAiSystem[] {
   return normalizeList(value, LIST_PATHS).map((entry, index) => {
     const riskRaw = getStringFromPaths(entry, ["risk_level", "riskLevel", "severity", "priority", "risk", "risk_rating"]);
+    const rawId = getStringFromPaths(entry, ["id", "uuid", "system_id", "model_id"]);
     return {
-      id: getStringFromPaths(entry, ["id", "uuid", "system_id", "model_id"]) || `system-${index}`,
+      id: rawId || `system-${index}`,
+      rawId,
       name: getStringFromPaths(entry, ["name", "system_name", "title", "model_name"]) || "Unnamed system",
       owner: getStringFromPaths(entry, ["owner", "owner_name", "team", "business_owner", "responsible", "owned_by"]),
       useCase: getStringFromPaths(entry, ["use_case", "useCase", "purpose", "description", "category", "function"]),

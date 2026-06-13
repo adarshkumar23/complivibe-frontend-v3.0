@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Cpu, Boxes } from "lucide-react";
+import Link from "next/link";
+import { Search, Cpu, Boxes, ChevronRight } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { IconTile } from "@/components/ui/IconTile";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
@@ -144,11 +145,10 @@ export function SystemsRegistry({ data }: { data: AiSystemsData }) {
               {filtered.map((s) => {
                 const tone = scoreTone(s.score);
                 const time = formatRelativeTime(s.lastAssessed);
-                return (
-                  <li
-                    key={s.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl bg-white/55 px-3.5 py-3 ring-1 ring-white/70 transition hover:bg-white/85"
-                  >
+                const rowCls =
+                  "flex items-center justify-between gap-3 rounded-2xl bg-white/55 px-3.5 py-3 ring-1 ring-white/70 transition hover:bg-white/85";
+                const content = (
+                  <>
                     <div className="flex min-w-0 items-center gap-3">
                       <IconTile icon={Cpu} accent={riskAccent[s.riskLevel]} size="sm" />
                       <div className="min-w-0">
@@ -176,7 +176,19 @@ export function SystemsRegistry({ data }: { data: AiSystemsData }) {
                       ) : null}
                       {s.lifecycleStage ? <StatusBadge label={s.lifecycleStage} tone="info" /> : null}
                       {s.hasRisk ? <SeverityBadge severity={s.riskLevel} /> : null}
+                      {s.rawId ? <ChevronRight size={16} className="text-cv-mist" /> : null}
                     </div>
+                  </>
+                );
+                return (
+                  <li key={s.id}>
+                    {s.rawId ? (
+                      <Link href={`/dashboard/ai-systems/${encodeURIComponent(s.rawId)}`} className={cn(rowCls, "cursor-pointer")}>
+                        {content}
+                      </Link>
+                    ) : (
+                      <div className={rowCls}>{content}</div>
+                    )}
                   </li>
                 );
               })}

@@ -6,6 +6,7 @@ import {
   ShieldCheck,
   BrainCircuit,
   Database,
+  FileCheck2,
   FileBarChart,
   Bell,
   Settings,
@@ -32,6 +33,7 @@ const NAV: NavItem[] = [
   { label: "Compliance", icon: ShieldCheck, href: "/dashboard/compliance", match: "prefix" },
   { label: "AI Governance", icon: BrainCircuit, href: "/dashboard/ai-systems", match: "prefix" },
   { label: "Data Observability", icon: Database, href: "/dashboard/data-observability", match: "prefix" },
+  { label: "Evidence", icon: FileCheck2, href: "/dashboard/evidence", match: "prefix" },
   { label: "Reports", icon: FileBarChart, href: "/dashboard" },
   { label: "Alerts", icon: Bell, href: "/dashboard" },
   { label: "Settings", icon: Settings, href: "/dashboard" }

@@ -45,6 +45,15 @@ async function capture() {
   await shoot(browser, { path: "screenshots/data-observability-desktop.png", url: "/dashboard/data-observability" });
   await shoot(browser, { path: "screenshots/data-observability-mobile.png", url: "/dashboard/data-observability", mobile: true });
 
+  // Evidence Vault page
+  await shoot(browser, { path: "screenshots/evidence-desktop.png", url: "/dashboard/evidence" });
+  await shoot(browser, { path: "screenshots/evidence-mobile.png", url: "/dashboard/evidence", mobile: true });
+
+  // AI System Detail (use a real id via DETAIL_ID env; falls back to a sample id that shows empty states)
+  const detailId = process.env.DETAIL_ID || "sample";
+  await shoot(browser, { path: "screenshots/ai-system-detail-desktop.png", url: `/dashboard/ai-systems/${detailId}` });
+  await shoot(browser, { path: "screenshots/ai-system-detail-mobile.png", url: `/dashboard/ai-systems/${detailId}`, mobile: true });
+
   await browser.close();
 }
 
