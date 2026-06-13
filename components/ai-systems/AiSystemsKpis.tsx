@@ -1,7 +1,7 @@
 "use client";
 
 import { Boxes, ShieldAlert, Gauge, Activity } from "lucide-react";
-import { RegistryKpi } from "@/components/ai-systems/RegistryKpi";
+import { RegistryKpi } from "@/components/ui/RegistryKpi";
 import { pickScore } from "@/lib/hooks/useCommandCenter";
 import type { AiSystemsData } from "@/lib/hooks/useAiSystems";
 import {

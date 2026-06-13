@@ -41,6 +41,10 @@ async function capture() {
   await shoot(browser, { path: "screenshots/ai-systems-desktop.png", url: "/dashboard/ai-systems" });
   await shoot(browser, { path: "screenshots/ai-systems-mobile.png", url: "/dashboard/ai-systems", mobile: true });
 
+  // Data Observability page
+  await shoot(browser, { path: "screenshots/data-observability-desktop.png", url: "/dashboard/data-observability" });
+  await shoot(browser, { path: "screenshots/data-observability-mobile.png", url: "/dashboard/data-observability", mobile: true });
+
   await browser.close();
 }
 
