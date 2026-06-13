@@ -10,6 +10,7 @@ import {
   TriangleAlert,
   Siren,
   FileBarChart,
+  PackageCheck,
   Bell,
   Settings,
   Sparkles,
@@ -39,6 +40,7 @@ const NAV: NavItem[] = [
   { label: "Risks", icon: TriangleAlert, href: "/dashboard/risks", match: "prefix" },
   { label: "Incidents", icon: Siren, href: "/dashboard/incidents", match: "prefix" },
   { label: "Reports", icon: FileBarChart, href: "/dashboard/reports", match: "prefix" },
+  { label: "Audit Pack", icon: PackageCheck, href: "/dashboard/audit-pack", match: "prefix" },
   { label: "Alerts", icon: Bell, href: "/dashboard" },
   { label: "Settings", icon: Settings, href: "/dashboard" }
 ];

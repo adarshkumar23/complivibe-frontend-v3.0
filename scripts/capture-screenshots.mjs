@@ -61,6 +61,10 @@ async function capture() {
   await shoot(browser, { path: "screenshots/reports-desktop.png", url: "/dashboard/reports" });
   await shoot(browser, { path: "screenshots/reports-mobile.png", url: "/dashboard/reports", mobile: true });
 
+  // Audit Pack page
+  await shoot(browser, { path: "screenshots/audit-pack-desktop.png", url: "/dashboard/audit-pack" });
+  await shoot(browser, { path: "screenshots/audit-pack-mobile.png", url: "/dashboard/audit-pack", mobile: true });
+
   // AI System Detail (use a real id via DETAIL_ID env; falls back to a sample id that shows empty states)
   const detailId = process.env.DETAIL_ID || "sample";
   await shoot(browser, { path: "screenshots/ai-system-detail-desktop.png", url: `/dashboard/ai-systems/${detailId}` });
