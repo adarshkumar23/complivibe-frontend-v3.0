@@ -24,12 +24,12 @@ type NavItem = {
   label: string;
   icon: LucideIcon;
   href: string;
-  active?: boolean;
+  match?: "exact" | "prefix";
 };
 
 const NAV: NavItem[] = [
-  { label: "Command Center", icon: LayoutDashboard, href: "/dashboard", active: true },
-  { label: "Compliance", icon: ShieldCheck, href: "/dashboard" },
+  { label: "Command Center", icon: LayoutDashboard, href: "/dashboard", match: "exact" },
+  { label: "Compliance", icon: ShieldCheck, href: "/dashboard/compliance", match: "prefix" },
   { label: "AI Governance", icon: BrainCircuit, href: "/dashboard" },
   { label: "Data Observability", icon: Database, href: "/dashboard" },
   { label: "Reports", icon: FileBarChart, href: "/dashboard" },
@@ -71,7 +71,12 @@ function SidebarBody() {
       <nav className="mt-3 flex-1 space-y-1.5 overflow-y-auto px-0.5">
         {NAV.map((item) => {
           const Icon = item.icon;
-          const isActive = Boolean(item.active && pathname?.startsWith("/dashboard"));
+          const isActive =
+            item.match === "prefix"
+              ? Boolean(pathname?.startsWith(item.href))
+              : item.match === "exact"
+                ? pathname === item.href
+                : false;
           return (
             <button
               key={item.label}

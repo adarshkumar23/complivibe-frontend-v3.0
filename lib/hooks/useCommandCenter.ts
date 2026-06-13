@@ -9,8 +9,7 @@ import {
   getPredictiveAlerts,
   getAiSystems,
   getEvidence,
-  getRegulatoryDeadlines,
-  getControlCenterFeed
+  getRegulatoryDeadlines
 } from "@/lib/api/command";
 import { getNumberFromPaths } from "@/lib/api/normalizers";
 
@@ -37,9 +36,8 @@ export function useCommandCenter() {
   const aiSystems = useEndpoint("ai-systems", getAiSystems);
   const evidence = useEndpoint("evidence", getEvidence);
   const deadlines = useEndpoint("regulatory-deadlines", getRegulatoryDeadlines);
-  const feed = useEndpoint("control-center-feed", getControlCenterFeed);
 
-  return { scores, unified, executive, insights, predictive, aiSystems, evidence, deadlines, feed };
+  return { scores, unified, executive, insights, predictive, aiSystems, evidence, deadlines };
 }
 
 export type CommandCenter = ReturnType<typeof useCommandCenter>;
