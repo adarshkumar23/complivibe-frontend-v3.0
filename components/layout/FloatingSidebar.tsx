@@ -11,6 +11,8 @@ import {
   Siren,
   FileBarChart,
   PackageCheck,
+  BadgeCheck,
+  ClipboardList,
   Bell,
   Settings,
   Sparkles,
@@ -41,6 +43,8 @@ const NAV: NavItem[] = [
   { label: "Incidents", icon: Siren, href: "/dashboard/incidents", match: "prefix" },
   { label: "Reports", icon: FileBarChart, href: "/dashboard/reports", match: "prefix" },
   { label: "Audit Pack", icon: PackageCheck, href: "/dashboard/audit-pack", match: "prefix" },
+  { label: "Trust Center", icon: BadgeCheck, href: "/dashboard/trust-center", match: "prefix" },
+  { label: "Questionnaires", icon: ClipboardList, href: "/dashboard/questionnaires", match: "prefix" },
   { label: "Alerts", icon: Bell, href: "/dashboard" },
   { label: "Settings", icon: Settings, href: "/dashboard" }
 ];

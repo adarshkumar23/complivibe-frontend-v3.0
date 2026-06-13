@@ -65,6 +65,14 @@ async function capture() {
   await shoot(browser, { path: "screenshots/audit-pack-desktop.png", url: "/dashboard/audit-pack" });
   await shoot(browser, { path: "screenshots/audit-pack-mobile.png", url: "/dashboard/audit-pack", mobile: true });
 
+  // Trust Center page
+  await shoot(browser, { path: "screenshots/trust-center-desktop.png", url: "/dashboard/trust-center" });
+  await shoot(browser, { path: "screenshots/trust-center-mobile.png", url: "/dashboard/trust-center", mobile: true });
+
+  // Questionnaires page
+  await shoot(browser, { path: "screenshots/questionnaires-desktop.png", url: "/dashboard/questionnaires" });
+  await shoot(browser, { path: "screenshots/questionnaires-mobile.png", url: "/dashboard/questionnaires", mobile: true });
+
   // AI System Detail (use a real id via DETAIL_ID env; falls back to a sample id that shows empty states)
   const detailId = process.env.DETAIL_ID || "sample";
   await shoot(browser, { path: "screenshots/ai-system-detail-desktop.png", url: `/dashboard/ai-systems/${detailId}` });
