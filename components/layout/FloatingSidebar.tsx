@@ -38,7 +38,7 @@ const NAV: NavItem[] = [
   { label: "Evidence", icon: FileCheck2, href: "/dashboard/evidence", match: "prefix" },
   { label: "Risks", icon: TriangleAlert, href: "/dashboard/risks", match: "prefix" },
   { label: "Incidents", icon: Siren, href: "/dashboard/incidents", match: "prefix" },
-  { label: "Reports", icon: FileBarChart, href: "/dashboard" },
+  { label: "Reports", icon: FileBarChart, href: "/dashboard/reports", match: "prefix" },
   { label: "Alerts", icon: Bell, href: "/dashboard" },
   { label: "Settings", icon: Settings, href: "/dashboard" }
 ];
