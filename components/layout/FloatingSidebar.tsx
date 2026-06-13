@@ -7,6 +7,8 @@ import {
   BrainCircuit,
   Database,
   FileCheck2,
+  TriangleAlert,
+  Siren,
   FileBarChart,
   Bell,
   Settings,
@@ -34,6 +36,8 @@ const NAV: NavItem[] = [
   { label: "AI Governance", icon: BrainCircuit, href: "/dashboard/ai-systems", match: "prefix" },
   { label: "Data Observability", icon: Database, href: "/dashboard/data-observability", match: "prefix" },
   { label: "Evidence", icon: FileCheck2, href: "/dashboard/evidence", match: "prefix" },
+  { label: "Risks", icon: TriangleAlert, href: "/dashboard/risks", match: "prefix" },
+  { label: "Incidents", icon: Siren, href: "/dashboard/incidents", match: "prefix" },
   { label: "Reports", icon: FileBarChart, href: "/dashboard" },
   { label: "Alerts", icon: Bell, href: "/dashboard" },
   { label: "Settings", icon: Settings, href: "/dashboard" }
