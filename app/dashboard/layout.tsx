@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DashboardShell } from "@/components/layout/DashboardShell";
+import { BottomModeSwitcher } from "@/components/layout/BottomModeSwitcher";
 import { Logo } from "@/components/ui/Logo";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -33,5 +34,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  return <DashboardShell>{children}</DashboardShell>;
+  return (
+    <DashboardShell>
+      {children}
+      <BottomModeSwitcher />
+    </DashboardShell>
+  );
 }

@@ -37,6 +37,10 @@ async function capture() {
   await shoot(browser, { path: "screenshots/compliance-desktop.png", url: "/dashboard/compliance" });
   await shoot(browser, { path: "screenshots/compliance-mobile.png", url: "/dashboard/compliance", mobile: true });
 
+  // AI Systems page
+  await shoot(browser, { path: "screenshots/ai-systems-desktop.png", url: "/dashboard/ai-systems" });
+  await shoot(browser, { path: "screenshots/ai-systems-mobile.png", url: "/dashboard/ai-systems", mobile: true });
+
   await browser.close();
 }
 

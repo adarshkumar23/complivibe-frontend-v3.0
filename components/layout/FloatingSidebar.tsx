@@ -30,7 +30,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { label: "Command Center", icon: LayoutDashboard, href: "/dashboard", match: "exact" },
   { label: "Compliance", icon: ShieldCheck, href: "/dashboard/compliance", match: "prefix" },
-  { label: "AI Governance", icon: BrainCircuit, href: "/dashboard" },
+  { label: "AI Governance", icon: BrainCircuit, href: "/dashboard/ai-systems", match: "prefix" },
   { label: "Data Observability", icon: Database, href: "/dashboard" },
   { label: "Reports", icon: FileBarChart, href: "/dashboard" },
   { label: "Alerts", icon: Bell, href: "/dashboard" },
