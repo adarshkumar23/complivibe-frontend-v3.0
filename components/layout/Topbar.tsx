@@ -6,6 +6,7 @@ import { useUiStore } from "@/store/ui-store";
 
 export function Topbar() {
   const toggleSidebar = useUiStore((s) => s.toggleSidebar);
+  const toggleCopilot = useUiStore((s) => s.toggleCopilot);
 
   return (
     <header className="sticky top-0 z-40 px-4 pt-4 sm:px-6 lg:px-0 lg:pr-6 lg:pt-5">
@@ -36,6 +37,8 @@ export function Topbar() {
         {/* Ask Copilot */}
         <button
           type="button"
+          onClick={toggleCopilot}
+          aria-label="Open Copilot"
           className="cv-ring-focus group inline-flex shrink-0 items-center gap-2 rounded-full bg-cv-brand px-3.5 py-2.5 text-sm font-bold text-white shadow-button transition hover:-translate-y-0.5 sm:px-5"
         >
           <Sparkles size={16} className="transition group-hover:rotate-12" />

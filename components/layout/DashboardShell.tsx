@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { FloatingSidebar } from "@/components/layout/FloatingSidebar";
 import { Topbar } from "@/components/layout/Topbar";
+import { CopilotDrawer } from "@/components/copilot/CopilotDrawer";
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   return (
@@ -14,6 +15,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           <div className="mx-auto w-full max-w-[1480px]">{children}</div>
         </main>
       </div>
+      {/* Global, page-aware Copilot — mounted once for the whole dashboard shell */}
+      <CopilotDrawer />
     </div>
   );
 }
