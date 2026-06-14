@@ -34,6 +34,8 @@ import {
   Calculator,
   Briefcase,
   Lightbulb,
+  Lock,
+  Fingerprint,
   Sparkles,
   LogOut,
   X,
@@ -84,6 +86,8 @@ const NAV: NavItem[] = [
   { label: "Automation", icon: Zap, href: "/dashboard/automation", match: "prefix" },
   { label: "Workflows", icon: Network, href: "/dashboard/workflows", match: "prefix" },
   { label: "Notifications", icon: Inbox, href: "/dashboard/notifications", match: "prefix" },
+  { label: "Security", icon: Fingerprint, href: "/dashboard/security", match: "prefix" },
+  { label: "Privacy", icon: Lock, href: "/dashboard/privacy", match: "prefix" },
   { label: "Settings", icon: Settings, href: "/dashboard/settings", match: "prefix" }
 ];
 
