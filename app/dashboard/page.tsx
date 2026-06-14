@@ -3,12 +3,15 @@
 import { motion, type Variants } from "framer-motion";
 import { CommandHeader } from "@/components/dashboard/CommandHeader";
 import { KpiRow } from "@/components/dashboard/KpiRow";
+import { CoverageMap } from "@/components/dashboard/CoverageMap";
+import { QuickActions } from "@/components/dashboard/QuickActions";
 import { TrustOverview } from "@/components/dashboard/TrustOverview";
 import { OpenAlerts } from "@/components/dashboard/OpenAlerts";
 import { HighRiskSystems } from "@/components/dashboard/HighRiskSystems";
 import { EvidenceFreshness } from "@/components/dashboard/EvidenceFreshness";
 import { RegulatoryDeadlines } from "@/components/dashboard/RegulatoryDeadlines";
 import { useCommandCenter } from "@/lib/hooks/useCommandCenter";
+import { useGovernanceCoverage } from "@/lib/hooks/useGovernanceCoverage";
 
 const fade: Variants = {
   hidden: { opacity: 0, y: 14 },
@@ -21,6 +24,7 @@ const fade: Variants = {
 
 export default function DashboardPage() {
   const data = useCommandCenter();
+  const coverage = useGovernanceCoverage();
 
   return (
     <div className="space-y-7">
@@ -29,12 +33,20 @@ export default function DashboardPage() {
       </motion.div>
 
       <motion.div variants={fade} custom={1} initial="hidden" animate="show">
-        <KpiRow data={data} />
+        <KpiRow data={data} coverage={coverage} />
+      </motion.div>
+
+      <motion.div variants={fade} custom={2} initial="hidden" animate="show">
+        <CoverageMap coverage={coverage} />
+      </motion.div>
+
+      <motion.div variants={fade} custom={3} initial="hidden" animate="show">
+        <QuickActions />
       </motion.div>
 
       <motion.div
         variants={fade}
-        custom={2}
+        custom={4}
         initial="hidden"
         animate="show"
         className="grid grid-cols-1 gap-4 lg:grid-cols-3"
@@ -49,7 +61,7 @@ export default function DashboardPage() {
 
       <motion.div
         variants={fade}
-        custom={3}
+        custom={5}
         initial="hidden"
         animate="show"
         className="grid grid-cols-1 gap-4 md:grid-cols-3"

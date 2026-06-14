@@ -134,6 +134,59 @@ export function getArrayFromPaths(value: unknown, paths: string[]): unknown[] {
   return [];
 }
 
+/** Backend-provided total/count fields, checked before falling back to array length. */
+const TOTAL_PATHS = [
+  "total",
+  "count",
+  "total_count",
+  "totalCount",
+  "total_items",
+  "totalItems",
+  "pagination.total",
+  "meta.total",
+  "summary.total"
+];
+
+/** Return the first array found in the payload (envelope-aware), or null if none exists. */
+function findArray(value: unknown): unknown[] | null {
+  for (const candidate of candidates(value)) {
+    if (Array.isArray(candidate)) {
+      return candidate;
+    }
+    if (isRecord(candidate)) {
+      for (const key of ARRAY_KEYS) {
+        if (Array.isArray(candidate[key])) {
+          return candidate[key] as unknown[];
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Derive a real record count from a successful endpoint payload.
+ * - Array payload -> array length.
+ * - Backend-provided total/count field -> that number (so limited lists still report the full size).
+ * - Otherwise the length of the first embedded list.
+ * Returns `null` when the payload carries data but no countable list/total (e.g. a config object),
+ * so callers can show "Records available" without fabricating a number. Never defaults to 0.
+ */
+export function getCountFromPayload(value: unknown): number | null {
+  if (value == null) return null;
+  if (Array.isArray(value)) return value.length;
+
+  const explicit = getNumberFromPaths(value, TOTAL_PATHS);
+  if (explicit !== null && explicit >= 0) {
+    return Math.round(explicit);
+  }
+
+  const arr = findArray(value);
+  if (arr !== null) return arr.length;
+
+  return null;
+}
+
 export function getDateFromPaths(value: unknown, paths: string[]): string | null {
   const raw = getStringFromPaths(value, paths);
   if (!raw) {

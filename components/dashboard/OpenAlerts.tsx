@@ -54,7 +54,7 @@ export function OpenAlerts({ data }: { data: CommandCenter }) {
               >
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-[13px] font-semibold leading-snug text-cv-ink">{alert.title}</p>
-                  <SeverityBadge severity={alert.severity} />
+                  {alert.hasSeverity ? <SeverityBadge severity={alert.severity} /> : null}
                 </div>
                 {alert.description ? (
                   <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-cv-slate">{alert.description}</p>
