@@ -26,6 +26,8 @@ import {
   ClipboardCheck,
   Plug,
   Webhook,
+  Zap,
+  Network,
   Sparkles,
   LogOut,
   X,
@@ -68,6 +70,8 @@ const NAV: NavItem[] = [
   { label: "Alerts", icon: Bell, href: "/dashboard/alerts", match: "prefix" },
   { label: "Integrations", icon: Plug, href: "/dashboard/integrations", match: "prefix" },
   { label: "Webhooks", icon: Webhook, href: "/dashboard/webhooks", match: "prefix" },
+  { label: "Automation", icon: Zap, href: "/dashboard/automation", match: "prefix" },
+  { label: "Workflows", icon: Network, href: "/dashboard/workflows", match: "prefix" },
   { label: "Settings", icon: Settings, href: "/dashboard/settings", match: "prefix" }
 ];
 
