@@ -28,6 +28,8 @@ import {
   Webhook,
   Zap,
   Network,
+  Search,
+  Inbox,
   Sparkles,
   LogOut,
   X,
@@ -48,6 +50,7 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { label: "Command Center", icon: LayoutDashboard, href: "/dashboard", match: "exact" },
+  { label: "Search", icon: Search, href: "/dashboard/search", match: "prefix" },
   { label: "Compliance", icon: ShieldCheck, href: "/dashboard/compliance", match: "prefix" },
   { label: "Regulatory", icon: Scale, href: "/dashboard/regulatory", match: "prefix" },
   { label: "Policies", icon: ScrollText, href: "/dashboard/policies", match: "prefix" },
@@ -72,6 +75,7 @@ const NAV: NavItem[] = [
   { label: "Webhooks", icon: Webhook, href: "/dashboard/webhooks", match: "prefix" },
   { label: "Automation", icon: Zap, href: "/dashboard/automation", match: "prefix" },
   { label: "Workflows", icon: Network, href: "/dashboard/workflows", match: "prefix" },
+  { label: "Notifications", icon: Inbox, href: "/dashboard/notifications", match: "prefix" },
   { label: "Settings", icon: Settings, href: "/dashboard/settings", match: "prefix" }
 ];
 
