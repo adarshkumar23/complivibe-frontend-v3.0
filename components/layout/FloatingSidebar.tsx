@@ -24,6 +24,8 @@ import {
   Waves,
   Stamp,
   ClipboardCheck,
+  Plug,
+  Webhook,
   Sparkles,
   LogOut,
   X,
@@ -64,6 +66,8 @@ const NAV: NavItem[] = [
   { label: "Vendor Risk", icon: Building, href: "/dashboard/vendor-risk", match: "prefix" },
   { label: "Questionnaires", icon: ClipboardList, href: "/dashboard/questionnaires", match: "prefix" },
   { label: "Alerts", icon: Bell, href: "/dashboard/alerts", match: "prefix" },
+  { label: "Integrations", icon: Plug, href: "/dashboard/integrations", match: "prefix" },
+  { label: "Webhooks", icon: Webhook, href: "/dashboard/webhooks", match: "prefix" },
   { label: "Settings", icon: Settings, href: "/dashboard/settings", match: "prefix" }
 ];
 
