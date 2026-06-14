@@ -10,6 +10,7 @@ export type Severity = "critical" | "high" | "medium" | "low" | "info";
 export type NormalizedAlert = {
   id: string;
   severity: Severity;
+  hasSeverity: boolean;
   title: string;
   description: string | null;
   timestamp: string | null;

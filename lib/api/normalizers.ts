@@ -183,14 +183,19 @@ export function normalizeAlerts(insights: unknown, predictive: unknown): Normali
     ...normalizeList(predictive, ["", "data", "result", "items", "results", "alerts"])
   ];
 
-  return records.map((entry, index) => ({
-    id: getStringFromPaths(entry, ["id", "uuid", "alert_id", "insight_id"]) || `alert-${index}`,
-    severity: normalizeSeverity(getStringFromPaths(entry, ["severity", "priority", "risk_level", "level", "type"])),
-    title: getStringFromPaths(entry, ["title", "name", "summary", "message"]) || "Untitled alert",
-    description: getStringFromPaths(entry, ["description", "details", "reason", "body"]),
-    timestamp: getDateFromPaths(entry, ["timestamp", "created_at", "updated_at", "event_time", "date"]),
-    confidence: getNumberFromPaths(entry, ["confidence", "confidence_score", "probability", "score"])
-  }));
+  return records.map((entry, index) => {
+    // Only treat genuine severity/priority fields as a real classification — never "type".
+    const sevRaw = getStringFromPaths(entry, ["severity", "priority", "risk_level", "level"]);
+    return {
+      id: getStringFromPaths(entry, ["id", "uuid", "alert_id", "insight_id"]) || `alert-${index}`,
+      severity: normalizeSeverity(sevRaw),
+      hasSeverity: sevRaw != null,
+      title: getStringFromPaths(entry, ["title", "name", "summary", "message"]) || "Untitled alert",
+      description: getStringFromPaths(entry, ["description", "details", "reason", "body"]),
+      timestamp: getDateFromPaths(entry, ["timestamp", "created_at", "updated_at", "event_time", "date"]),
+      confidence: getNumberFromPaths(entry, ["confidence", "confidence_score", "probability", "score"])
+    };
+  });
 }
 
 export function normalizeSystems(value: unknown): NormalizedSystem[] {

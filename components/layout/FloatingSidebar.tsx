@@ -15,6 +15,8 @@ import {
   ClipboardList,
   Bell,
   Settings,
+  Scale,
+  Award,
   Sparkles,
   LogOut,
   X,
@@ -36,6 +38,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { label: "Command Center", icon: LayoutDashboard, href: "/dashboard", match: "exact" },
   { label: "Compliance", icon: ShieldCheck, href: "/dashboard/compliance", match: "prefix" },
+  { label: "Regulatory", icon: Scale, href: "/dashboard/regulatory", match: "prefix" },
   { label: "AI Governance", icon: BrainCircuit, href: "/dashboard/ai-systems", match: "prefix" },
   { label: "Data Observability", icon: Database, href: "/dashboard/data-observability", match: "prefix" },
   { label: "Evidence", icon: FileCheck2, href: "/dashboard/evidence", match: "prefix" },
@@ -44,9 +47,10 @@ const NAV: NavItem[] = [
   { label: "Reports", icon: FileBarChart, href: "/dashboard/reports", match: "prefix" },
   { label: "Audit Pack", icon: PackageCheck, href: "/dashboard/audit-pack", match: "prefix" },
   { label: "Trust Center", icon: BadgeCheck, href: "/dashboard/trust-center", match: "prefix" },
+  { label: "Certifications", icon: Award, href: "/dashboard/certifications", match: "prefix" },
   { label: "Questionnaires", icon: ClipboardList, href: "/dashboard/questionnaires", match: "prefix" },
-  { label: "Alerts", icon: Bell, href: "/dashboard" },
-  { label: "Settings", icon: Settings, href: "/dashboard" }
+  { label: "Alerts", icon: Bell, href: "/dashboard/alerts", match: "prefix" },
+  { label: "Settings", icon: Settings, href: "/dashboard/settings", match: "prefix" }
 ];
 
 function SidebarBody() {

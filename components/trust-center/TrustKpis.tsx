@@ -19,8 +19,8 @@ export function TrustKpis({ data }: { data: TrustCenterData }) {
   );
 
   const assetList = normalizeTrustAssets(assets.data);
-  const anyVisibility = assetList.some((a) => a.visibility || a.status);
-  const published = assets.isSuccess ? (anyVisibility ? assetList.filter(isPublished).length : assetList.length) : null;
+  // Count only assets the backend marks as published/public — never assume unmarked assets are published.
+  const published = assets.isSuccess ? assetList.filter(isPublished).length : null;
 
   const reportCount = reports.isSuccess ? normalizeReports(reports.data).length : null;
   const evidenceCount = evidence.isSuccess ? normalizeEvidenceItems(evidence.data).length : null;
