@@ -27,26 +27,32 @@ export type CopilotContextCard = {
   href: string;
 };
 
-function useEndpoint<T = unknown>(key: string, fn: () => Promise<T>, retry: boolean | number = 1) {
-  return useQuery({ queryKey: [key], queryFn: fn, retry, staleTime: 300_000 });
+function useEndpoint<T = unknown>(key: string, fn: () => Promise<T>, enabled: boolean, retry: boolean | number = 1) {
+  return useQuery({ queryKey: [key], queryFn: fn, retry, staleTime: 300_000, enabled });
 }
 
-export function useCopilot(context?: Record<string, unknown>) {
+/**
+ * @param enabled when false, no Copilot request runs (probe or context). The drawer passes its
+ * open state so the availability probe and context fetches only fire when the user opens Copilot —
+ * keeping the console clean across the rest of the app.
+ */
+export function useCopilot(context?: Record<string, unknown>, enabled = true) {
   const availability = useQuery({
     queryKey: ["copilot-availability"],
     queryFn: probeCopilot,
     retry: false,
-    staleTime: Infinity
+    staleTime: Infinity,
+    enabled
   });
 
   const [messages, setMessages] = useState<CopilotMessage[]>([]);
 
-  const insights = useEndpoint("proactive-insights", getProactiveInsights);
-  const alerts = useEndpoint("predictive-alerts", getPredictiveAlerts);
-  const risks = useEndpoint("risks", getRisks);
-  const deadlines = useEndpoint("regulatory-deadlines", getRegulatoryDeadlines);
-  const approvals = useEndpoint("approvals", getApprovals, false);
-  const assurance = useEndpoint("assurance-cases", getAssuranceCases, false);
+  const insights = useEndpoint("proactive-insights", getProactiveInsights, enabled);
+  const alerts = useEndpoint("predictive-alerts", getPredictiveAlerts, enabled);
+  const risks = useEndpoint("risks", getRisks, enabled);
+  const deadlines = useEndpoint("regulatory-deadlines", getRegulatoryDeadlines, enabled);
+  const approvals = useEndpoint("approvals", getApprovals, enabled, false);
+  const assurance = useEndpoint("assurance-cases", getAssuranceCases, enabled, false);
 
   const mutation = useMutation({
     mutationFn: (message: string) => {

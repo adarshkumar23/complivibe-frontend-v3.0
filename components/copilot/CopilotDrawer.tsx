@@ -56,7 +56,7 @@ export function CopilotDrawer() {
   const pathname = usePathname();
   const currentModule = useMemo(() => moduleLabel(pathname), [pathname]);
 
-  const copilot = useCopilot({ route: pathname ?? undefined, module: currentModule });
+  const copilot = useCopilot({ route: pathname ?? undefined, module: currentModule }, open);
   const [input, setInput] = useState("");
 
   const connected = copilot.contextCards.filter((c) => c.status === "available").length;
