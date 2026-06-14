@@ -1,12 +1,20 @@
 "use client";
 
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { Search, Bell, Sparkles, Menu } from "lucide-react";
-import { cn } from "@/lib/utils/cn";
 import { useUiStore } from "@/store/ui-store";
 
 export function Topbar() {
+  const router = useRouter();
+  const [query, setQuery] = useState("");
   const toggleSidebar = useUiStore((s) => s.toggleSidebar);
   const toggleCopilot = useUiStore((s) => s.toggleCopilot);
+
+  const onSearchSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    router.push("/dashboard/search");
+  };
 
   return (
     <header className="sticky top-0 z-40 px-4 pt-4 sm:px-6 lg:px-0 lg:pr-6 lg:pt-5">
@@ -22,17 +30,23 @@ export function Topbar() {
         </button>
 
         {/* Search */}
-        <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-full bg-white/55 px-4 py-2.5 ring-1 ring-white/70 focus-within:ring-cv-blue/40">
+        <form
+          onSubmit={onSearchSubmit}
+          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-full bg-white/55 px-4 py-2.5 ring-1 ring-white/70 focus-within:ring-cv-blue/40"
+        >
           <Search size={17} className="shrink-0 text-cv-mist" />
           <input
             type="text"
-            placeholder="Ask Copilot or search..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search the workspace..."
+            aria-label="Search the workspace"
             className="min-w-0 flex-1 bg-transparent text-sm text-cv-ink placeholder:text-cv-mist focus:outline-none"
           />
           <kbd className="hidden shrink-0 rounded-md bg-white/80 px-1.5 py-0.5 text-[10px] font-semibold text-cv-mist ring-1 ring-slate-200/70 sm:inline-block">
-            ⌘K
+            ↵
           </kbd>
-        </div>
+        </form>
 
         {/* Ask Copilot */}
         <button
