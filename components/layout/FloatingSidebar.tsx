@@ -32,6 +32,8 @@ import {
   Inbox,
   Share2,
   Calculator,
+  Briefcase,
+  Lightbulb,
   Sparkles,
   LogOut,
   X,
@@ -52,6 +54,7 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { label: "Command Center", icon: LayoutDashboard, href: "/dashboard", match: "exact" },
+  { label: "Executive Summary", icon: Briefcase, href: "/dashboard/executive", match: "prefix" },
   { label: "Search", icon: Search, href: "/dashboard/search", match: "prefix" },
   { label: "Compliance", icon: ShieldCheck, href: "/dashboard/compliance", match: "prefix" },
   { label: "Regulatory", icon: Scale, href: "/dashboard/regulatory", match: "prefix" },
@@ -61,6 +64,7 @@ const NAV: NavItem[] = [
   { label: "AI Monitoring", icon: Activity, href: "/dashboard/ai-monitoring", match: "prefix" },
   { label: "Drift Detection", icon: Waves, href: "/dashboard/drift", match: "prefix" },
   { label: "Trust Graph", icon: Share2, href: "/dashboard/trust-graph", match: "prefix" },
+  { label: "Proactive Insights", icon: Lightbulb, href: "/dashboard/insights", match: "prefix" },
   { label: "Score Explainer", icon: Calculator, href: "/dashboard/score-explainer", match: "prefix" },
   { label: "Data Observability", icon: Database, href: "/dashboard/data-observability", match: "prefix" },
   { label: "Evidence", icon: FileCheck2, href: "/dashboard/evidence", match: "prefix" },
