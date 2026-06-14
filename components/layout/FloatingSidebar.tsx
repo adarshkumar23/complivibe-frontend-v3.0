@@ -36,6 +36,8 @@ import {
   Lightbulb,
   Lock,
   Fingerprint,
+  Building2,
+  UserCheck,
   Sparkles,
   LogOut,
   X,
@@ -88,6 +90,8 @@ const NAV: NavItem[] = [
   { label: "Notifications", icon: Inbox, href: "/dashboard/notifications", match: "prefix" },
   { label: "Security", icon: Fingerprint, href: "/dashboard/security", match: "prefix" },
   { label: "Privacy", icon: Lock, href: "/dashboard/privacy", match: "prefix" },
+  { label: "Enterprise Control", icon: Building2, href: "/dashboard/enterprise", match: "prefix" },
+  { label: "Employee Compliance", icon: UserCheck, href: "/dashboard/employee-compliance", match: "prefix" },
   { label: "Settings", icon: Settings, href: "/dashboard/settings", match: "prefix" }
 ];
 
