@@ -99,6 +99,20 @@ const NAV: NavItem[] = [
   { label: "Settings", icon: Settings, href: "/dashboard/settings", match: "prefix" }
 ];
 
+/**
+ * Determine whether a nav item is active for the current pathname.
+ * Prefix matching uses a path-segment boundary (href === path or path starts
+ * with `href/`) so a parent like `/dashboard/ai-systems` stays active on its
+ * detail routes (`/dashboard/ai-systems/{id}`) without bleeding into siblings
+ * such as `/dashboard/ai-testing`.
+ */
+function isNavItemActive(item: NavItem, pathname: string | null): boolean {
+  if (!pathname) return false;
+  if (item.match === "exact") return pathname === item.href;
+  // default to prefix matching for everything else
+  return pathname === item.href || pathname.startsWith(item.href + "/");
+}
+
 function SidebarBody() {
   const router = useRouter();
   const pathname = usePathname();
@@ -133,41 +147,40 @@ function SidebarBody() {
       <nav className="mt-3 flex-1 space-y-1.5 overflow-y-auto px-0.5">
         {NAV.map((item) => {
           const Icon = item.icon;
-          const isActive =
-            item.match === "prefix"
-              ? Boolean(pathname?.startsWith(item.href))
-              : item.match === "exact"
-                ? pathname === item.href
-                : false;
+          const isActive = isNavItemActive(item, pathname);
           return (
             <button
               key={item.label}
               type="button"
+              aria-current={isActive ? "page" : undefined}
               onClick={() => {
                 setSidebarOpen(false);
                 router.push(item.href);
               }}
               className={cn(
-                "group relative flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold transition",
-                isActive ? "text-white" : "text-cv-slate hover:bg-white/60 hover:text-cv-ink"
+                "group relative flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold outline-none transition",
+                "focus-visible:ring-2 focus-visible:ring-cv-blue focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+                isActive
+                  ? "text-white drop-shadow-sm"
+                  : "text-cv-slate hover:bg-white/60 hover:text-cv-ink"
               )}
             >
               {isActive ? (
                 <motion.span
                   layoutId="sidebar-active"
-                  className="absolute inset-0 rounded-2xl bg-cv-brand shadow-button"
+                  className="absolute inset-0 z-0 rounded-2xl bg-cv-brand shadow-button"
                   transition={{ type: "spring", stiffness: 360, damping: 30 }}
                 />
               ) : null}
               <span
                 className={cn(
-                  "relative inline-flex h-8 w-8 items-center justify-center rounded-xl transition",
-                  isActive ? "bg-white/20 text-white" : "bg-white/70 text-cv-slate group-hover:text-cv-blue"
+                  "relative z-10 inline-flex h-8 w-8 items-center justify-center rounded-xl transition",
+                  isActive ? "bg-white/25 text-white" : "bg-white/70 text-cv-slate group-hover:text-cv-blue"
                 )}
               >
                 <Icon size={17} strokeWidth={2.2} />
               </span>
-              <span className="relative">{item.label}</span>
+              <span className="relative z-10">{item.label}</span>
             </button>
           );
         })}
