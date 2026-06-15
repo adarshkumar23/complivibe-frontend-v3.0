@@ -1,0 +1,96 @@
+{
+  "phase": "16",
+  "name": "Frontend-Backend Alignment QA",
+  "date": "2026-06-15",
+  "frontend": {
+    "commit_baseline": "9bda9fd56bf28acd7cf685e923c2c4c54571b773",
+    "commit_short": "9bda9fd",
+    "branch": "main",
+    "typecheck": "pass",
+    "lint": "n/a (no lint script)",
+    "build": "pass"
+  },
+  "backend_reference": {
+    "url": "https://api.adarshkumar.app",
+    "version": "3.0",
+    "commit": "2fcd78b4",
+    "health": "200",
+    "openapi": "200",
+    "auth_providers": "200",
+    "local_repo_present": false,
+    "local_port_8000_reachable": false,
+    "preflight_scripts_run": false,
+    "preflight_note": "Local backend repo/port unavailable; live backend used as reference"
+  },
+  "auth_providers_contract": {
+    "methods": [
+      { "provider": "password", "label": "Email and password", "enabled": true }
+    ],
+    "sso_exposed_to_customers": false
+  },
+  "results": {
+    "login_ui": "PASS",
+    "auth_flow": "PASS (valid-login not exercised: no QA creds)",
+    "route_smoke": "PASS (35/35 routes HTTP 200, 0 failures)",
+    "api_proxy": "PASS",
+    "data_integrity": "PASS",
+    "new_feature_alignment": "PASS",
+    "responsive": "PASS (login); authenticated screenshots not captured (no creds)",
+    "tests_build": "PASS (smoke 4/4, typecheck pass, build pass)"
+  },
+  "checks": {
+    "login_password_only": true,
+    "no_google_button": true,
+    "no_microsoft_button": true,
+    "no_saml_sso_button": true,
+    "no_scim_option": true,
+    "no_token_logging": true,
+    "no_fake_compliance_claims": true,
+    "scim_saml_setup_screens_present": false,
+    "unauthenticated_dashboard_redirects_to_login": true,
+    "invalid_login_clean_error": true,
+    "expired_token_redirects_to_login": true,
+    "all_required_endpoints_exist_on_backend": true
+  },
+  "smoke_tests": {
+    "script": "scripts/alignment-smoke.mjs",
+    "passed": 4,
+    "total": 4,
+    "cases": [
+      "login email+password fields present",
+      "login no SSO/OAuth buttons",
+      "unauthenticated /dashboard redirects to /login",
+      "invalid login shows clean error, stays on /login"
+    ]
+  },
+  "issues_fixed": [
+    {
+      "file": "lib/api/client.ts",
+      "fix": "401 on authenticated request clears cv_token and redirects to /login (guarded; only when token attached)"
+    },
+    {
+      "file": "lib/api/client.ts",
+      "fix": "errorMessage() flattens FastAPI array-style 422 detail into readable validation text"
+    },
+    {
+      "file": "app/login/page.tsx",
+      "fix": "Friendly status-specific login errors for 429 (rate limit) and 5xx; explicit 401 message"
+    }
+  ],
+  "remaining_warnings": [
+    "QA credentials not provisioned: valid-login E2E and authenticated data/screenshots not exercised live",
+    "Local backend repo/port unavailable: production_readiness_gate.py and live_authenticated_backend_e2e.py not run here",
+    "Connector-health backend endpoint (/api/v1/compliance/connectors/health) not yet surfaced on Integrations page (enhancement)",
+    "Screenshot harness seeds a fake token which now correctly redirects to login; needs a real QA token"
+  ],
+  "constraints_respected": {
+    "no_ui_redesign": true,
+    "visual_style_unchanged": true,
+    "floating_sidebar_kept": true,
+    "light_theme_kept": true,
+    "glass_style_kept": true,
+    "no_fake_data_added": true,
+    "no_sso_oauth_scim_login_buttons": true
+  },
+  "verdict": "PASS_WITH_WARNINGS"
+}

@@ -45,7 +45,15 @@ export default function LoginPage() {
       router.replace("/dashboard");
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.message || "Invalid email or password.");
+        if (err.status === 429) {
+          setError("Too many attempts. Please try again later.");
+        } else if (err.status === 401) {
+          setError("Invalid email or password.");
+        } else if (err.status >= 500) {
+          setError("The server is having trouble right now. Please try again shortly.");
+        } else {
+          setError(err.message || "Invalid email or password.");
+        }
       } else {
         setError("Unable to reach the server. Please check your connection and try again.");
       }
