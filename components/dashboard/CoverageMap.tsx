@@ -12,7 +12,7 @@ import type { CoverageItem, GovernanceCoverage } from "@/lib/hooks/useGovernance
 const STATUS_LABEL: Record<CoverageItem["status"], string> = {
   loading: "Checking…",
   available: "Records available",
-  empty: "No records returned",
+  empty: "No signal yet",
   unavailable: "Unavailable"
 };
 

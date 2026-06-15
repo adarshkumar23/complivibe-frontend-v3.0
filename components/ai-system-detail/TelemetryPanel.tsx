@@ -39,7 +39,7 @@ function Tile({
           {display}
         </span>
       </p>
-      {!hasValue && t.series.length < 2 ? <p className="mt-1 text-[10px] font-medium text-cv-mist">No data returned</p> : null}
+      {!hasValue && t.series.length < 2 ? <p className="mt-1 text-[10px] font-medium text-cv-mist">No telemetry yet</p> : null}
       {t.status ? <p className="mt-1 text-[11px] font-medium capitalize text-cv-slate">{t.status}</p> : null}
     </div>
   );

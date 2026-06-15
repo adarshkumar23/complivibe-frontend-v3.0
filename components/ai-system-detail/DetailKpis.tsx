@@ -70,7 +70,7 @@ export function DetailKpis({ data }: { data: AiSystemDetail }) {
         suffix={monitoring != null ? "%" : ""}
         scoreToneFor={monitoring}
         loading={reliability.isLoading && dashboard.isLoading}
-        unavailableHint="No data"
+        unavailableHint="No health signal"
       />
       <DetailKpi
         label="Drift Status"
@@ -89,7 +89,7 @@ export function DetailKpis({ data }: { data: AiSystemDetail }) {
         suffix={rel.value != null ? "%" : ""}
         scoreToneFor={rel.value}
         loading={reliability.isLoading}
-        unavailableHint="No data"
+        unavailableHint="No reliability data"
       />
     </div>
   );

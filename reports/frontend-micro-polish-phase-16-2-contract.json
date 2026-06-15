@@ -1,0 +1,88 @@
+{
+  "phase": "16.2",
+  "name": "Frontend Micro-Polish After Authenticated QA",
+  "date": "2026-06-15",
+  "frontend": {
+    "commit_baseline": "665d341",
+    "branch": "main",
+    "typecheck": "pass",
+    "lint": "n/a (no lint script)",
+    "build": "pass"
+  },
+  "backend_reference": {
+    "url": "https://api.adarshkumar.app",
+    "version": "3.0",
+    "commit": "2fcd78b4"
+  },
+  "results": {
+    "sidebar_contrast": "PASS",
+    "empty_state_wording": "PASS",
+    "connector_health_ui": "PASS",
+    "login_check": "PASS",
+    "screenshot_qa": "NOT_RUN (no QA credentials)",
+    "build_tests": "PASS (typecheck pass, build pass, smoke 4/4)"
+  },
+  "sidebar_contrast": {
+    "file": "components/layout/FloatingSidebar.tsx",
+    "changes": [
+      "active item drop-shadow strengthened to drop-shadow(0 1px 2px rgba(15,23,42,0.45)) for white text+icon legibility",
+      "active icon tile bg-white/25 -> bg-white/30 with ring-1 ring-white/40"
+    ],
+    "kept": ["light theme", "glass style", "no redesign", "inactive items soft"]
+  },
+  "empty_state_changes": [
+    { "file": "components/compliance/FrameworkReadiness.tsx", "from": "No data", "to": "Awaiting evidence" },
+    { "file": "components/dashboard/CoverageMap.tsx", "from": "No records returned", "to": "No signal yet" },
+    { "file": "components/ai-system-detail/TelemetryPanel.tsx", "from": "No data returned", "to": "No telemetry yet" },
+    { "file": "components/ai-system-detail/DetailKpis.tsx", "from": "No data (Monitoring Health)", "to": "No health signal" },
+    { "file": "components/ai-system-detail/DetailKpis.tsx", "from": "No data (Reliability)", "to": "No reliability data" }
+  ],
+  "connector_health": {
+    "page": "/dashboard/integrations",
+    "endpoints": [
+      "/api/v1/compliance/connectors/health",
+      "/api/v1/compliance/connectors/health/summary"
+    ],
+    "new_files": [
+      "lib/api/connector-health.ts",
+      "lib/api/connector-health-normalizers.ts",
+      "lib/hooks/useConnectorHealth.ts",
+      "components/integrations/ConnectorHealthCard.tsx"
+    ],
+    "displays": ["total", "healthy", "needs_attention", "unavailable", "provider_list", "last_sync"],
+    "states_supported": ["healthy", "degraded", "stale", "failing", "permission_error", "token_expired", "rate_limited", "unavailable", "unknown"],
+    "real_data_only": true,
+    "honest_empty_state": true,
+    "sensitive_data_hidden": ["raw_tokens", "webhook_urls", "provider_secrets", "raw_error_strings"]
+  },
+  "login_check": {
+    "email_password_only": true,
+    "no_google_button": true,
+    "no_microsoft_button": true,
+    "no_saml_button": true,
+    "no_scim_mention": true,
+    "friendly_429_message": true,
+    "clean_invalid_login_message": true,
+    "oauth_added": false
+  },
+  "smoke_tests": {
+    "script": "scripts/alignment-smoke.mjs",
+    "passed": 4,
+    "total": 4
+  },
+  "constraints_respected": {
+    "no_redesign": true,
+    "visual_style_unchanged": true,
+    "light_theme_kept": true,
+    "floating_sidebar_kept": true,
+    "bottom_mode_switcher_untouched": true,
+    "glass_style_kept": true,
+    "no_fake_data": true,
+    "no_sso_oauth_scim_login": true
+  },
+  "warnings": [
+    "No QA credentials: Connector Health populated state and authenticated screenshots not visually captured",
+    "Connector-health backend data shape is generic ResponseEnvelope; normalizer reads broad field candidates and degrades to honest empty/unknown states"
+  ],
+  "verdict": "PASS_WITH_WARNINGS"
+}

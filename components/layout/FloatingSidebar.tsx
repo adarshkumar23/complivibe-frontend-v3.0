@@ -163,7 +163,7 @@ function SidebarBody() {
                 "group relative flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold outline-none transition",
                 "focus-visible:ring-2 focus-visible:ring-cv-blue focus-visible:ring-offset-2 focus-visible:ring-offset-white",
                 isActive
-                  ? "text-white drop-shadow-sm"
+                  ? "text-white [filter:drop-shadow(0_1px_2px_rgba(15,23,42,0.45))]"
                   : "text-cv-slate hover:bg-white/60 hover:text-cv-ink"
               )}
             >
@@ -177,7 +177,7 @@ function SidebarBody() {
               <span
                 className={cn(
                   "relative z-10 inline-flex h-8 w-8 items-center justify-center rounded-xl transition",
-                  isActive ? "bg-white/25 text-white" : "bg-white/70 text-cv-slate group-hover:text-cv-blue"
+                  isActive ? "bg-white/30 text-white ring-1 ring-white/40" : "bg-white/70 text-cv-slate group-hover:text-cv-blue"
                 )}
               >
                 <Icon size={17} strokeWidth={2.2} />

@@ -70,7 +70,7 @@ export function FrameworkReadiness({ data }: { data: Compliance }) {
                   ) : fw.status ? (
                     <StatusBadge label={fw.status} tone="info" />
                   ) : (
-                    <StatusBadge label="No data" tone="neutral" />
+                    <StatusBadge label="Awaiting evidence" tone="neutral" />
                   )}
                 </div>
                 <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-400/12">
