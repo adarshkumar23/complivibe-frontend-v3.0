@@ -46,13 +46,25 @@ export function getEvidenceReadinessSummary() {
 }
 
 // ── GET /api/v1/evidence/readiness/gaps ─────────────────────────────────────
+// Live shape: paginated envelope { total, limit, offset, items: [...] };
+// items carry control_name + reason.
 export type EvidenceReadinessGap = {
   control_id?: string | null;
-  control_title?: string | null;
-  gap_type?: string | null;
+  control_name?: string | null;
+  reason?: string | null;
   [key: string]: unknown;
 };
 
-export function getEvidenceReadinessGaps(limit = 20) {
-  return apiFetch<EvidenceReadinessGap[]>(`/api/v1/evidence/readiness/gaps?limit=${limit}`);
+type EvidenceReadinessGapsEnvelope = {
+  total: number;
+  limit: number;
+  offset: number;
+  items: EvidenceReadinessGap[];
+};
+
+export async function getEvidenceReadinessGaps(limit = 20) {
+  const envelope = await apiFetch<EvidenceReadinessGapsEnvelope>(
+    `/api/v1/evidence/readiness/gaps?limit=${limit}`,
+  );
+  return envelope.items ?? [];
 }
