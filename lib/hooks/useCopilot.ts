@@ -5,10 +5,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { probeCopilot, sendCopilotMessage } from "@/lib/api/copilot";
 import { normalizeCopilotResponse, type CopilotSource } from "@/lib/api/copilot-normalizers";
 import { getCountFromPayload } from "@/lib/api/normalizers";
-import { getProactiveInsights, getPredictiveAlerts, getRegulatoryDeadlines } from "@/lib/api/command";
 import { getRisks } from "@/lib/api/risks";
-import { getApprovals } from "@/lib/api/approvals";
-import { getAssuranceCases } from "@/lib/api/assurance";
+import { getDeadlines, getIssues } from "@/lib/api/compliance";
+import { getInbox } from "@/lib/api/notifications";
+import { getExecutionApprovals } from "@/lib/api/approvals";
 
 export type CopilotMessage = {
   id: string;
@@ -47,12 +47,11 @@ export function useCopilot(context?: Record<string, unknown>, enabled = true) {
 
   const [messages, setMessages] = useState<CopilotMessage[]>([]);
 
-  const insights = useEndpoint("proactive-insights", getProactiveInsights, enabled);
-  const alerts = useEndpoint("predictive-alerts", getPredictiveAlerts, enabled);
-  const risks = useEndpoint("risks", getRisks, enabled);
-  const deadlines = useEndpoint("regulatory-deadlines", getRegulatoryDeadlines, enabled);
-  const approvals = useEndpoint("approvals", getApprovals, enabled, false);
-  const assurance = useEndpoint("assurance-cases", getAssuranceCases, enabled, false);
+  const inbox = useEndpoint("inbox", () => getInbox(25), enabled);
+  const issues = useEndpoint("cmp-issues", getIssues, enabled);
+  const risks = useEndpoint("risks", () => getRisks(), enabled);
+  const deadlines = useEndpoint("cmp-deadlines", () => getDeadlines(), enabled);
+  const approvals = useEndpoint("execution-approvals", getExecutionApprovals, enabled, false);
 
   const mutation = useMutation({
     mutationFn: (message: string) => {
@@ -95,12 +94,11 @@ export function useCopilot(context?: Record<string, unknown>, enabled = true) {
   });
 
   const contextCards: CopilotContextCard[] = [
-    cardOf("insights", "Proactive insights", "/dashboard/insights", insights),
-    cardOf("alerts", "Predictive alerts", "/dashboard/alerts", alerts),
+    cardOf("inbox", "Inbox items", "/dashboard/notifications", inbox),
+    cardOf("issues", "Open issues", "/dashboard/compliance", issues),
     cardOf("risks", "Open risks", "/dashboard/risks", risks),
-    cardOf("deadlines", "Regulatory deadlines", "/dashboard/regulatory", deadlines),
-    cardOf("approvals", "Approvals", "/dashboard/approvals", approvals),
-    cardOf("assurance", "Assurance cases", "/dashboard/assurance", assurance)
+    cardOf("deadlines", "Deadlines", "/dashboard/regulatory", deadlines),
+    cardOf("approvals", "Approvals", "/dashboard/approvals", approvals)
   ];
 
   // available only when the probe positively confirmed a backend endpoint

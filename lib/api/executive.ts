@@ -1,15 +1,8 @@
 /**
- * Executive Summary reuses the confirmed executive/score endpoints plus real module sources.
- * The backend executive brief is used when present; otherwise a factual brief is DERIVED from
- * real record counts (never fabricated). No new endpoints are invented.
+ * Executive page reads from the same typed real endpoints as the rest of the app:
+ * posture summary, dashboard summary, board scorecards, and the risk register.
  */
-export { getExecutiveSummary, getScoresSummary, getUnifiedHealthScore, getRegulatoryDeadlines, getPredictiveAlerts } from "@/lib/api/command";
-export { getComplianceOverview, getComplianceScore, getComplianceEvidence, getRisks, getCertifications } from "@/lib/api/compliance";
-export { getGovernanceScore, getAiGovernanceSummary, getAiSystems } from "@/lib/api/ai-systems";
-export { getIncidents } from "@/lib/api/incidents";
-export { getReports } from "@/lib/api/reports";
-export { getAuditPacks } from "@/lib/api/audit-pack";
-export { getQuestionnaires } from "@/lib/api/questionnaires";
-export { getTrustCenter } from "@/lib/api/trust-center";
-export { getApprovals } from "@/lib/api/approvals";
-export { getAssuranceCases } from "@/lib/api/assurance";
+export { getPostureSummary, getDeadlines } from "@/lib/api/compliance";
+export { getDashboardSummary } from "@/lib/api/command";
+export { getBoardScorecards } from "@/lib/api/reports";
+export { getRisks, getRiskSummary } from "@/lib/api/risks";

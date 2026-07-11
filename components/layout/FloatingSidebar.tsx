@@ -4,6 +4,9 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   ShieldCheck,
+  ShieldHalf,
+  CreditCard,
+  Cloud,
   BrainCircuit,
   Database,
   FileCheck2,
@@ -66,6 +69,7 @@ const NAV: NavItem[] = [
   { label: "Compliance", icon: ShieldCheck, href: "/dashboard/compliance", match: "prefix" },
   { label: "Regulatory", icon: Scale, href: "/dashboard/regulatory", match: "prefix" },
   { label: "Policies", icon: ScrollText, href: "/dashboard/policies", match: "prefix" },
+  { label: "Controls", icon: ShieldHalf, href: "/dashboard/controls", match: "prefix" },
   { label: "AI Governance", icon: BrainCircuit, href: "/dashboard/ai-systems", match: "prefix" },
   { label: "AI Testing", icon: FlaskConical, href: "/dashboard/ai-testing", match: "prefix" },
   { label: "AI Monitoring", icon: Activity, href: "/dashboard/ai-monitoring", match: "prefix" },
@@ -89,15 +93,19 @@ const NAV: NavItem[] = [
   { label: "Questionnaires", icon: ClipboardList, href: "/dashboard/questionnaires", match: "prefix" },
   { label: "Alerts", icon: Bell, href: "/dashboard/alerts", match: "prefix" },
   { label: "Integrations", icon: Plug, href: "/dashboard/integrations", match: "prefix" },
+  { label: "Cloud Connectors", icon: Cloud, href: "/dashboard/cloud-connectors", match: "prefix" },
   { label: "Webhooks", icon: Webhook, href: "/dashboard/webhooks", match: "prefix" },
   { label: "Automation", icon: Zap, href: "/dashboard/automation", match: "prefix" },
+  { label: "Autopilot", icon: Bot, href: "/dashboard/autopilot", match: "prefix" },
   { label: "Workflows", icon: Network, href: "/dashboard/workflows", match: "prefix" },
   { label: "Agents", icon: Bot, href: "/dashboard/agents", match: "prefix" },
   { label: "Notifications", icon: Inbox, href: "/dashboard/notifications", match: "prefix" },
+  { label: "Legal", icon: Scale, href: "/dashboard/legal", match: "prefix" },
   { label: "Security", icon: Fingerprint, href: "/dashboard/security", match: "prefix" },
   { label: "Privacy", icon: Lock, href: "/dashboard/privacy", match: "prefix" },
   { label: "Enterprise Control", icon: Building2, href: "/dashboard/enterprise", match: "prefix" },
   { label: "Employee Compliance", icon: UserCheck, href: "/dashboard/employee-compliance", match: "prefix" },
+  { label: "Billing & ESG", icon: CreditCard, href: "/dashboard/billing", match: "prefix" },
   { label: "Settings", icon: Settings, href: "/dashboard/settings", match: "prefix" }
 ];
 

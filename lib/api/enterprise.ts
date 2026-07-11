@@ -1,33 +1,49 @@
-import { apiFetch, ApiError } from "@/lib/api/client";
-
-/** Try endpoints in order; advance only on 404/405/501, otherwise surface the error. */
-async function tryEndpoints(paths: string[]): Promise<unknown> {
-  let lastError: unknown;
-  for (const path of paths) {
-    try {
-      return await apiFetch<unknown>(path);
-    } catch (err) {
-      lastError = err;
-      if (err instanceof ApiError && [404, 405, 501].includes(err.status)) continue;
-      throw err;
-    }
-  }
-  throw lastError;
-}
-
-/** Confirmed endpoints (already used by Settings / Security). */
-export { getOrganization, getTeam, getApiKeys, getSecuritySettings, getIntegrations, getSettings } from "@/lib/api/settings";
-export { getProductionReadiness, getHealth, getAuditLogs } from "@/lib/api/security";
-
-/** Canonical-only endpoints — graceful 404 to an unavailable state. */
-export function getEnterpriseSummary() {
-  return tryEndpoints(["/api/v1/enterprise/summary", "/api/v1/enterprise"]);
-}
-export function getUsage() {
-  return tryEndpoints(["/api/v1/usage", "/api/v1/billing"]);
-}
+import { apiFetch } from "@/lib/api/client";
 
 /**
- * NOTE: No enterprise write/action endpoint (invite/change role/rotate/export/update workspace) is confirmed.
- * Action buttons in the UI are disabled — no mutations are issued. Raw key/token/secret values are never read.
+ * Enterprise governance API — typed against the live backend schema
+ * (/api/v1/compliance/business-units, /api/v1/access-certifications, /api/v1/recertification).
  */
+
+// ── GET /api/v1/compliance/business-units ───────────────────────────────────
+export type BusinessUnit = {
+  id: string;
+  name?: string | null;
+  parent_id?: string | null;
+  is_active?: boolean | null;
+  [key: string]: unknown;
+};
+
+export function getBusinessUnits() {
+  return apiFetch<BusinessUnit[]>("/api/v1/compliance/business-units");
+}
+
+// ── GET /api/v1/access-certifications/campaigns ─────────────────────────────
+export type AccessCertCampaign = {
+  id: string;
+  name?: string | null;
+  status?: string | null;
+  due_date?: string | null;
+  created_at?: string | null;
+  [key: string]: unknown;
+};
+
+export function getAccessCertCampaigns() {
+  return apiFetch<AccessCertCampaign[]>("/api/v1/access-certifications/campaigns");
+}
+
+// ── GET /api/v1/recertification/summary ─────────────────────────────────────
+export type RecertificationSummary = {
+  active_policies: number;
+  due_evidence: number;
+  expired_evidence: number;
+  evidence_needing_review: number;
+  due_control_tests: number;
+  overdue_control_tests: number;
+  runs_last_24h: number;
+  tasks_created_last_24h: number;
+};
+
+export function getRecertificationSummary() {
+  return apiFetch<RecertificationSummary>("/api/v1/recertification/summary");
+}

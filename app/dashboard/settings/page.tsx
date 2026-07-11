@@ -1,16 +1,8 @@
 "use client";
 
 import { motion, type Variants } from "framer-motion";
-import { SettingsHeader } from "@/components/settings/SettingsHeader";
-import { SettingsStatusCards } from "@/components/settings/SettingsStatusCards";
-import { ProfileWorkspace } from "@/components/settings/ProfileWorkspace";
-import { OrganizationSettings } from "@/components/settings/OrganizationSettings";
-import { TeamAccess } from "@/components/settings/TeamAccess";
-import { SecuritySettings } from "@/components/settings/SecuritySettings";
-import { NotificationPreferences } from "@/components/settings/NotificationPreferences";
-import { IntegrationsPanel } from "@/components/settings/IntegrationsPanel";
-import { ApiKeysPanel } from "@/components/settings/ApiKeysPanel";
-import { DataPreferences } from "@/components/settings/DataPreferences";
+import { Settings } from "lucide-react";
+import { OrgProfilePanel, TeamPanel, AuthConfigPanel, SessionsPanel } from "@/components/settings/SettingsPanels";
 import { useSettings } from "@/lib/hooks/useSettings";
 
 const fade: Variants = {
@@ -24,35 +16,29 @@ export default function SettingsPage() {
   return (
     <div className="space-y-7">
       <motion.div variants={fade} custom={0} initial="hidden" animate="show">
-        <SettingsHeader />
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2.5">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-cv-brand text-white shadow-tile">
+              <Settings size={15} />
+            </span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-cv-blue">Workspace</span>
+          </div>
+          <h1 className="text-[30px] font-extrabold leading-tight tracking-tight text-cv-ink sm:text-[34px]">Settings</h1>
+          <p className="max-w-2xl text-[15px] text-cv-slate">
+            Organization identity, team, authentication, network policy, and AI credentials.
+          </p>
+        </div>
       </motion.div>
 
-      <motion.div variants={fade} custom={1} initial="hidden" animate="show">
-        <SettingsStatusCards data={data} />
-      </motion.div>
-
-      <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ProfileWorkspace data={data} />
-        <OrganizationSettings data={data} />
-      </motion.div>
-
-      <motion.div variants={fade} custom={3} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <motion.div variants={fade} custom={1} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <TeamAccess data={data} />
+          <TeamPanel data={data} />
         </div>
-        <div>
-          <SecuritySettings data={data} />
+        <div className="flex flex-col gap-4">
+          <OrgProfilePanel data={data} />
+          <AuthConfigPanel data={data} />
+          <SessionsPanel data={data} />
         </div>
-      </motion.div>
-
-      <motion.div variants={fade} custom={4} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <NotificationPreferences data={data} />
-        <IntegrationsPanel data={data} />
-        <ApiKeysPanel data={data} />
-      </motion.div>
-
-      <motion.div variants={fade} custom={5} initial="hidden" animate="show">
-        <DataPreferences data={data} />
       </motion.div>
     </div>
   );

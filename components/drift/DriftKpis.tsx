@@ -1,36 +1,44 @@
 "use client";
 
-import { Waves, Radar, Flame, ClipboardCheck } from "lucide-react";
+import { Waves, PlugZap, TriangleAlert } from "lucide-react";
 import { RegistryKpi } from "@/components/ui/RegistryKpi";
-import { normalizeTelemetry, driftDetail, isHighRiskDrift, driftTone, normalizeDriftSignals } from "@/lib/api/drift-normalizers";
 import type { DriftData } from "@/lib/hooks/useDrift";
 
 export function DriftKpis({ data }: { data: DriftData }) {
-  const { systems, list, driftById, anyDrift, driftLoading } = data;
-  const loading = systems.isLoading || driftLoading;
-
-  const details = list
-    .map((s) => {
-      const e = s.rawId ? driftById.get(s.rawId) : undefined;
-      if (!e?.isSuccess) return null;
-      const base = normalizeTelemetry(e.data, "drift");
-      return { detail: driftDetail(e.data, base.value, base.status), signals: normalizeDriftSignals(e.data, s.name).length };
-    })
-    .filter((x): x is { detail: ReturnType<typeof driftDetail>; signals: number } => x != null);
-
-  const monitored = systems.isSuccess && anyDrift
-    ? details.filter((d) => d.detail.score != null || d.detail.status != null).length
-    : null;
-  const signalsDetected = anyDrift ? details.reduce((sum, d) => sum + d.signals, 0) : null;
-  const highRisk = anyDrift ? details.filter((d) => isHighRiskDrift(d.detail)).length : null;
-  const needsReview = anyDrift ? details.filter((d) => driftTone(d.detail) === "bad" || driftTone(d.detail) === "warn").length : null;
+  const { connection, drift } = data;
+  const connected = connection.isSuccess ? connection.data != null : null;
+  const entries = drift.data ?? [];
+  const detected = drift.isSuccess ? entries.filter((e) => e.drift_detected).length : null;
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <RegistryKpi label="Systems Monitored" icon={Waves} accent="blue" value={monitored} caption={monitored != null ? "with drift telemetry" : undefined} loading={loading} unavailableHint="Drift unavailable" />
-      <RegistryKpi label="Drift Signals" icon={Radar} accent="purple" value={signalsDetected} caption={signalsDetected != null ? "detected" : undefined} loading={loading} unavailableHint="No signals" />
-      <RegistryKpi label="High-Risk Drift" icon={Flame} accent="red" value={highRisk} caption={highRisk != null ? "backend-flagged" : undefined} loading={loading} unavailableHint="No drift status" />
-      <RegistryKpi label="Systems Needing Review" icon={ClipboardCheck} accent="amber" value={needsReview} caption={needsReview != null ? "drifting" : undefined} loading={loading} unavailableHint="No drift status" />
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <RegistryKpi
+        label="MLflow Connection"
+        icon={PlugZap}
+        accent={connected ? "green" : "amber"}
+        value={connected == null ? null : connected ? 1 : 0}
+        caption={connected == null ? undefined : connected ? "tracking server linked" : "connect MLflow to enable drift detection"}
+        loading={connection.isLoading}
+        unavailableHint="Connection status unavailable"
+      />
+      <RegistryKpi
+        label="Models Monitored"
+        icon={Waves}
+        accent="blue"
+        value={drift.isSuccess ? entries.length : null}
+        caption={drift.isSuccess && entries.length === 0 ? "no drift checks recorded yet" : undefined}
+        loading={drift.isLoading}
+        unavailableHint="Drift data unavailable"
+      />
+      <RegistryKpi
+        label="Drift Detected"
+        icon={TriangleAlert}
+        accent="red"
+        value={detected}
+        caption={detected != null && detected > 0 ? "investigate affected models" : detected === 0 ? "no statistically significant drift" : undefined}
+        loading={drift.isLoading}
+        unavailableHint="Drift data unavailable"
+      />
     </div>
   );
 }

@@ -1,40 +1,72 @@
-import { apiFetch, ApiError } from "@/lib/api/client";
+import { apiFetch } from "@/lib/api/client";
 
-/** Try endpoints in order; skip to the next only on 404/405/501, otherwise surface the error. */
-async function tryEndpoints(paths: string[], init?: RequestInit): Promise<unknown> {
-  let lastError: unknown;
-  for (const path of paths) {
-    try {
-      return await apiFetch<unknown>(path, init);
-    } catch (err) {
-      lastError = err;
-      if (err instanceof ApiError && [404, 405, 501].includes(err.status)) continue;
-      throw err;
-    }
-  }
-  throw lastError;
-}
+/**
+ * Audit domain API — typed against the live backend schema
+ * (/api/v1/compliance/audit-engagements*, /audit-findings*, /pbc-items*, /api/v1/exports).
+ */
 
-export function getAuditPacks() {
-  return tryEndpoints(["/api/v1/audit-packs?limit=100", "/api/v1/audit-packs", "/api/v1/audit-pack"]);
-}
-
-export type GenerateAuditPackInput = {
-  framework?: string | null;
-  ai_system?: string | null;
-  date_from?: string | null;
-  date_to?: string | null;
-  include_evidence?: boolean;
-  include_reports?: boolean;
-  include_risks?: boolean;
-  include_incidents?: boolean;
-  include_model_cards?: boolean;
-  include_governance_scores?: boolean;
+// ── GET /api/v1/compliance/audit-engagements + /dashboard ───────────────────
+export type AuditEngagement = {
+  id: string;
+  title?: string | null;
+  audit_type?: string | null;
+  status?: string | null;
+  framework_id?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  created_at?: string | null;
+  [key: string]: unknown;
 };
 
-export function generateAuditPack(input: GenerateAuditPackInput) {
-  return tryEndpoints(["/api/v1/audit-pack/generate", "/api/v1/audit-packs/generate"], {
-    method: "POST",
-    body: JSON.stringify(input)
-  });
+export function getAuditEngagements(params = "") {
+  return apiFetch<AuditEngagement[]>(`/api/v1/compliance/audit-engagements${params}`);
+}
+
+export type AuditEngagementsDashboard = {
+  total_engagements: number;
+  by_status: Record<string, number>;
+  by_type: Record<string, number>;
+  upcoming: number;
+  overdue: number;
+};
+
+export function getAuditEngagementsDashboard() {
+  return apiFetch<AuditEngagementsDashboard>("/api/v1/compliance/audit-engagements/dashboard");
+}
+
+// ── GET /api/v1/compliance/audit-findings/summary ───────────────────────────
+export type AuditFindingsSummary = {
+  total: number;
+  by_severity: Record<string, number>;
+  by_status: Record<string, number>;
+  open_critical_count: number;
+  overdue_count: number;
+  linked_to_risk_count: number;
+};
+
+export function getAuditFindingsSummary() {
+  return apiFetch<AuditFindingsSummary>("/api/v1/compliance/audit-findings/summary");
+}
+
+// ── GET /api/v1/compliance/pbc-items/summary ────────────────────────────────
+export type PbcItemsSummary = {
+  total_items: number;
+  by_status: Record<string, number>;
+  overdue_count: number;
+  completion_rate: number;
+  items_without_evidence: number;
+  avg_days_to_submit: number | null;
+};
+
+export function getPbcItemsSummary() {
+  return apiFetch<PbcItemsSummary>("/api/v1/compliance/pbc-items/summary");
+}
+
+// ── GET /api/v1/exports/summary ─────────────────────────────────────────────
+export type ExportsSummary = {
+  [key: string]: unknown;
+};
+
+export function getExportsSummary() {
+  return apiFetch<ExportsSummary>("/api/v1/exports/summary");
 }

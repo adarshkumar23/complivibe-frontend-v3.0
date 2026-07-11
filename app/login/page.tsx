@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Mail, Lock, ArrowRight, Loader2, TriangleAlert, Eye, EyeOff, Sparkles } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
-import { login, extractToken } from "@/lib/api/auth";
+import { login, extractToken, getMyOrganizations } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import { useAuthStore } from "@/store/auth-store";
 import { cn } from "@/lib/utils/cn";
@@ -42,6 +42,15 @@ export default function LoginPage() {
         return;
       }
       setToken(newToken);
+      // Resolve the user's org so org-scoped endpoints get the X-Organization-ID header.
+      try {
+        const orgs = await getMyOrganizations();
+        if (orgs?.[0]?.id) {
+          window.localStorage.setItem("cv_org", orgs[0].id);
+        }
+      } catch {
+        // Non-fatal: session-scoped endpoints still work without the header.
+      }
       router.replace("/dashboard");
     } catch (err) {
       if (err instanceof ApiError) {

@@ -197,14 +197,14 @@ export function CopilotDrawer() {
                                     className="cv-ring-focus inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-1 text-[10px] font-semibold text-cv-blue ring-1 ring-white/70 hover:bg-white"
                                   >
                                     <ExternalLink size={10} />
-                                    {src.title}
+                                    {src.label}
                                   </Link>
                                 ) : (
                                   <span
                                     key={i}
                                     className="inline-flex items-center rounded-full bg-white/60 px-2 py-1 text-[10px] font-semibold text-cv-slate ring-1 ring-white/70"
                                   >
-                                    {src.title}
+                                    {src.label}
                                   </span>
                                 )
                               )}

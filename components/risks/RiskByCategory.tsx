@@ -1,43 +1,53 @@
 "use client";
 
-import { PieChart, Layers } from "lucide-react";
+import { ChartBarBig } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
-import { normalizeRisks, riskCategoryCounts } from "@/lib/api/risk-normalizers";
+import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import type { RisksData } from "@/lib/hooks/useRisks";
 
-const palette = ["#3B82F6", "#8B5CF6", "#06B6D4", "#14B8A6", "#10B981", "#F59E0B", "#EF4444"];
+const barColors = ["#3B82F6", "#8B5CF6", "#14B8A6", "#F59E0B", "#EF4444", "#06B6D4"];
 
+/** Category distribution aggregated from the real risk register. */
 export function RiskByCategory({ data }: { data: RisksData }) {
   const { risks } = data;
-  const list = normalizeRisks(risks.data);
-  const counts = riskCategoryCounts(list);
-  const max = counts.reduce((m, c) => Math.max(m, c.value), 0) || 1;
+  const list = risks.data ?? [];
+
+  const byCategory = new Map<string, { count: number; maxScore: number }>();
+  for (const r of list) {
+    const key = r.category ?? "uncategorized";
+    const entry = byCategory.get(key) ?? { count: 0, maxScore: 0 };
+    entry.count += 1;
+    entry.maxScore = Math.max(entry.maxScore, r.inherent_score ?? 0);
+    byCategory.set(key, entry);
+  }
+  const entries = [...byCategory.entries()].sort((a, b) => b[1].count - a[1].count);
+  const total = list.length;
 
   return (
-    <SectionCard title="Risk by Category" subtitle="Distribution across domains" icon={PieChart} accent="purple">
+    <SectionCard title="Risks by Category" subtitle="Where exposure concentrates" icon={ChartBarBig} accent="purple">
       {risks.isLoading ? (
-        <div className="space-y-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <LoadingSkeleton key={i} className="h-9 w-full" />
-          ))}
-        </div>
+        <SkeletonRows rows={4} />
       ) : risks.isError ? (
         <ErrorState compact title="Unable to load risks" onRetry={() => risks.refetch()} />
-      ) : counts.length === 0 ? (
-        <EmptyState compact icon={Layers} title="No risk categories" description="Category distribution appears here once risks are registered." />
+      ) : entries.length === 0 ? (
+        <EmptyState compact icon={ChartBarBig} title="No risks yet" description="Category distribution will appear here." />
       ) : (
-        <ul className="space-y-4">
-          {counts.slice(0, 6).map((c, i) => (
-            <li key={c.label}>
-              <div className="mb-1.5 flex items-center justify-between text-[13px]">
-                <span className="truncate font-semibold capitalize text-cv-ink">{c.label}</span>
-                <span className="font-bold text-cv-ink">{c.value}</span>
+        <ul className="space-y-3">
+          {entries.map(([cat, { count, maxScore }], i) => (
+            <li key={cat}>
+              <div className="mb-1 flex items-center justify-between text-[12px]">
+                <span className="font-semibold text-cv-ink">{cat.replaceAll("_", " ")}</span>
+                <span className="font-medium text-cv-slate">
+                  {count} · peak score {maxScore}
+                </span>
               </div>
-              <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-400/12">
-                <div className="h-full rounded-full" style={{ width: `${Math.max(6, (c.value / max) * 100)}%`, background: palette[i % palette.length] }} />
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-400/12">
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${Math.max(6, (count / total) * 100)}%`, background: barColors[i % barColors.length] }}
+                />
               </div>
             </li>
           ))}

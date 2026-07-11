@@ -1,31 +1,63 @@
 "use client";
 
-import { ScrollText, FileSearch, Layers, CalendarClock } from "lucide-react";
+import { ScrollText, CheckCircle2, Hourglass, CalendarClock } from "lucide-react";
 import { RegistryKpi } from "@/components/ui/RegistryKpi";
-import { normalizePolicies, isUnderReview, isReviewDue } from "@/lib/api/policy-normalizers";
 import type { PoliciesData } from "@/lib/hooks/usePolicies";
 
 export function PolicyKpis({ data }: { data: PoliciesData }) {
-  const { policies } = data;
-  const list = policies.isSuccess ? normalizePolicies(policies.data) : null;
-  const loading = policies.isLoading;
+  const { summary, policies } = data;
+  const s = summary.data;
 
-  const tracked = list ? list.length : null;
-  // Under review only counts when the backend provides a status field.
-  const anyStatus = list ? list.some((p) => p.status) : false;
-  const underReview = list && anyStatus ? list.filter(isUnderReview).length : null;
-  // Linked to frameworks only counts when at least one policy carries a framework field.
-  const anyFramework = list ? list.some((p) => p.framework) : false;
-  const linked = list && anyFramework ? list.filter((p) => Boolean(p.framework)).length : null;
-  const anyReviewField = list ? list.some((p) => p.nextReview || p.status) : false;
-  const reviewsDue = list && anyReviewField ? list.filter(isReviewDue).length : null;
+  const approved = s ? (s.by_status["approved"] ?? 0) : null;
+  const inReview = s ? (s.by_status["under_review"] ?? 0) + (s.by_status["draft"] ?? 0) : null;
+
+  // Review-due within 30 days, computed from real review_due_date values.
+  const dueSoon = policies.isSuccess
+    ? policies.data.filter((p) => {
+        if (!p.review_due_date) return false;
+        const days = Math.ceil((new Date(p.review_due_date).getTime() - Date.now()) / 86400000);
+        return days <= 30;
+      }).length
+    : null;
 
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <RegistryKpi label="Policies Tracked" icon={ScrollText} accent="blue" value={tracked} caption={tracked != null ? "in library" : undefined} loading={loading} unavailableHint="Policies unavailable" />
-      <RegistryKpi label="Under Review" icon={FileSearch} accent="amber" value={underReview} caption={underReview != null ? "backend-confirmed" : undefined} loading={loading} unavailableHint="No status field" />
-      <RegistryKpi label="Linked to Frameworks" icon={Layers} accent="purple" value={linked} caption={linked != null ? "mapped" : undefined} loading={loading} unavailableHint="No framework data" />
-      <RegistryKpi label="Reviews Due" icon={CalendarClock} accent="red" value={reviewsDue} caption={reviewsDue != null ? "need re-approval" : undefined} loading={loading} unavailableHint="No review data" />
+      <RegistryKpi
+        label="Total Policies"
+        icon={ScrollText}
+        accent="blue"
+        value={s ? s.total_policies : null}
+        caption={s ? `${Object.keys(s.by_policy_type).length} policy types` : undefined}
+        loading={summary.isLoading}
+        unavailableHint="Policy summary unavailable"
+      />
+      <RegistryKpi
+        label="Approved"
+        icon={CheckCircle2}
+        accent="green"
+        value={approved}
+        caption={s && s.total_policies > 0 ? `${Math.round(((approved ?? 0) / s.total_policies) * 100)}% of library` : undefined}
+        loading={summary.isLoading}
+        unavailableHint="Policy summary unavailable"
+      />
+      <RegistryKpi
+        label="Draft / In Review"
+        icon={Hourglass}
+        accent="amber"
+        value={inReview}
+        caption={inReview != null && inReview > 0 ? "not yet enforceable" : inReview === 0 ? "library fully approved" : undefined}
+        loading={summary.isLoading}
+        unavailableHint="Policy summary unavailable"
+      />
+      <RegistryKpi
+        label="Review Due ≤ 30d"
+        icon={CalendarClock}
+        accent="red"
+        value={dueSoon}
+        caption={dueSoon != null && dueSoon > 0 ? "schedule reviews now" : dueSoon === 0 ? "no reviews imminent" : undefined}
+        loading={policies.isLoading}
+        unavailableHint="Policies unavailable"
+      />
     </div>
   );
 }

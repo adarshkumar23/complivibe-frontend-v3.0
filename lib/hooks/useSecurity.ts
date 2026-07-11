@@ -1,28 +1,15 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-  getApiKeys, getSecuritySettings, getTeam, getOrganization,
-  getSecuritySummary, getAuditLogs, getHealth, getProductionReadiness, getSecurityScan
-} from "@/lib/api/security";
-
-function useEndpoint<T = unknown>(key: string, fn: () => Promise<T>) {
-  return useQuery({ queryKey: [key], queryFn: fn, retry: false });
-}
+import { getScanJobsSummary, getScanJobs, getNhiSummary, getSodFindings } from "@/lib/api/security";
 
 export function useSecurity() {
-  const apiKeys = useEndpoint("api-keys", getApiKeys);
-  const securitySettings = useEndpoint("security-settings", getSecuritySettings);
-  const team = useEndpoint("team", getTeam);
-  const organization = useEndpoint("organization", getOrganization);
+  const scanSummary = useQuery({ queryKey: ["scan-jobs-summary"], queryFn: getScanJobsSummary });
+  const scanJobs = useQuery({ queryKey: ["scan-jobs"], queryFn: () => getScanJobs() });
+  const nhi = useQuery({ queryKey: ["nhi-summary"], queryFn: getNhiSummary });
+  const sod = useQuery({ queryKey: ["sod-findings"], queryFn: getSodFindings });
 
-  const summary = useEndpoint("security-summary", getSecuritySummary);
-  const auditLogs = useEndpoint("audit-logs", getAuditLogs);
-  const health = useEndpoint("system-health", getHealth);
-  const readiness = useEndpoint("production-readiness", getProductionReadiness);
-  const scan = useEndpoint("security-scan", getSecurityScan);
-
-  return { apiKeys, securitySettings, team, organization, summary, auditLogs, health, readiness, scan };
+  return { scanSummary, scanJobs, nhi, sod };
 }
 
 export type SecurityData = ReturnType<typeof useSecurity>;

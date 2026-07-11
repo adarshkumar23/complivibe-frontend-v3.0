@@ -26,6 +26,13 @@ function getToken(): string | null {
   return localStorage.getItem("cv_token");
 }
 
+function getOrgId(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return localStorage.getItem("cv_org");
+}
+
 let redirectingToLogin = false;
 
 /**
@@ -39,6 +46,7 @@ function handleExpiredSession(): void {
   }
   redirectingToLogin = true;
   window.localStorage.removeItem("cv_token");
+  window.localStorage.removeItem("cv_org");
   if (window.location.pathname !== "/login") {
     window.location.replace("/login");
   }
@@ -67,6 +75,12 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   const token = getToken();
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  // Several backend endpoints scope by org via this header (session org is the fallback).
+  const orgId = getOrgId();
+  if (orgId) {
+    headers.set("X-Organization-ID", orgId);
   }
 
   const response = await fetch(toProxyPath(path), {

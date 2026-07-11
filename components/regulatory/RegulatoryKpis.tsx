@@ -1,32 +1,64 @@
 "use client";
 
-import { Layers, ListChecks, CalendarClock, Flame } from "lucide-react";
+import { Layers, ListChecks, CalendarClock, HelpCircle } from "lucide-react";
 import { RegistryKpi } from "@/components/ui/RegistryKpi";
-import { normalizeFrameworks, normalizeObligations } from "@/lib/api/compliance-normalizers";
-import { normalizeRegulatoryDeadlines, isHighPriority } from "@/lib/api/regulatory-normalizers";
 import type { RegulatoryData } from "@/lib/hooks/useRegulatory";
 
 export function RegulatoryKpis({ data }: { data: RegulatoryData }) {
-  const { frameworks, obligations, deadlines } = data;
+  const { catalog, active, deadlines, applicability } = data;
 
-  const frameworkCount = frameworks.isSuccess ? normalizeFrameworks(frameworks.data).length : null;
+  const activeCount = active.isSuccess ? active.data.length : null;
+  const catalogCount = catalog.isSuccess ? catalog.data.length : null;
 
-  const obligationList = obligations.isSuccess ? normalizeObligations(obligations.data) : null;
-  const openObligations = obligationList
-    ? obligationList.filter((o) => !o.status || !/(closed|complete|completed|met|satisfied|done|resolved)/i.test(o.status)).length
+  const app = applicability.data;
+  const applicable = app ? app.applicable_obligations : null;
+  const unknown = app ? app.unknown_obligations : null;
+
+  const regFilings = deadlines.isSuccess
+    ? deadlines.data.filter((d) => d.status === "upcoming" || d.status === "overdue").length
     : null;
-
-  const deadlineList = deadlines.isSuccess ? normalizeRegulatoryDeadlines(deadlines.data) : null;
-  const upcoming = deadlineList ? deadlineList.filter((d) => d.daysRemaining != null && d.daysRemaining >= 0).length : null;
-  // High priority counts only items the backend explicitly marks high/critical.
-  const highPriority = deadlineList ? deadlineList.filter((d) => isHighPriority(d.priority)).length : null;
+  const overdueFilings = deadlines.isSuccess
+    ? deadlines.data.filter((d) => d.status === "overdue" || (d.days_until_due != null && d.days_until_due < 0)).length
+    : null;
 
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <RegistryKpi label="Active Frameworks" icon={Layers} accent="blue" value={frameworkCount} caption={frameworkCount != null ? "tracked" : undefined} loading={frameworks.isLoading} unavailableHint="Frameworks unavailable" />
-      <RegistryKpi label="Open Obligations" icon={ListChecks} accent="purple" value={openObligations} caption={openObligations != null ? "needing action" : undefined} loading={obligations.isLoading} unavailableHint="Obligations unavailable" />
-      <RegistryKpi label="Upcoming Deadlines" icon={CalendarClock} accent="teal" value={upcoming} caption={upcoming != null ? "on the horizon" : undefined} loading={deadlines.isLoading} unavailableHint="Deadlines unavailable" />
-      <RegistryKpi label="High-Priority Items" icon={Flame} accent="red" value={highPriority} caption={highPriority != null ? "flagged by backend" : undefined} loading={deadlines.isLoading} unavailableHint="Deadlines unavailable" />
+      <RegistryKpi
+        label="Active Frameworks"
+        icon={Layers}
+        accent="blue"
+        value={activeCount}
+        caption={catalogCount != null ? `of ${catalogCount} in catalog` : undefined}
+        loading={active.isLoading}
+        unavailableHint="Active frameworks unavailable"
+      />
+      <RegistryKpi
+        label="Applicable Obligations"
+        icon={ListChecks}
+        accent="purple"
+        value={applicable}
+        caption={applicable != null ? "in selected framework" : undefined}
+        loading={applicability.isLoading}
+        unavailableHint="Applicability unavailable"
+      />
+      <RegistryKpi
+        label="Unscoped Obligations"
+        icon={HelpCircle}
+        accent="amber"
+        value={unknown}
+        caption={unknown != null && unknown > 0 ? "need an applicability decision" : unknown === 0 ? "all decided" : undefined}
+        loading={applicability.isLoading}
+        unavailableHint="Applicability unavailable"
+      />
+      <RegistryKpi
+        label="Regulatory Filings Open"
+        icon={CalendarClock}
+        accent="red"
+        value={regFilings}
+        caption={overdueFilings != null && overdueFilings > 0 ? `${overdueFilings} overdue` : regFilings != null ? "none overdue" : undefined}
+        loading={deadlines.isLoading}
+        unavailableHint="Deadlines unavailable"
+      />
     </div>
   );
 }

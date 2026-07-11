@@ -5,7 +5,6 @@ import { AutomationHeader } from "@/components/automation/AutomationHeader";
 import { AutomationKpis } from "@/components/automation/AutomationKpis";
 import { AutomationRulesTable } from "@/components/automation/AutomationRulesTable";
 import { AutomationRunHistory } from "@/components/automation/AutomationRunHistory";
-import { TriggerSourcesPanel } from "@/components/automation/TriggerSourcesPanel";
 import { useAutomation } from "@/lib/hooks/useAutomation";
 
 const fade: Variants = {
@@ -30,8 +29,7 @@ export default function AutomationPage() {
         <div className="lg:col-span-2">
           <AutomationRulesTable data={data} />
         </div>
-        <div className="flex flex-col gap-4">
-          <TriggerSourcesPanel data={data} />
+        <div>
           <AutomationRunHistory data={data} />
         </div>
       </motion.div>

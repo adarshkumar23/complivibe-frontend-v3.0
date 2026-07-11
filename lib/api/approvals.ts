@@ -1,26 +1,46 @@
-import { apiFetch, ApiError } from "@/lib/api/client";
-
-/** Try endpoints in order; advance only on 404/405/501, otherwise surface the error. */
-async function tryEndpoints(paths: string[], init?: RequestInit): Promise<unknown> {
-  let lastError: unknown;
-  for (const path of paths) {
-    try {
-      return await apiFetch<unknown>(path, init);
-    } catch (err) {
-      lastError = err;
-      if (err instanceof ApiError && [404, 405, 501].includes(err.status)) continue;
-      throw err;
-    }
-  }
-  throw lastError;
-}
-
-/** Approval queue — canonical paths only. Degrades to an unavailable state if the backend lacks them. */
-export function getApprovals() {
-  return tryEndpoints(["/api/v1/approvals", "/api/v1/approval-queue"]);
-}
+import { apiFetch } from "@/lib/api/client";
 
 /**
- * NOTE: No approval write/action endpoint (approve/reject/request-changes/assign) is confirmed by the
- * backend matrix or API client. Action buttons in the UI are therefore disabled — no mutations are issued.
+ * Approvals API — the backend has no global approvals endpoint; approvals are
+ * per-entity. This aggregates the real queues:
+ * autopilot execution approvals, AI governance review queue, approval envelopes.
  */
+
+export type ExecutionApproval = {
+  id: string;
+  status?: string | null;
+  intent_id?: string | null;
+  created_at?: string | null;
+  [key: string]: unknown;
+};
+
+export function getExecutionApprovals() {
+  return apiFetch<ExecutionApproval[]>("/api/v1/ai-governance/autopilot/execution-approvals");
+}
+
+export type ReviewQueueItem = {
+  id?: string;
+  ai_system_id?: string | null;
+  review_type?: string | null;
+  due_at?: string | null;
+  status?: string | null;
+  [key: string]: unknown;
+};
+
+export function getReviewQueue() {
+  return apiFetch<ReviewQueueItem[]>("/api/v1/ai-governance/review-queue");
+}
+
+export type ApprovalEnvelope = {
+  id?: string;
+  status?: string | null;
+  entity_type?: string | null;
+  created_at?: string | null;
+  [key: string]: unknown;
+};
+
+export function getApprovalEnvelopes() {
+  return apiFetch<ApprovalEnvelope[]>("/api/v1/ai-governance/approval-envelopes");
+}
+
+export { getExecutionApprovalsSummary } from "@/lib/api/automation";

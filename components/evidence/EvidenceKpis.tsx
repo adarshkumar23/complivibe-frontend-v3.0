@@ -1,82 +1,62 @@
 "use client";
 
-import { Files, ShieldCheck, Clock4, Link2, ClipboardCheck } from "lucide-react";
+import { FileCheck2, FileClock, FileX2, ShieldOff } from "lucide-react";
 import { RegistryKpi } from "@/components/ui/RegistryKpi";
-import { pickScore } from "@/lib/hooks/useCommandCenter";
-import {
-  normalizeEvidenceItems,
-  freshnessSummary,
-  mappedControlsCount
-} from "@/lib/api/evidence-normalizers";
 import type { EvidenceData } from "@/lib/hooks/useEvidence";
 
 export function EvidenceKpis({ data }: { data: EvidenceData }) {
-  const { evidence, scores } = data;
-  const items = normalizeEvidenceItems(evidence.data);
-  const ok = evidence.isSuccess;
-  const loading = evidence.isLoading;
-  const summary = freshnessSummary(items);
-
-  const total = ok ? items.length : null;
-  const fresh = ok && summary.hasSignal ? summary.fresh : null;
-  const expiring = ok && summary.hasSignal ? summary.expiring : null;
-  const mapped = ok ? mappedControlsCount(items) : null;
-
-  const auditFromScores = pickScore(
-    [scores.data],
-    ["audit_readiness", "audit_readiness_score", "audit_score", "audit", "readiness.audit"]
-  );
-  const auditDerived = summary.hasSignal && total && total > 0 ? Math.round((summary.fresh / total) * 100) : null;
-  const audit = auditFromScores ?? auditDerived;
+  const { readiness } = data;
+  const r = readiness.data;
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-5">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <RegistryKpi
-        label="Total Evidence"
-        icon={Files}
+        label="Evidence Items"
+        icon={FileCheck2}
         accent="blue"
-        value={total}
-        caption={total != null ? "items in vault" : undefined}
-        loading={loading}
-        unavailableHint="Vault unavailable"
+        value={r ? r.total_evidence_items : null}
+        caption={r ? `${r.verified_evidence_items} verified` : undefined}
+        loading={readiness.isLoading}
+        unavailableHint="Readiness summary unavailable"
       />
       <RegistryKpi
-        label="Fresh Evidence"
-        icon={ShieldCheck}
-        accent="green"
-        value={fresh}
-        caption={fresh != null ? "currently valid" : undefined}
-        loading={loading}
-        unavailableHint="No freshness signal"
-      />
-      <RegistryKpi
-        label="Expiring Evidence"
-        icon={Clock4}
+        label="Needs Review"
+        icon={FileClock}
         accent="amber"
-        value={expiring}
-        caption={expiring != null ? "within 30 days" : undefined}
-        loading={loading}
-        unavailableHint="No freshness signal"
+        value={r ? r.needs_review_evidence_items : null}
+        caption={
+          r && r.needs_review_evidence_items > 0
+            ? "unreviewed evidence doesn't count toward audit readiness"
+            : r
+              ? "review queue clear"
+              : undefined
+        }
+        loading={readiness.isLoading}
+        unavailableHint="Readiness summary unavailable"
       />
       <RegistryKpi
-        label="Mapped Controls"
-        icon={Link2}
+        label="Expired"
+        icon={FileX2}
+        accent="red"
+        value={r ? r.expired_evidence_items : null}
+        caption={r && r.expired_evidence_items > 0 ? "recollect before the next audit window" : undefined}
+        loading={readiness.isLoading}
+        unavailableHint="Readiness summary unavailable"
+      />
+      <RegistryKpi
+        label="Controls Without Evidence"
+        icon={ShieldOff}
         accent="purple"
-        value={mapped}
-        caption={mapped != null ? "controls covered" : undefined}
-        loading={loading}
-        unavailableHint="No mappings"
-      />
-      <RegistryKpi
-        label="Audit Readiness"
-        icon={ClipboardCheck}
-        accent="teal"
-        value={audit}
-        suffix={audit != null ? "/100" : ""}
-        scoreToneFor={audit}
-        caption={audit != null ? (auditFromScores != null ? "audit posture" : "share of fresh") : undefined}
-        loading={loading && scores.isLoading}
-        unavailableHint="No score returned"
+        value={r ? r.controls_without_evidence : null}
+        caption={
+          r
+            ? r.controls_with_verified_evidence > 0
+              ? `${r.controls_with_verified_evidence} controls fully evidenced`
+              : "no control has verified evidence yet"
+            : undefined
+        }
+        loading={readiness.isLoading}
+        unavailableHint="Readiness summary unavailable"
       />
     </div>
   );

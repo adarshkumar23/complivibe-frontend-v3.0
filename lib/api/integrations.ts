@@ -1,58 +1,80 @@
 import { apiFetch, ApiError } from "@/lib/api/client";
 
-/** Try endpoints in order; advance only on 404/405/501, otherwise surface the error. */
-async function tryEndpoints(paths: string[], init?: RequestInit): Promise<unknown> {
-  let lastError: unknown;
-  for (const path of paths) {
-    try {
-      return await apiFetch<unknown>(path, init);
-    } catch (err) {
-      lastError = err;
-      if (err instanceof ApiError && [404, 405, 501].includes(err.status)) continue;
-      throw err;
-    }
-  }
-  throw lastError;
-}
-
-/** Confirmed integrations endpoint (also used by Settings). */
-export function getIntegrations() {
-  return apiFetch<unknown>("/api/v1/integrations");
-}
-
-export function getIntegrationStatus() {
-  return tryEndpoints(["/api/v1/integrations/status"]);
-}
-
-export function getSyncLogs() {
-  return tryEndpoints(["/api/v1/integrations/sync-logs"]);
-}
-
-export function getStorageStatus() {
-  return tryEndpoints(["/api/v1/storage/status", "/api/v1/storage/stats"]);
-}
-
-/** Per-provider summaries — canonical paths only. Each degrades to "not configured" on 404. */
-export function getGithubSummary() {
-  return tryEndpoints(["/api/v1/integrations/github/summary", "/api/v1/integrations/github/repos"]);
-}
-export function getSlackSummary() {
-  return tryEndpoints(["/api/v1/integrations/slack/configured", "/api/v1/integrations/slack/messages"]);
-}
-export function getJiraSummary() {
-  return tryEndpoints(["/api/v1/integrations/jira/tickets"]);
-}
-export function getGoogleSummary() {
-  return tryEndpoints(["/api/v1/integrations/google/workspace/summary", "/api/v1/integrations/google/drive/files"]);
-}
-export function getMicrosoftSummary() {
-  return tryEndpoints(["/api/v1/integrations/microsoft/summary"]);
-}
-export function getAwsSummary() {
-  return tryEndpoints(["/api/v1/integrations/aws/summary"]);
-}
-
 /**
- * NOTE: No integration write/action endpoint (connect/configure/re-sync/disconnect) is confirmed.
- * Action buttons in the UI are disabled — no mutations are issued.
+ * Integrations API — typed against the live backend schema
+ * (/api/v1/connectors/*, /api/v1/issue-sync/*, /api/v1/siem/config, /api/v1/email-config).
  */
+
+// ── GET /api/v1/connectors/catalog ──────────────────────────────────────────
+export type ConnectorCatalogEntry = {
+  id: string;
+  name: string;
+  category: string | null;
+  description: string | null;
+  config_schema: Record<string, unknown> | null;
+  enabled: boolean;
+  created_at: string | null;
+};
+
+export function getConnectorCatalog() {
+  return apiFetch<ConnectorCatalogEntry[]>("/api/v1/connectors/catalog");
+}
+
+// ── GET /api/v1/connectors/enabled ──────────────────────────────────────────
+export type EnabledConnector = {
+  id: string;
+  connector_id?: string | null;
+  name?: string | null;
+  status?: string | null;
+  [key: string]: unknown;
+};
+
+export function getEnabledConnectors() {
+  return apiFetch<EnabledConnector[]>("/api/v1/connectors/enabled");
+}
+
+// ── GET /api/v1/issue-sync/connections ──────────────────────────────────────
+export type IssueSyncConnection = {
+  id: string;
+  provider?: string | null;
+  status?: string | null;
+  created_at?: string | null;
+  [key: string]: unknown;
+};
+
+export function getIssueSyncConnections() {
+  return apiFetch<IssueSyncConnection[]>("/api/v1/issue-sync/connections");
+}
+
+// ── GET /api/v1/siem/config (404 = not configured) ──────────────────────────
+export type SiemConfig = {
+  id: string;
+  provider?: string | null;
+  is_active?: boolean | null;
+  [key: string]: unknown;
+};
+
+export async function getSiemConfig(): Promise<SiemConfig | null> {
+  try {
+    return await apiFetch<SiemConfig>("/api/v1/siem/config");
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+// ── GET /api/v1/email-config ────────────────────────────────────────────────
+export type EmailConfig = {
+  id: string | null;
+  use_platform_ses: boolean;
+  aws_region: string | null;
+  from_email: string | null;
+  from_name: string | null;
+  is_active: boolean;
+  sent_today: number;
+  daily_send_limit: number;
+};
+
+export function getEmailConfig() {
+  return apiFetch<EmailConfig>("/api/v1/email-config");
+}

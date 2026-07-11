@@ -1,18 +1,20 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getAiSystems, getAiGovernanceSummary, getGovernanceScore } from "@/lib/api/ai-systems";
-
-function useEndpoint<T = unknown>(key: string, fn: () => Promise<T>) {
-  return useQuery({ queryKey: [key], queryFn: fn });
-}
+import {
+  getAiSystems,
+  getAiSystemsSummary,
+  getAiGovernanceDashboard,
+  getAiGovernanceScorecard
+} from "@/lib/api/ai-systems";
 
 export function useAiSystems() {
-  const systems = useEndpoint("ai-systems", getAiSystems);
-  const governanceSummary = useEndpoint("ai-governance-summary", getAiGovernanceSummary);
-  const governanceScore = useEndpoint("governance-score", getGovernanceScore);
+  const systems = useQuery({ queryKey: ["ai-systems"], queryFn: () => getAiSystems() });
+  const summary = useQuery({ queryKey: ["ai-systems-summary"], queryFn: getAiSystemsSummary });
+  const dashboard = useQuery({ queryKey: ["ai-gov-dashboard"], queryFn: getAiGovernanceDashboard });
+  const scorecard = useQuery({ queryKey: ["ai-gov-scorecard"], queryFn: getAiGovernanceScorecard });
 
-  return { systems, governanceSummary, governanceScore };
+  return { systems, summary, dashboard, scorecard };
 }
 
 export type AiSystemsData = ReturnType<typeof useAiSystems>;

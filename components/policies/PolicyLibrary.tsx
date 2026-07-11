@@ -1,153 +1,138 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, ScrollText, FileText, Eye, FileSearch, RefreshCw, Download, FileCheck2, ShieldCheck } from "lucide-react";
+import { Search, Library, FileText } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { IconTile } from "@/components/ui/IconTile";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
-import { normalizePolicies, statusTone } from "@/lib/api/policy-normalizers";
 import { formatDate } from "@/lib/utils/format";
 import type { PoliciesData } from "@/lib/hooks/usePolicies";
 
-function distinct(values: (string | null)[]): string[] {
-  return [...new Set(values.filter((v): v is string => Boolean(v)))];
+function statusTone(status: string): "good" | "warn" | "bad" | "neutral" | "info" {
+  switch (status) {
+    case "approved":
+      return "good";
+    case "under_review":
+      return "info";
+    case "draft":
+      return "warn";
+    case "deprecated":
+    case "archived":
+      return "neutral";
+    default:
+      return "neutral";
+  }
 }
 
-/** Actions with no backend endpoint are disabled — never faked. */
-function DisabledAction({ icon: Icon, label }: { icon: typeof Eye; label: string }) {
-  return (
-    <button
-      type="button"
-      disabled
-      title="Action endpoint not available on this backend yet"
-      className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-full bg-white/55 px-3 py-1.5 text-[11px] font-semibold text-cv-mist ring-1 ring-white/60"
-    >
-      <Icon size={12} /> {label}
-    </button>
-  );
-}
-
-function Count({ icon: Icon, value }: { icon: typeof FileCheck2; value: number | null }) {
-  if (value == null) return null;
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold text-cv-slate ring-1 ring-slate-200/70">
-      <Icon size={11} /> {value}
-    </span>
-  );
+/** Days until review is due; negative = overdue. */
+function reviewDays(reviewDue: string | null): number | null {
+  if (!reviewDue) return null;
+  return Math.ceil((new Date(reviewDue).getTime() - Date.now()) / 86400000);
 }
 
 export function PolicyLibrary({ data }: { data: PoliciesData }) {
   const { policies } = data;
-  const list = useMemo(() => normalizePolicies(policies.data), [policies.data]);
+  const list = useMemo(() => policies.data ?? [], [policies.data]);
 
   const [query, setQuery] = useState("");
-  const [framework, setFramework] = useState("all");
   const [status, setStatus] = useState("all");
 
-  const frameworks = useMemo(() => distinct(list.map((p) => p.framework)), [list]);
-  const statuses = useMemo(() => distinct(list.map((p) => p.status)), [list]);
+  const statuses = useMemo(() => [...new Set(list.map((p) => p.status))], [list]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return list.filter((p) => {
-      if (framework !== "all" && p.framework !== framework) return false;
       if (status !== "all" && p.status !== status) return false;
       if (!q) return true;
-      return [p.name, p.framework, p.category, p.owner].filter(Boolean).some((s) => (s as string).toLowerCase().includes(q));
+      return [p.title, p.description, p.policy_type].filter(Boolean).some((v) => (v as string).toLowerCase().includes(q));
     });
-  }, [list, query, framework, status]);
-
-  const selectCls = "cv-ring-focus rounded-full bg-white/60 px-3.5 py-2 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 focus:outline-none";
-
-  const Select = ({ value, onChange, allLabel, options }: { value: string; onChange: (v: string) => void; allLabel: string; options: string[] }) =>
-    options.length === 0 ? null : (
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={selectCls}>
-        <option value="all">{allLabel}</option>
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
-      </select>
-    );
+  }, [list, query, status]);
 
   return (
     <SectionCard
       title="Policy Library"
-      subtitle="Governance policies & review cycles"
-      icon={ScrollText}
+      subtitle="Governance policies with review cycles"
+      icon={Library}
       accent="blue"
-      action={policies.isSuccess ? <span className="rounded-full bg-cv-brand-soft px-2.5 py-1 text-[11px] font-semibold text-cv-blue ring-1 ring-white/60">{list.length} total</span> : null}
+      className="h-full"
+      action={
+        policies.isSuccess ? (
+          <span className="rounded-full bg-cv-brand-soft px-2.5 py-1 text-[11px] font-semibold text-cv-blue ring-1 ring-white/60">
+            {list.length} policies
+          </span>
+        ) : null
+      }
     >
       {policies.isLoading ? (
         <SkeletonRows rows={6} />
       ) : policies.isError ? (
-        <ErrorState title="Policy library unavailable" description="The policies endpoint did not respond. Framework mapping may still be available." onRetry={() => policies.refetch()} />
+        <ErrorState title="Unable to load policies" onRetry={() => policies.refetch()} />
       ) : list.length === 0 ? (
-        <EmptyState icon={FileText} title="No policies returned" description="Governance policies, owners, versions, and review dates will appear here once the backend provides them." />
+        <EmptyState
+          icon={FileText}
+          title="No policies yet"
+          description="Create your first governance policy or start from a template."
+        />
       ) : (
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2.5 rounded-full bg-white/60 px-4 py-2.5 ring-1 ring-white/70 focus-within:ring-cv-blue/40">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex flex-1 items-center gap-2.5 rounded-full bg-white/60 px-4 py-2.5 ring-1 ring-white/70 focus-within:ring-cv-blue/40">
               <Search size={16} className="shrink-0 text-cv-mist" />
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search policies, frameworks, owners..." className="min-w-0 flex-1 bg-transparent text-sm text-cv-ink placeholder:text-cv-mist focus:outline-none" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search policies…"
+                className="min-w-0 flex-1 bg-transparent text-sm text-cv-ink placeholder:text-cv-mist focus:outline-none"
+              />
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Select value={framework} onChange={setFramework} allLabel="All frameworks" options={frameworks} />
-              <Select value={status} onChange={setStatus} allLabel="All statuses" options={statuses} />
-            </div>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="cv-ring-focus rounded-full bg-white/60 px-3.5 py-2 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 focus:outline-none"
+            >
+              <option value="all">All statuses</option>
+              {statuses.map((s) => (
+                <option key={s} value={s}>
+                  {s.replaceAll("_", " ")}
+                </option>
+              ))}
+            </select>
           </div>
 
           {filtered.length === 0 ? (
-            <EmptyState compact icon={Search} title="No policies match your filters" description="Try adjusting search or filters." />
+            <EmptyState compact icon={Search} title="No policies match" description="Try adjusting search or filters." />
           ) : (
-            <ul className="max-h-[560px] space-y-2.5 overflow-y-auto pr-1">
-              {filtered.map((p) => (
-                <li key={p.id} className="rounded-2xl bg-white/55 px-3.5 py-3 ring-1 ring-white/70 transition hover:bg-white/85">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <IconTile icon={FileText} accent="blue" size="sm" />
+            <ul className="space-y-2.5">
+              {filtered.map((p) => {
+                const days = reviewDays(p.review_due_date);
+                return (
+                  <li key={p.id} className="rounded-2xl bg-white/55 px-3.5 py-3 ring-1 ring-white/70 transition hover:bg-white/85">
+                    <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="truncate text-[14px] font-semibold text-cv-ink">
-                          {p.name}
-                          {p.version ? <span className="ml-2 text-[11px] font-medium text-cv-mist">v{p.version}</span> : null}
+                        <p className="text-[13px] font-semibold leading-snug text-cv-ink">
+                          {p.title}
+                          {p.version ? <span className="ml-1.5 text-[11px] font-medium text-cv-mist">v{p.version}</span> : null}
                         </p>
-                        <p className="truncate text-[11px] text-cv-slate">
-                          {[p.framework || p.category, p.owner, p.lastUpdated ? `Updated ${formatDate(p.lastUpdated)}` : null].filter(Boolean).join(" · ") || "No metadata"}
+                        <p className="mt-0.5 text-[11px] text-cv-slate">
+                          {p.policy_type.replaceAll("_", " ")}
+                          {p.effective_date ? ` · effective ${formatDate(p.effective_date) ?? p.effective_date}` : ""}
+                          {days != null
+                            ? days < 0
+                              ? ` · review overdue by ${Math.abs(days)}d`
+                              : ` · review due in ${days}d`
+                            : ""}
                         </p>
                       </div>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        {days != null && days < 0 ? <StatusBadge label="Review overdue" tone="bad" /> : null}
+                        <StatusBadge label={p.status.replaceAll("_", " ")} tone={statusTone(p.status)} />
+                      </div>
                     </div>
-                    {p.status ? <StatusBadge label={p.status} tone={statusTone(p.status)} /> : <StatusBadge label="Status unknown" tone="neutral" />}
-                  </div>
-
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 pl-12 text-[11px] text-cv-mist">
-                    <span>{p.nextReview ? `Next review ${formatDate(p.nextReview)}` : "Next review —"}</span>
-                    <Count icon={FileCheck2} value={p.evidenceCount} />
-                    <Count icon={ShieldCheck} value={p.controlCount} />
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap gap-2 border-t border-white/50 pt-3 pl-12">
-                    <DisabledAction icon={Eye} label="View" />
-                    <DisabledAction icon={FileSearch} label="Review" />
-                    <DisabledAction icon={RefreshCw} label="Request update" />
-                    {p.url ? (
-                      <a
-                        href={p.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3 py-1.5 text-[11px] font-bold text-white shadow-button transition hover:-translate-y-0.5"
-                      >
-                        <Download size={12} /> Export
-                      </a>
-                    ) : (
-                      <DisabledAction icon={Download} label="Export" />
-                    )}
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

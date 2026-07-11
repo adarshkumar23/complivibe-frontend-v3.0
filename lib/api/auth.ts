@@ -25,3 +25,14 @@ export function login(input: LoginInput) {
 export function extractToken(payload: LoginResponse): string | null {
   return payload.access_token || payload.token || payload.data?.access_token || payload.data?.token || null;
 }
+
+export type MyOrganization = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+/** GET /api/v1/organizations/me returns the orgs the current user belongs to. */
+export function getMyOrganizations() {
+  return apiFetch<MyOrganization[]>("/api/v1/organizations/me");
+}

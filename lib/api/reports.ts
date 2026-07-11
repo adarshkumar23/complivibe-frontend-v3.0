@@ -1,37 +1,72 @@
-import { apiFetch, ApiError } from "@/lib/api/client";
-
-export function getReports() {
-  return apiFetch<unknown>("/api/v1/reports?limit=100");
-}
+import { apiFetch } from "@/lib/api/client";
 
 /**
- * Report templates are optional. This backend has no `/reports/templates` route — the path resolves
- * against `/reports/{report_id}` and is rejected as an invalid UUID (422). Treat that (and 404/405/501)
- * as "no templates" so the UI shows a graceful empty state instead of a scary error.
+ * Reports API — typed against the live backend schema (/api/v1/reports*).
  */
-export async function getReportTemplates() {
-  try {
-    return await apiFetch<unknown>("/api/v1/reports/templates");
-  } catch (err) {
-    if (err instanceof ApiError && [404, 405, 422, 501].includes(err.status)) return { items: [] };
-    throw err;
-  }
-}
 
-export type GenerateReportInput = {
-  type?: string | null;
-  framework?: string | null;
-  ai_system?: string | null;
-  date_from?: string | null;
-  date_to?: string | null;
-  include_evidence?: boolean;
-  include_risks?: boolean;
-  include_incidents?: boolean;
+// ── GET /api/v1/reports ─────────────────────────────────────────────────────
+export type Report = {
+  id: string;
+  title?: string | null;
+  report_type?: string | null;
+  status?: string | null;
+  framework_id?: string | null;
+  created_at?: string | null;
+  [key: string]: unknown;
 };
 
-export function generateReport(input: GenerateReportInput) {
-  return apiFetch<unknown>("/api/v1/reports/generate", {
-    method: "POST",
-    body: JSON.stringify(input)
-  });
+export function getReports(params = "") {
+  return apiFetch<{ reports: Report[] }>(`/api/v1/reports${params}`);
+}
+
+// ── GET /api/v1/reports/summary ─────────────────────────────────────────────
+export type ReportsSummary = {
+  total_reports: number;
+  generated_reports: number;
+  archived_reports: number;
+  reports_last_30d: number;
+  stale_reports_30d: number;
+  archived_ratio: number;
+  context_flags: string[] | null;
+  latest_executive_summary_at: string | null;
+  latest_framework_readiness_at: string | null;
+  latest_risk_posture_at: string | null;
+};
+
+export function getReportsSummary() {
+  return apiFetch<ReportsSummary>("/api/v1/reports/summary");
+}
+
+// ── GET /api/v1/reports/regulatory/available-types ──────────────────────────
+export type RegulatoryReportType = {
+  report_type: string;
+  description: string;
+};
+
+export function getRegulatoryReportTypes() {
+  return apiFetch<{ report_types: RegulatoryReportType[] }>("/api/v1/reports/regulatory/available-types");
+}
+
+// ── POST /api/v1/reports/generate ───────────────────────────────────────────
+export function generateReport(body: {
+  report_type: string;
+  title?: string;
+  description?: string;
+  framework_id?: string;
+}) {
+  return apiFetch<Report>("/api/v1/reports/generate", { method: "POST", body: JSON.stringify(body) });
+}
+
+// ── GET /api/v1/compliance/board-scorecard ──────────────────────────────────
+export type BoardScorecardSnapshot = {
+  id: string;
+  snapshot_label: string | null;
+  overall_compliance_score: number | null;
+  created_at: string;
+};
+
+export function getBoardScorecards(params = "?page_size=10") {
+  return apiFetch<{ items: BoardScorecardSnapshot[]; total: number }>(
+    `/api/v1/compliance/board-scorecard${params}`
+  );
 }

@@ -8,12 +8,16 @@ async function handler(request: NextRequest, { params }: { params: Promise<{ pat
   const headers = new Headers();
   const auth = request.headers.get("authorization");
   const contentType = request.headers.get("content-type");
+  const orgId = request.headers.get("x-organization-id");
 
   if (auth) {
     headers.set("authorization", auth);
   }
   if (contentType) {
     headers.set("content-type", contentType);
+  }
+  if (orgId) {
+    headers.set("x-organization-id", orgId);
   }
 
   const init: RequestInit = {

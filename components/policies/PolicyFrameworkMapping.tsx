@@ -1,52 +1,48 @@
 "use client";
 
-import { Layers, LayoutGrid } from "lucide-react";
+import { PieChart } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
-import { normalizeFrameworks, normalizeObligations } from "@/lib/api/compliance-normalizers";
 import type { PoliciesData } from "@/lib/hooks/usePolicies";
 
+const barColors = ["#3B82F6", "#8B5CF6", "#14B8A6", "#10B981", "#F59E0B", "#06B6D4", "#EF4444"];
+
+/** Policy-type mix from GET /api/v1/compliance/policies/summary (by_policy_type). */
 export function PolicyFrameworkMapping({ data }: { data: PoliciesData }) {
-  const { frameworks, obligations } = data;
-  const fws = normalizeFrameworks(frameworks.data);
-
-  // Real obligation→framework counts from backend obligation records.
-  const obligationCounts = new Map<string, number>();
-  for (const o of normalizeObligations(obligations.data)) {
-    if (!o.framework) continue;
-    obligationCounts.set(o.framework, (obligationCounts.get(o.framework) ?? 0) + 1);
-  }
-
-  const loading = frameworks.isLoading && obligations.isLoading;
-  const errored = frameworks.isError && obligations.isError;
+  const { summary } = data;
+  const byType = summary.data?.by_policy_type ?? {};
+  const entries = Object.entries(byType).sort((a, b) => b[1] - a[1]);
+  const total = entries.reduce((s, [, n]) => s + n, 0);
 
   return (
-    <SectionCard title="Framework Mapping" subtitle="Regulatory frameworks & mapped obligations" icon={LayoutGrid} accent="purple" className="h-full">
-      {loading ? (
-        <SkeletonRows rows={5} />
-      ) : errored ? (
-        <ErrorState compact title="Unable to load mapping" onRetry={() => frameworks.refetch()} />
-      ) : fws.length === 0 ? (
-        <EmptyState icon={Layers} title="Policy-to-framework mapping unavailable from backend." description="Frameworks and their mapped obligations will appear here once the backend returns them." />
+    <SectionCard title="Policy Mix" subtitle="Coverage by policy domain" icon={PieChart} accent="teal">
+      {summary.isLoading ? (
+        <SkeletonRows rows={4} />
+      ) : summary.isError ? (
+        <ErrorState compact title="Unable to load policy mix" onRetry={() => summary.refetch()} />
+      ) : entries.length === 0 ? (
+        <EmptyState compact icon={PieChart} title="No policies yet" description="Policy domain coverage will appear here." />
       ) : (
-        <ul className="max-h-[360px] space-y-2.5 overflow-y-auto pr-1">
-          {fws.slice(0, 10).map((f) => {
-            const obCount = obligationCounts.get(f.name) ?? null;
-            return (
-              <li key={f.id} className="flex items-center justify-between gap-3 rounded-xl bg-white/55 px-3 py-2.5 ring-1 ring-white/60">
-                <div className="min-w-0">
-                  <p className="truncate text-[13px] font-semibold text-cv-ink">{f.name}</p>
-                  <p className="truncate text-[11px] text-cv-slate">
-                    {[obCount != null ? `${obCount} obligations` : null, f.controlsTotal != null ? `${f.controlsTotal} controls` : null].filter(Boolean).join(" · ") || "No mapping detail"}
-                  </p>
-                </div>
-                {f.coverage != null ? <StatusBadge label={`${Math.round(f.coverage)}%`} tone="info" /> : f.status ? <StatusBadge label={f.status} tone="neutral" /> : null}
-              </li>
-            );
-          })}
+        <ul className="space-y-3">
+          {entries.map(([type, count], i) => (
+            <li key={type}>
+              <div className="mb-1 flex items-center justify-between text-[12px]">
+                <span className="font-semibold text-cv-ink">{type.replaceAll("_", " ")}</span>
+                <span className="font-medium text-cv-slate">{count}</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-400/12">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${total > 0 ? Math.max(4, (count / total) * 100) : 0}%`,
+                    background: barColors[i % barColors.length]
+                  }}
+                />
+              </div>
+            </li>
+          ))}
         </ul>
       )}
     </SectionCard>

@@ -3,12 +3,9 @@
 import { motion, type Variants } from "framer-motion";
 import { ExecutiveHeader } from "@/components/executive/ExecutiveHeader";
 import { ExecutiveKpis } from "@/components/executive/ExecutiveKpis";
-import { ExecutiveActions } from "@/components/executive/ExecutiveActions";
-import { ExecutiveBrief } from "@/components/executive/ExecutiveBrief";
-import { ReadinessByArea } from "@/components/executive/ReadinessByArea";
 import { TopExecutiveRisks } from "@/components/executive/TopExecutiveRisks";
-import { UpcomingDeadlines } from "@/components/executive/UpcomingDeadlines";
 import { BoardSummaryCards } from "@/components/executive/BoardSummaryCards";
+import { UpcomingDeadlines } from "@/components/executive/UpcomingDeadlines";
 import { useExecutiveSummary } from "@/lib/hooks/useExecutiveSummary";
 
 const fade: Variants = {
@@ -29,26 +26,10 @@ export default function ExecutivePage() {
         <ExecutiveKpis data={data} />
       </motion.div>
 
-      <motion.div variants={fade} custom={2} initial="hidden" animate="show">
-        <ExecutiveActions />
-      </motion.div>
-
-      <motion.div variants={fade} custom={3} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <ExecutiveBrief data={data} />
-        </div>
-        <div>
-          <ReadinessByArea data={data} />
-        </div>
-      </motion.div>
-
-      <motion.div variants={fade} custom={4} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <TopExecutiveRisks data={data} />
-        <UpcomingDeadlines data={data} />
-      </motion.div>
-
-      <motion.div variants={fade} custom={5} initial="hidden" animate="show">
         <BoardSummaryCards data={data} />
+        <UpcomingDeadlines data={data} />
       </motion.div>
     </div>
   );

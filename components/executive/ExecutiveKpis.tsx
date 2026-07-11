@@ -1,30 +1,54 @@
 "use client";
 
-import { ShieldCheck, FileCheck2, TriangleAlert, CalendarClock } from "lucide-react";
+import { Gauge, LayoutGrid, TriangleAlert, CalendarClock } from "lucide-react";
 import { RegistryKpi } from "@/components/ui/RegistryKpi";
-import { normalizeScoreComponents } from "@/lib/api/executive-normalizers";
-import { riskImpact } from "@/lib/api/score-explainer-normalizers";
-import { normalizeRegulatoryDeadlines } from "@/lib/api/regulatory-normalizers";
-import type { ExecutiveSummaryData } from "@/lib/hooks/useExecutiveSummary";
+import type { ExecutiveData } from "@/lib/hooks/useExecutiveSummary";
 
-export function ExecutiveKpis({ data }: { data: ExecutiveSummaryData }) {
-  const { executive, scores, unified, overview, complianceScore, governance, aiGovernance, risks, regulatory, scoreLoading } = data;
-  const c = normalizeScoreComponents(executive.data, scores.data, unified.data, overview.data, complianceScore.data, governance.data, aiGovernance.data);
+export function ExecutiveKpis({ data }: { data: ExecutiveData }) {
+  const { summary, posture } = data;
+  const s = summary.data;
+  const p = posture.data;
 
-  const govReadiness = c.governance;
-  const evidenceCov = c.evidence;
-
-  const rImpact = risks.isSuccess ? riskImpact(risks.data) : null;
-  const openRisk = rImpact ? rImpact.highCritical : null;
-
-  const upcoming = regulatory.isSuccess ? normalizeRegulatoryDeadlines(regulatory.data).filter((d) => d.daysRemaining != null && d.daysRemaining >= 0).length : null;
+  const criticalRisks = p ? p.risks.by_severity.critical + p.risks.by_severity.high : null;
 
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <RegistryKpi label="Governance Readiness" icon={ShieldCheck} accent="purple" value={govReadiness} suffix={govReadiness != null ? "/100" : ""} scoreToneFor={govReadiness} caption={govReadiness != null ? "backend score" : undefined} loading={scoreLoading} unavailableHint="No score returned" />
-      <RegistryKpi label="Evidence Coverage" icon={FileCheck2} accent="green" value={evidenceCov} suffix={evidenceCov != null ? "/100" : ""} scoreToneFor={evidenceCov} caption={evidenceCov != null ? "coverage score" : undefined} loading={scoreLoading} unavailableHint="No coverage score" />
-      <RegistryKpi label="Open Risk Exposure" icon={TriangleAlert} accent="red" value={openRisk} caption={openRisk != null ? "high/critical risks" : undefined} loading={risks.isLoading} unavailableHint="No risk severity" />
-      <RegistryKpi label="Upcoming Deadlines" icon={CalendarClock} accent="amber" value={upcoming} caption={upcoming != null ? "on the horizon" : undefined} loading={regulatory.isLoading} unavailableHint="No deadline data" />
+      <RegistryKpi
+        label="Compliance Score"
+        icon={Gauge}
+        accent="blue"
+        value={s?.current_score ?? null}
+        caption={s && s.current_score == null ? "no score snapshot computed yet" : s?.current_score_grade ? `grade ${s.current_score_grade}` : undefined}
+        loading={summary.isLoading}
+        unavailableHint="Score not yet computed"
+      />
+      <RegistryKpi
+        label="Active Frameworks"
+        icon={LayoutGrid}
+        accent="purple"
+        value={p ? p.active_frameworks.count : null}
+        caption={p ? `${p.obligations.applicable} applicable obligations` : undefined}
+        loading={posture.isLoading}
+        unavailableHint="Posture summary unavailable"
+      />
+      <RegistryKpi
+        label="Critical & High Risks"
+        icon={TriangleAlert}
+        accent="red"
+        value={criticalRisks}
+        caption={p ? `${p.risks.total} total risks · ${p.risks.open_treatments} open treatments` : undefined}
+        loading={posture.isLoading}
+        unavailableHint="Posture summary unavailable"
+      />
+      <RegistryKpi
+        label="Deadlines ≤ 30d"
+        icon={CalendarClock}
+        accent="amber"
+        value={p ? p.deadlines.upcoming_30_days : null}
+        caption={p && p.deadlines.overdue > 0 ? `${p.deadlines.overdue} already overdue` : undefined}
+        loading={posture.isLoading}
+        unavailableHint="Posture summary unavailable"
+      />
     </div>
   );
 }

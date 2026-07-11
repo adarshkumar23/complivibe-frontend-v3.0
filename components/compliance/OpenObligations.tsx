@@ -7,29 +7,21 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
-import { normalizeObligations } from "@/lib/api/compliance-normalizers";
+import type { Severity } from "@/lib/api/types";
 import type { Compliance } from "@/lib/hooks/useCompliance";
 
-const OPEN_STATES = ["open", "pending", "in_progress", "in progress", "overdue", "todo", "not_started", "active"];
+const CLOSED = new Set(["resolved", "closed"]);
 
-function isOpen(status: string | null): boolean {
-  if (!status) return true;
-  const s = status.toLowerCase();
-  if (["compliant", "complete", "completed", "closed", "met", "done", "satisfied"].some((x) => s.includes(x)))
-    return false;
-  return OPEN_STATES.some((x) => s.includes(x)) || true;
-}
-
+/** Open compliance issues from GET /api/v1/compliance/issues. */
 export function OpenObligations({ data }: { data: Compliance }) {
-  const { obligations } = data;
-  const all = normalizeObligations(obligations.data);
-  const open = all.filter((o) => isOpen(o.status));
+  const { issues } = data;
+  const open = (issues.data ?? []).filter((i) => !CLOSED.has(i.status));
   const shown = open.slice(0, 5);
 
   return (
     <SectionCard
-      title="Open Obligations"
-      subtitle="Requirements awaiting action"
+      title="Open Issues"
+      subtitle="Compliance issues awaiting resolution"
       icon={ListChecks}
       accent="amber"
       action={
@@ -40,34 +32,39 @@ export function OpenObligations({ data }: { data: Compliance }) {
         ) : null
       }
     >
-      {obligations.isLoading ? (
+      {issues.isLoading ? (
         <SkeletonRows rows={4} />
-      ) : obligations.isError ? (
-        <ErrorState compact title="Unable to load obligations" onRetry={() => obligations.refetch()} />
+      ) : issues.isError ? (
+        <ErrorState compact title="Unable to load issues" onRetry={() => issues.refetch()} />
       ) : shown.length === 0 ? (
         <EmptyState
           compact
           icon={CheckCircle2}
-          title="No open obligations"
-          description="All tracked obligations are satisfied or none have been registered yet."
+          title="No open issues"
+          description="All tracked compliance issues are resolved, or none have been raised yet."
         />
       ) : (
         <ul className="space-y-2.5">
-          {shown.map((o) => (
-            <li key={o.id} className="rounded-xl bg-white/50 px-3 py-2.5 ring-1 ring-white/60">
+          {shown.map((issue) => (
+            <li key={issue.id} className="rounded-xl bg-white/50 px-3 py-2.5 ring-1 ring-white/60">
               <div className="flex items-start justify-between gap-3">
-                <p className="line-clamp-1 text-[13px] font-semibold text-cv-ink">{o.title}</p>
-                {o.severity !== "info" ? (
-                  <SeverityBadge severity={o.severity} />
-                ) : o.status ? (
-                  <StatusBadge label={o.status} tone="warn" />
-                ) : null}
+                <p className="line-clamp-1 text-[13px] font-semibold text-cv-ink">{issue.title}</p>
+                <SeverityBadge severity={issue.severity as Severity} />
               </div>
-              {o.framework ? <p className="mt-0.5 text-[11px] text-cv-slate">{o.framework}</p> : null}
+              <p className="mt-0.5 text-[11px] text-cv-slate">
+                {issue.issue_type.replaceAll("_", " ")}
+                {issue.assigned_to ? "" : " · unassigned"}
+                {issue.status !== "open" ? ` · ${issue.status.replaceAll("_", " ")}` : ""}
+              </p>
             </li>
           ))}
         </ul>
       )}
+      {!issues.isLoading && !issues.isError && open.length > 0 && shown.length < open.length ? (
+        <p className="mt-3 text-[11px] font-medium text-cv-mist">
+          Showing {shown.length} of {open.length} open issues
+        </p>
+      ) : null}
     </SectionCard>
   );
 }
