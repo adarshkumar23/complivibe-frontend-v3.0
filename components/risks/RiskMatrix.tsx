@@ -5,68 +5,69 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
-import { normalizeRisks, buildRiskMatrix } from "@/lib/api/risk-normalizers";
+import { cn } from "@/lib/utils/cn";
 import type { RisksData } from "@/lib/hooks/useRisks";
 
-function cellColor(impact: number, likelihood: number): string {
-  const product = impact * likelihood; // 1..25
-  if (product <= 5) return "rgba(16,185,129,0.18)";
-  if (product <= 10) return "rgba(245,158,11,0.20)";
-  if (product <= 16) return "rgba(249,115,22,0.24)";
-  return "rgba(239,68,68,0.26)";
+/** Cell color scales with likelihood × impact zone, intensity with count. */
+function cellClasses(likelihood: number, impact: number, count: number): string {
+  const zone = likelihood * impact;
+  if (count === 0) return "bg-slate-400/8 text-cv-mist";
+  if (zone >= 15) return "bg-rose-500/75 text-white";
+  if (zone >= 8) return "bg-amber-400/80 text-white";
+  return "bg-emerald-500/70 text-white";
 }
 
+/** 5×5 likelihood/impact matrix from GET /api/v1/risks/heatmap. */
 export function RiskMatrix({ data }: { data: RisksData }) {
-  const { risks } = data;
-  const list = normalizeRisks(risks.data);
-  const matrix = buildRiskMatrix(list);
+  const { heatmap } = data;
+  const cells = heatmap.data?.matrix ?? [];
+  const total = cells.reduce((s, c) => s + c.count, 0);
+  const byKey = new Map(cells.map((c) => [`${c.likelihood}-${c.impact}`, c]));
 
   return (
-    <SectionCard title="Risk Matrix" subtitle="Impact × likelihood heatmap" icon={Grid3x3} accent="amber" className="h-full">
-      {risks.isLoading ? (
-        <LoadingSkeleton className="mx-auto h-48 w-full" />
-      ) : risks.isError ? (
-        <ErrorState compact title="Unable to load risks" onRetry={() => risks.refetch()} />
-      ) : !matrix.hasData ? (
-        <EmptyState
-          icon={Grid3x3}
-          title="Risk matrix unavailable"
-          description="Backend has not returned impact/likelihood fields yet."
-        />
+    <SectionCard
+      title="Risk Matrix"
+      subtitle="Likelihood × impact distribution"
+      icon={Grid3x3}
+      accent="red"
+      className="h-full"
+    >
+      {heatmap.isLoading ? (
+        <LoadingSkeleton className="h-52 w-full" />
+      ) : heatmap.isError ? (
+        <ErrorState compact title="Unable to load risk matrix" onRetry={() => heatmap.refetch()} />
+      ) : total === 0 ? (
+        <EmptyState compact icon={Grid3x3} title="No plotted risks" description="Risks with likelihood and impact scores will plot here." />
       ) : (
-        <div>
-          <div className="flex">
-            {/* y-axis label */}
-            <div className="flex w-5 items-center justify-center">
-              <span className="-rotate-90 whitespace-nowrap text-[10px] font-bold uppercase tracking-wide text-cv-mist">
-                Likelihood
-              </span>
-            </div>
-            <div className="flex-1">
-              <div className="grid grid-cols-5 gap-1.5">
-                {matrix.cells.map((row, r) =>
-                  row.map((count, c) => {
-                    const impact = c + 1;
-                    const likelihood = 5 - r;
-                    return (
-                      <div
-                        key={`${r}-${c}`}
-                        className="flex aspect-square items-center justify-center rounded-lg text-[13px] font-bold text-cv-ink ring-1 ring-white/50"
-                        style={{ background: cellColor(impact, likelihood) }}
-                        title={`Impact ${impact} × Likelihood ${likelihood}: ${count}`}
-                      >
-                        {count > 0 ? count : ""}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-              <p className="mt-2 text-center text-[10px] font-bold uppercase tracking-wide text-cv-mist">Impact →</p>
-            </div>
+        <div className="flex gap-2">
+          <div className="flex flex-col justify-between py-1 text-[10px] font-semibold text-cv-mist">
+            <span className="-rotate-90">High</span>
+            <span className="-rotate-90">Low</span>
           </div>
-          <p className="mt-3 text-center text-[11px] text-cv-slate">
-            {matrix.total} risk{matrix.total === 1 ? "" : "s"} plotted from real impact &amp; likelihood
-          </p>
+          <div className="flex-1">
+            <div className="grid grid-cols-5 gap-1.5">
+              {[5, 4, 3, 2, 1].map((likelihood) =>
+                [1, 2, 3, 4, 5].map((impact) => {
+                  const cell = byKey.get(`${likelihood}-${impact}`);
+                  const count = cell?.count ?? 0;
+                  const names = cell?.risks.map((r) => r.title).join(", ");
+                  return (
+                    <div
+                      key={`${likelihood}-${impact}`}
+                      title={names || `Likelihood ${likelihood}, impact ${impact}`}
+                      className={cn(
+                        "flex aspect-square items-center justify-center rounded-lg text-sm font-extrabold transition",
+                        cellClasses(likelihood, impact, count)
+                      )}
+                    >
+                      {count > 0 ? count : ""}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <p className="mt-1.5 text-center text-[10px] font-semibold text-cv-mist">Impact →</p>
+          </div>
         </div>
       )}
     </SectionCard>

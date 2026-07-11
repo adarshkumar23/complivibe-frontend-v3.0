@@ -4,19 +4,13 @@ import { motion, type Variants } from "framer-motion";
 import { ReportsHeader } from "@/components/reports/ReportsHeader";
 import { ReportKpis } from "@/components/reports/ReportKpis";
 import { ReportLibrary } from "@/components/reports/ReportLibrary";
-import { GenerateReport } from "@/components/reports/GenerateReport";
 import { ReportTemplates } from "@/components/reports/ReportTemplates";
-import { ReportReadiness } from "@/components/reports/ReportReadiness";
-import { RecentReportActivity } from "@/components/reports/RecentReportActivity";
+import { GenerateReport } from "@/components/reports/GenerateReport";
 import { useReports } from "@/lib/hooks/useReports";
 
 const fade: Variants = {
   hidden: { opacity: 0, y: 14 },
-  show: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.45, ease: "easeOut", delay: i * 0.06 }
-  })
+  show: (i: number) => ({ opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut", delay: i * 0.06 } })
 };
 
 export default function ReportsPage() {
@@ -32,31 +26,14 @@ export default function ReportsPage() {
         <ReportKpis data={data} />
       </motion.div>
 
-      <motion.div
-        variants={fade}
-        custom={2}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-1 gap-4 lg:grid-cols-3"
-      >
+      <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <ReportLibrary data={data} />
         </div>
-        <div>
-          <GenerateReport data={data} onGenerated={() => data.reports.refetch()} />
+        <div className="flex flex-col gap-4">
+          <GenerateReport data={data} />
+          <ReportTemplates data={data} />
         </div>
-      </motion.div>
-
-      <motion.div
-        variants={fade}
-        custom={3}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-1 gap-4 md:grid-cols-3"
-      >
-        <ReportTemplates data={data} />
-        <ReportReadiness data={data} />
-        <RecentReportActivity data={data} />
       </motion.div>
     </div>
   );

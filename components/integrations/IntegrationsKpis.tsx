@@ -1,30 +1,56 @@
 "use client";
 
-import { Plug, Boxes, RefreshCw, AlertTriangle } from "lucide-react";
+import { Plug, PlugZap, GitPullRequest, Mail } from "lucide-react";
 import { RegistryKpi } from "@/components/ui/RegistryKpi";
-import { normalizeIntegrations, isConnected, normalizeSyncLogs, syncFailed } from "@/lib/api/integration-normalizers";
 import type { IntegrationsData } from "@/lib/hooks/useIntegrations";
 
 export function IntegrationsKpis({ data }: { data: IntegrationsData }) {
-  const { integrations, syncLogs } = data;
-  const list = integrations.isSuccess ? normalizeIntegrations(integrations.data) : null;
-
-  // Connected only counts entries the backend marks connected/active/configured.
-  const anyStatus = list ? list.some((i) => i.status) : false;
-  const connected = list && anyStatus ? list.filter((i) => isConnected(i.status)).length : null;
-  const configured = list ? list.length : null;
-
-  const logs = syncLogs.isSuccess ? normalizeSyncLogs(syncLogs.data) : null;
-  const recentSyncs = logs ? logs.length : null;
-  const anyLogStatus = logs ? logs.some((l) => l.status) : false;
-  const failedSyncs = logs && anyLogStatus ? logs.filter((l) => syncFailed(l.status)).length : null;
+  const { catalog, enabled, issueSync, email } = data;
 
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <RegistryKpi label="Connected Integrations" icon={Plug} accent="green" value={connected} caption={connected != null ? "active connections" : undefined} loading={integrations.isLoading} unavailableHint="No status field" />
-      <RegistryKpi label="Configured Providers" icon={Boxes} accent="blue" value={configured} caption={configured != null ? "in registry" : undefined} loading={integrations.isLoading} unavailableHint="Integrations unavailable" />
-      <RegistryKpi label="Recent Syncs" icon={RefreshCw} accent="purple" value={recentSyncs} caption={recentSyncs != null ? "logged events" : undefined} loading={syncLogs.isLoading} unavailableHint="Sync logs unavailable" />
-      <RegistryKpi label="Failed Syncs" icon={AlertTriangle} accent="red" value={failedSyncs} caption={failedSyncs != null ? "need attention" : undefined} loading={syncLogs.isLoading} unavailableHint="No sync status" />
+      <RegistryKpi
+        label="Catalog Connectors"
+        icon={Plug}
+        accent="blue"
+        value={catalog.isSuccess ? catalog.data.length : null}
+        caption={catalog.isSuccess ? `${new Set(catalog.data.map((c) => c.category)).size} categories` : undefined}
+        loading={catalog.isLoading}
+        unavailableHint="Catalog unavailable"
+      />
+      <RegistryKpi
+        label="Enabled"
+        icon={PlugZap}
+        accent="green"
+        value={enabled.isSuccess ? enabled.data.length : null}
+        caption={enabled.isSuccess && enabled.data.length === 0 ? "no connectors enabled yet" : undefined}
+        loading={enabled.isLoading}
+        unavailableHint="Enabled connectors unavailable"
+      />
+      <RegistryKpi
+        label="Issue Sync Connections"
+        icon={GitPullRequest}
+        accent="purple"
+        value={issueSync.isSuccess ? issueSync.data.length : null}
+        caption={issueSync.isSuccess && issueSync.data.length === 0 ? "connect Jira/ServiceNow to sync issues" : undefined}
+        loading={issueSync.isLoading}
+        unavailableHint="Issue sync unavailable"
+      />
+      <RegistryKpi
+        label="Email Sends Today"
+        icon={Mail}
+        accent="teal"
+        value={email.data ? email.data.sent_today : null}
+        caption={
+          email.data
+            ? email.data.is_active
+              ? `limit ${email.data.daily_send_limit}/day`
+              : "email sending not active"
+            : undefined
+        }
+        loading={email.isLoading}
+        unavailableHint="Email config unavailable"
+      />
     </div>
   );
 }

@@ -2,30 +2,27 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
-  getPrivacySummary, getPrivacyRequests, getPrivacyRetention, getPrivacyDataMap,
-  getDataObsSensitive, getComplianceOverview, getComplianceEvidence, getRegulatoryDeadlines,
-  getPolicies, getTrustCenter, getCertifications
+  getConsentSummary,
+  getDsrRequests,
+  getDsrSummary,
+  getDpiaSummary,
+  getDpaSummary,
+  getRopaSummary,
+  getLawfulBasisSummary,
+  getCommonControlsSummary
 } from "@/lib/api/privacy";
 
-function useEndpoint<T = unknown>(key: string, fn: () => Promise<T>) {
-  return useQuery({ queryKey: [key], queryFn: fn, retry: false });
-}
-
 export function usePrivacy() {
-  const summary = useEndpoint("privacy-summary", getPrivacySummary);
-  const requests = useEndpoint("privacy-requests", getPrivacyRequests);
-  const retention = useEndpoint("privacy-retention", getPrivacyRetention);
-  const dataMap = useEndpoint("privacy-data-map", getPrivacyDataMap);
+  const consent = useQuery({ queryKey: ["consent-summary"], queryFn: getConsentSummary });
+  const dsr = useQuery({ queryKey: ["dsr-requests"], queryFn: () => getDsrRequests() });
+  const dsrSummary = useQuery({ queryKey: ["dsr-summary"], queryFn: getDsrSummary });
+  const dpias = useQuery({ queryKey: ["dpia-summary"], queryFn: getDpiaSummary });
+  const dpas = useQuery({ queryKey: ["dpa-summary"], queryFn: getDpaSummary });
+  const ropa = useQuery({ queryKey: ["ropa-summary"], queryFn: getRopaSummary });
+  const lawfulBasis = useQuery({ queryKey: ["lawful-basis-summary"], queryFn: getLawfulBasisSummary });
+  const commonControls = useQuery({ queryKey: ["common-controls-summary"], queryFn: getCommonControlsSummary });
 
-  const sensitive = useEndpoint("data-obs-sensitive", getDataObsSensitive);
-  const overview = useEndpoint("cmp-overview", getComplianceOverview);
-  const evidence = useEndpoint("cmp-evidence", getComplianceEvidence);
-  const regulatory = useEndpoint("regulatory-deadlines", getRegulatoryDeadlines);
-  const policies = useEndpoint("policies", getPolicies);
-  const trustCenter = useEndpoint("trust-center", getTrustCenter);
-  const certifications = useEndpoint("certifications", getCertifications);
-
-  return { summary, requests, retention, dataMap, sensitive, overview, evidence, regulatory, policies, trustCenter, certifications };
+  return { consent, dsr, dsrSummary, dpias, dpas, ropa, lawfulBasis, commonControls };
 }
 
 export type PrivacyData = ReturnType<typeof usePrivacy>;

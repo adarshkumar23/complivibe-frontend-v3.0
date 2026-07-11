@@ -5,9 +5,7 @@ import { IntegrationsHeader } from "@/components/integrations/IntegrationsHeader
 import { IntegrationsKpis } from "@/components/integrations/IntegrationsKpis";
 import { ProviderStatusGrid } from "@/components/integrations/ProviderStatusGrid";
 import { ConnectorHealthCard } from "@/components/integrations/ConnectorHealthCard";
-import { SyncLogsPanel } from "@/components/integrations/SyncLogsPanel";
 import { useIntegrations } from "@/lib/hooks/useIntegrations";
-import { useConnectorHealth } from "@/lib/hooks/useConnectorHealth";
 
 const fade: Variants = {
   hidden: { opacity: 0, y: 14 },
@@ -16,7 +14,6 @@ const fade: Variants = {
 
 export default function IntegrationsPage() {
   const data = useIntegrations();
-  const connectorHealth = useConnectorHealth();
 
   return (
     <div className="space-y-7">
@@ -28,16 +25,13 @@ export default function IntegrationsPage() {
         <IntegrationsKpis data={data} />
       </motion.div>
 
-      <motion.div variants={fade} custom={2} initial="hidden" animate="show">
-        <ConnectorHealthCard data={connectorHealth} />
-      </motion.div>
-
-      <motion.div variants={fade} custom={3} initial="hidden" animate="show">
-        <ProviderStatusGrid data={data} />
-      </motion.div>
-
-      <motion.div variants={fade} custom={4} initial="hidden" animate="show">
-        <SyncLogsPanel data={data} />
+      <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <ProviderStatusGrid data={data} />
+        </div>
+        <div>
+          <ConnectorHealthCard data={data} />
+        </div>
       </motion.div>
     </div>
   );

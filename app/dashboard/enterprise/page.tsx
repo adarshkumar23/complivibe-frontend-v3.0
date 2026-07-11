@@ -1,14 +1,8 @@
 "use client";
 
 import { motion, type Variants } from "framer-motion";
-import { EnterpriseHeader } from "@/components/enterprise/EnterpriseHeader";
-import { EnterpriseKpis } from "@/components/enterprise/EnterpriseKpis";
-import { EnterpriseActions } from "@/components/enterprise/EnterpriseActions";
-import { OrgProfilePanel } from "@/components/enterprise/OrgProfilePanel";
-import { TeamRbacPanel } from "@/components/enterprise/TeamRbacPanel";
-import { ApiKeysAccessPanel } from "@/components/enterprise/ApiKeysAccessPanel";
-import { ProductionReadinessPanel } from "@/components/enterprise/ProductionReadinessPanel";
-import { EnterpriseControlsPanel } from "@/components/enterprise/EnterpriseControlsPanel";
+import { Building2 } from "lucide-react";
+import { EnterpriseKpis, RecertificationPanel, AccessCertPanel } from "@/components/enterprise/EnterprisePanels";
 import { useEnterpriseControl } from "@/lib/hooks/useEnterpriseControl";
 
 const fade: Variants = {
@@ -22,33 +16,29 @@ export default function EnterprisePage() {
   return (
     <div className="space-y-7">
       <motion.div variants={fade} custom={0} initial="hidden" animate="show">
-        <EnterpriseHeader />
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2.5">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-cv-brand text-white shadow-tile">
+              <Building2 size={15} />
+            </span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-cv-blue">Org Governance</span>
+          </div>
+          <h1 className="text-[30px] font-extrabold leading-tight tracking-tight text-cv-ink sm:text-[34px]">
+            Enterprise Control
+          </h1>
+          <p className="max-w-2xl text-[15px] text-cv-slate">
+            Business units, access certification campaigns, recertification workload, and separation-of-duties findings.
+          </p>
+        </div>
       </motion.div>
 
       <motion.div variants={fade} custom={1} initial="hidden" animate="show">
         <EnterpriseKpis data={data} />
       </motion.div>
 
-      <motion.div variants={fade} custom={2} initial="hidden" animate="show">
-        <EnterpriseActions />
-      </motion.div>
-
-      <motion.div variants={fade} custom={3} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div>
-          <OrgProfilePanel data={data} />
-        </div>
-        <div className="lg:col-span-2">
-          <TeamRbacPanel data={data} />
-        </div>
-      </motion.div>
-
-      <motion.div variants={fade} custom={4} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ApiKeysAccessPanel data={data} />
-        <ProductionReadinessPanel data={data} />
-      </motion.div>
-
-      <motion.div variants={fade} custom={5} initial="hidden" animate="show">
-        <EnterpriseControlsPanel data={data} />
+      <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <RecertificationPanel data={data} />
+        <AccessCertPanel data={data} />
       </motion.div>
     </div>
   );

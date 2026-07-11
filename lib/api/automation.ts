@@ -1,34 +1,144 @@
-import { apiFetch, ApiError } from "@/lib/api/client";
-
-/** Try endpoints in order; advance only on 404/405/501, otherwise surface the error. */
-async function tryEndpoints(paths: string[], init?: RequestInit): Promise<unknown> {
-  let lastError: unknown;
-  for (const path of paths) {
-    try {
-      return await apiFetch<unknown>(path, init);
-    } catch (err) {
-      lastError = err;
-      if (err instanceof ApiError && [404, 405, 501].includes(err.status)) continue;
-      throw err;
-    }
-  }
-  throw lastError;
-}
-
-/** Automation rules — canonical paths only. Degrade to an unavailable state if the backend lacks them. */
-export function getAutomationRules() {
-  return tryEndpoints(["/api/v1/automation/rules", "/api/v1/automation"]);
-}
-
-export function getAutomationRuns() {
-  return tryEndpoints(["/api/v1/automation/runs", "/api/v1/jobs"]);
-}
-
-export function getAutomationStatus() {
-  return tryEndpoints(["/api/v1/automation/status", "/api/v1/data-obs/automation/status"]);
-}
+import { apiFetch } from "@/lib/api/client";
 
 /**
- * NOTE: No automation write/action endpoint (create/enable/disable/run-now) is confirmed.
- * Action buttons in the UI are disabled — no mutations are issued.
+ * Automation + Governance Autopilot API — typed against the live backend schema
+ * (/api/v1/automation/*, /api/v1/ai-governance/autopilot/*, /api/v1/governance/overrides*).
  */
+
+// ── GET /api/v1/automation/summary ──────────────────────────────────────────
+export type AutomationSummary = {
+  active_rules: number;
+  inactive_rules: number;
+  archived_rules: number;
+  executions_last_24h: number;
+  actions_created_last_24h: number;
+  duplicate_actions_skipped_last_24h: number;
+  failed_actions_last_24h: number;
+  execution_error_rate_last_24h: number;
+  stale_active_rules: number;
+  active_scheduled_rules_overdue: number;
+  context_flags: string[] | null;
+};
+
+export function getAutomationSummary() {
+  return apiFetch<AutomationSummary>("/api/v1/automation/summary");
+}
+
+// ── GET /api/v1/automation/rules ────────────────────────────────────────────
+export type AutomationRule = {
+  id: string;
+  name?: string | null;
+  title?: string | null;
+  status?: string | null;
+  trigger_type?: string | null;
+  action_type?: string | null;
+  created_at?: string | null;
+  [key: string]: unknown;
+};
+
+export function getAutomationRules() {
+  return apiFetch<AutomationRule[]>("/api/v1/automation/rules");
+}
+
+// ── GET /api/v1/automation/executions ───────────────────────────────────────
+export type AutomationExecution = {
+  id: string;
+  rule_id?: string | null;
+  status?: string | null;
+  started_at?: string | null;
+  finished_at?: string | null;
+  [key: string]: unknown;
+};
+
+export function getAutomationExecutions(limit = 20) {
+  return apiFetch<AutomationExecution[]>(`/api/v1/automation/executions?limit=${limit}`);
+}
+
+// ── GET /api/v1/ai-governance/autopilot/summary ─────────────────────────────
+export type AutopilotSummary = {
+  total_policies: number;
+  active_policies: number;
+  archived_policies: number;
+  default_policy_id: string | null;
+  resolved_mode: string;
+  resolved_source: string;
+  external_effects_allowed: boolean;
+  task_creation_allowed: boolean;
+  review_creation_allowed: boolean;
+  source_record_mutation_allowed: boolean;
+  pending_execution_intents: number;
+  pending_approval_requests: number;
+  open_critical_signals: number;
+};
+
+export function getAutopilotSummary() {
+  return apiFetch<AutopilotSummary>("/api/v1/ai-governance/autopilot/summary");
+}
+
+// ── GET /api/v1/ai-governance/autopilot/execution-intents/summary ───────────
+export type ExecutionIntentsSummary = {
+  total_intents: number;
+  by_status: Record<string, number>;
+  by_source_type: Record<string, number>;
+  blocked_count: number;
+  approval_required_count: number;
+  pending_intents: number;
+  stale_pending_intents: number;
+  latest_intent_at: string | null;
+  context_flags: string[] | null;
+  caveat: string | null;
+};
+
+export function getExecutionIntentsSummary() {
+  return apiFetch<ExecutionIntentsSummary>("/api/v1/ai-governance/autopilot/execution-intents/summary");
+}
+
+// ── GET /api/v1/ai-governance/autopilot/execution-approvals/summary ─────────
+export type ExecutionApprovalsSummary = {
+  total_approvals: number;
+  by_status: Record<string, number>;
+  ready_for_runner_count: number;
+  approval_required_count: number;
+  blocked_count: number;
+  latest_approval_at: string | null;
+  caveat: string | null;
+};
+
+export function getExecutionApprovalsSummary() {
+  return apiFetch<ExecutionApprovalsSummary>("/api/v1/ai-governance/autopilot/execution-approvals/summary");
+}
+
+// ── GET /api/v1/ai-governance/actions/candidate-summary ─────────────────────
+export type CandidateActionsSummary = {
+  total_candidate_actions: number;
+  by_action_type: Record<string, number>;
+  by_priority_band: Record<string, number>;
+  top_action_keys: unknown[];
+  top_ai_systems_by_action_count: unknown[];
+  caveat: string | null;
+};
+
+export function getCandidateActionsSummary() {
+  return apiFetch<CandidateActionsSummary>("/api/v1/ai-governance/actions/candidate-summary");
+}
+
+// ── GET /api/v1/governance/overrides/summary ────────────────────────────────
+export type OverridesSummary = {
+  total_requests: number;
+  pending_requests: number;
+  approved_requests: number;
+  rejected_requests: number;
+  executed_requests: number;
+  cancelled_requests: number;
+  expired_requests: number;
+  pending_approval_over_24h: number;
+  overrides_executed_last_30d: number;
+  pending_expiring_within_24h: number;
+  approved_awaiting_execution: number;
+  execution_failed_last_30d: number;
+  context_flags: string[] | null;
+};
+
+export function getOverridesSummary() {
+  return apiFetch<OverridesSummary>("/api/v1/governance/overrides/summary");
+}

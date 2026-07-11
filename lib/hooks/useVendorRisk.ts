@@ -1,22 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getVendors, getVendorRiskSummary } from "@/lib/api/vendor-risk";
-import { getRisks, getComplianceEvidence } from "@/lib/api/compliance";
-import { getQuestionnaires } from "@/lib/api/questionnaires";
-
-function useEndpoint<T = unknown>(key: string, fn: () => Promise<T>) {
-  return useQuery({ queryKey: [key], queryFn: fn });
-}
+import { getVendors, getVendorRiskSummary, getVendorConcentrationRisk } from "@/lib/api/vendor-risk";
 
 export function useVendorRisk() {
-  const vendors = useEndpoint("vendors", getVendors);
-  const summary = useEndpoint("vendor-risk-summary", getVendorRiskSummary);
-  const risks = useEndpoint("risks", getRisks);
-  const evidence = useEndpoint("cmp-evidence", getComplianceEvidence);
-  const questionnaires = useEndpoint("questionnaires", getQuestionnaires);
+  const vendors = useQuery({ queryKey: ["vendors"], queryFn: () => getVendors() });
+  const summary = useQuery({ queryKey: ["vendor-summary"], queryFn: getVendorRiskSummary });
+  const concentration = useQuery({ queryKey: ["vendor-concentration"], queryFn: getVendorConcentrationRisk });
 
-  return { vendors, summary, risks, evidence, questionnaires };
+  return { vendors, summary, concentration };
 }
 
 export type VendorRiskData = ReturnType<typeof useVendorRisk>;

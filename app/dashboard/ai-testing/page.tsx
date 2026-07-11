@@ -5,7 +5,6 @@ import { AiTestingHeader } from "@/components/ai-testing/AiTestingHeader";
 import { AiTestingKpis } from "@/components/ai-testing/AiTestingKpis";
 import { AiTestingTable } from "@/components/ai-testing/AiTestingTable";
 import { ResponsibleAiChecks } from "@/components/ai-testing/ResponsibleAiChecks";
-import { ViolationsFindings } from "@/components/ai-testing/ViolationsFindings";
 import { useAiTesting } from "@/lib/hooks/useAiTesting";
 
 const fade: Variants = {
@@ -30,9 +29,8 @@ export default function AiTestingPage() {
         <div className="lg:col-span-2">
           <AiTestingTable data={data} />
         </div>
-        <div className="flex flex-col gap-4">
+        <div>
           <ResponsibleAiChecks data={data} />
-          <ViolationsFindings data={data} />
         </div>
       </motion.div>
     </div>

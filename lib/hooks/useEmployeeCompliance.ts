@@ -2,24 +2,19 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
-  getTeam, getPolicies, getEvidenceList,
-  getEmployeeComplianceSummary, getTraining, getAttestations, getPolicyAcknowledgements
+  getTrainingSummary,
+  getTrainingRecords,
+  getAttestationDashboard,
+  getAttestationCampaigns
 } from "@/lib/api/employee-compliance";
 
-function useEndpoint<T = unknown>(key: string, fn: () => Promise<T>) {
-  return useQuery({ queryKey: [key], queryFn: fn, retry: false });
-}
-
 export function useEmployeeCompliance() {
-  const team = useEndpoint("emp-team", getTeam);
-  const summary = useEndpoint("emp-summary", getEmployeeComplianceSummary);
-  const acknowledgements = useEndpoint("emp-acks", getPolicyAcknowledgements);
-  const training = useEndpoint("emp-training", getTraining);
-  const attestations = useEndpoint("emp-attestations", getAttestations);
-  const policies = useEndpoint("emp-policies", getPolicies);
-  const evidence = useEndpoint("emp-evidence", getEvidenceList);
+  const training = useQuery({ queryKey: ["training-summary"], queryFn: getTrainingSummary });
+  const records = useQuery({ queryKey: ["training-records"], queryFn: () => getTrainingRecords() });
+  const attestations = useQuery({ queryKey: ["attestation-dashboard"], queryFn: getAttestationDashboard });
+  const campaigns = useQuery({ queryKey: ["attestation-campaigns"], queryFn: getAttestationCampaigns });
 
-  return { team, summary, acknowledgements, training, attestations, policies, evidence };
+  return { training, records, attestations, campaigns };
 }
 
 export type EmployeeComplianceData = ReturnType<typeof useEmployeeCompliance>;

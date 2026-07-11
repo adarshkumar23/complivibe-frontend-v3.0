@@ -1,46 +1,73 @@
 "use client";
 
-import { Link2, FolderOpen } from "lucide-react";
+import { Share2, ExternalLink } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
-import { normalizeEvidenceItems } from "@/lib/api/evidence-normalizers";
-import { formatDate } from "@/lib/utils/format";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { VendorRiskData } from "@/lib/hooks/useVendorRisk";
 
-const VENDOR_MATCH = /vendor|third[\s-]?party|supplier|contract|dpa|sub[\s-]?processor|procurement/i;
-
+/**
+ * Concentration-risk panel from GET /api/v1/vendor-concentration-risk —
+ * connects vendor spend concentration to the risk register entry it creates.
+ */
 export function VendorEvidenceLinkage({ data }: { data: VendorRiskData }) {
-  const { evidence } = data;
-  // Real vendor-related evidence only: items whose type/title/control mention vendor concepts.
-  const items = normalizeEvidenceItems(evidence.data).filter((e) =>
-    [e.type, e.title, e.control].some((v) => v && VENDOR_MATCH.test(v))
-  );
+  const { concentration } = data;
+  const c = concentration.data;
 
   return (
-    <SectionCard title="Vendor Evidence" subtitle="Third-party documents from the evidence vault" icon={Link2} accent="green" className="h-full">
-      {evidence.isLoading ? (
-        <SkeletonRows rows={4} />
-      ) : evidence.isError ? (
-        <ErrorState compact title="Unable to load evidence" onRetry={() => evidence.refetch()} />
-      ) : items.length === 0 ? (
-        <EmptyState compact icon={FolderOpen} title="Vendor evidence mapping unavailable from backend." description="Vendor, contract, and DPA evidence will appear here once the backend tags it." />
+    <SectionCard title="Concentration Risk" subtitle="Single-vendor dependency exposure (HHI)" icon={Share2} accent="teal">
+      {concentration.isLoading ? (
+        <SkeletonRows rows={3} />
+      ) : concentration.isError ? (
+        <ErrorState compact title="Unable to load concentration risk" onRetry={() => concentration.refetch()} />
+      ) : !c || c.status === "not_computed" ? (
+        <EmptyState
+          compact
+          icon={Share2}
+          title="Not computed yet"
+          description="Concentration risk is computed from vendor spend and dependency data once available."
+        />
       ) : (
-        <ul className="max-h-[360px] space-y-2.5 overflow-y-auto pr-1">
-          {items.slice(0, 10).map((e) => (
-            <li key={e.id} className="flex items-center justify-between gap-3 rounded-xl bg-white/50 px-3 py-2.5 ring-1 ring-white/60">
-              <div className="min-w-0">
-                <p className="truncate text-[13px] font-semibold text-cv-ink">{e.title}</p>
-                <p className="truncate text-[11px] text-cv-slate">
-                  {[e.type, e.updatedAt ? `Updated ${formatDate(e.updatedAt)}` : null].filter(Boolean).join(" · ") || "No metadata"}
-                </p>
-              </div>
-              {e.status ? <StatusBadge label={e.status} tone="info" /> : null}
-            </li>
-          ))}
-        </ul>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between rounded-xl bg-white/50 px-3 py-2.5 ring-1 ring-white/60">
+            <span className="text-[13px] font-semibold text-cv-ink">HHI score</span>
+            <StatusBadge
+              label={`${c.hhi_score} / ${c.threshold_hhi_score}`}
+              tone={c.hhi_score >= c.threshold_hhi_score ? "bad" : "good"}
+            />
+          </div>
+          {c.top_vendor_name ? (
+            <div className="flex items-center justify-between rounded-xl bg-white/50 px-3 py-2.5 ring-1 ring-white/60">
+              <span className="text-[13px] font-semibold text-cv-ink">Largest dependency</span>
+              <span className="text-[12px] font-medium text-cv-slate">
+                {c.top_vendor_name} ({(c.top_vendor_share_basis_points / 100).toFixed(1)}%)
+              </span>
+            </div>
+          ) : null}
+          <div className="flex items-center justify-between rounded-xl bg-white/50 px-3 py-2.5 ring-1 ring-white/60">
+            <span className="text-[13px] font-semibold text-cv-ink">Critical vendors</span>
+            <span className="text-[12px] font-medium text-cv-slate">
+              {c.critical_vendor_count} of {c.exposure_count} exposures
+            </span>
+          </div>
+          {c.risk_id ? (
+            <p className="text-[11px] font-medium text-cv-blue">
+              Linked to a risk register entry — treatment tracked there.
+            </p>
+          ) : null}
+          {c.convention_source_title ? (
+            <a
+              href={c.convention_source_url ?? "#"}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-cv-mist hover:text-cv-blue"
+            >
+              <ExternalLink size={11} /> Methodology: {c.convention_source_title}
+            </a>
+          ) : null}
+        </div>
       )}
     </SectionCard>
   );

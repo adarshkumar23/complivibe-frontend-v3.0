@@ -1,35 +1,37 @@
-import { apiFetch, ApiError } from "@/lib/api/client";
-
-/** Try endpoints in order; advance only on 404/405/501, otherwise surface the error. */
-async function tryEndpoints(paths: string[], init?: RequestInit): Promise<unknown> {
-  let lastError: unknown;
-  for (const path of paths) {
-    try {
-      return await apiFetch<unknown>(path, init);
-    } catch (err) {
-      lastError = err;
-      if (err instanceof ApiError && [404, 405, 501].includes(err.status)) continue;
-      throw err;
-    }
-  }
-  throw lastError;
-}
-
-/** Notification feed — canonical paths only. Falls back to aggregated governance signals on 404. */
-export function getNotifications() {
-  return tryEndpoints(["/api/v1/notifications"]);
-}
-
-export function getNotificationsSummary() {
-  return tryEndpoints(["/api/v1/notifications/summary"]);
-}
-
-/** Confirmed settings endpoint (also used by Settings page). */
-export function getNotificationSettings() {
-  return apiFetch<unknown>("/api/v1/notifications/settings");
-}
+import { apiFetch } from "@/lib/api/client";
 
 /**
- * NOTE: No notification write/action endpoint (mark-read/resolve/snooze) is confirmed.
- * Action buttons in the UI are disabled — no mutations are issued.
+ * Notifications API — typed against the live backend schema
+ * (/api/v1/inbox, /api/v1/preferences/notifications).
  */
+
+// ── GET /api/v1/inbox ───────────────────────────────────────────────────────
+export type InboxItem = {
+  item_key: string;
+  item_type: string;
+  title: string;
+  detail: string | null;
+  /** Backend explanation of why this item is prioritized (e.g. "3 days overdue"). */
+  reason: string | null;
+  priority_score: number;
+  due_at: string | null;
+  navigate_path: string | null;
+  metadata: Record<string, unknown> | null;
+};
+
+export function getInbox(limit = 25) {
+  return apiFetch<{ total_items: number; items: InboxItem[] }>(`/api/v1/inbox?limit=${limit}`);
+}
+
+// ── GET /api/v1/preferences/notifications ───────────────────────────────────
+export type NotificationPreference = {
+  id: string;
+  notification_type: string;
+  channel: string;
+  min_severity: string | null;
+  is_enabled: boolean;
+};
+
+export function getNotificationPreferences() {
+  return apiFetch<NotificationPreference[]>("/api/v1/preferences/notifications");
+}

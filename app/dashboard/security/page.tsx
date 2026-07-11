@@ -1,13 +1,8 @@
 "use client";
 
 import { motion, type Variants } from "framer-motion";
-import { SecurityHeader } from "@/components/security/SecurityHeader";
-import { SecurityKpis } from "@/components/security/SecurityKpis";
-import { AccessRbacPanel } from "@/components/security/AccessRbacPanel";
-import { ApiKeysPanel } from "@/components/security/ApiKeysPanel";
-import { AuditActivityPanel } from "@/components/security/AuditActivityPanel";
-import { ProductionHealthPanel } from "@/components/security/ProductionHealthPanel";
-import { SecurityGapsPanel } from "@/components/security/SecurityGapsPanel";
+import { Fingerprint } from "lucide-react";
+import { SecurityKpis, ScanJobsPanel, NhiPanel } from "@/components/security/SecurityPanels";
 import { useSecurity } from "@/lib/hooks/useSecurity";
 
 const fade: Variants = {
@@ -21,25 +16,30 @@ export default function SecurityPage() {
   return (
     <div className="space-y-7">
       <motion.div variants={fade} custom={0} initial="hidden" animate="show">
-        <SecurityHeader />
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2.5">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-cv-brand text-white shadow-tile">
+              <Fingerprint size={15} />
+            </span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-cv-blue">Security Posture</span>
+          </div>
+          <h1 className="text-[30px] font-extrabold leading-tight tracking-tight text-cv-ink sm:text-[34px]">Security</h1>
+          <p className="max-w-2xl text-[15px] text-cv-slate">
+            Ingested security scans, non-human identity hygiene, and separation-of-duties findings.
+          </p>
+        </div>
       </motion.div>
 
       <motion.div variants={fade} custom={1} initial="hidden" animate="show">
         <SecurityKpis data={data} />
       </motion.div>
 
-      <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <AccessRbacPanel data={data} />
-        <ApiKeysPanel data={data} />
-      </motion.div>
-
-      <motion.div variants={fade} custom={3} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <AuditActivityPanel data={data} />
+          <ScanJobsPanel data={data} />
         </div>
-        <div className="flex flex-col gap-4">
-          <ProductionHealthPanel data={data} />
-          <SecurityGapsPanel data={data} />
+        <div>
+          <NhiPanel data={data} />
         </div>
       </motion.div>
     </div>

@@ -1,15 +1,20 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getApprovals } from "@/lib/api/approvals";
-
-function useEndpoint<T = unknown>(key: string, fn: () => Promise<T>) {
-  return useQuery({ queryKey: [key], queryFn: fn });
-}
+import {
+  getExecutionApprovals,
+  getReviewQueue,
+  getApprovalEnvelopes,
+  getExecutionApprovalsSummary
+} from "@/lib/api/approvals";
 
 export function useApprovals() {
-  const approvals = useEndpoint("approvals", getApprovals);
-  return { approvals };
+  const executionApprovals = useQuery({ queryKey: ["execution-approvals"], queryFn: getExecutionApprovals });
+  const reviewQueue = useQuery({ queryKey: ["review-queue"], queryFn: getReviewQueue });
+  const envelopes = useQuery({ queryKey: ["approval-envelopes"], queryFn: getApprovalEnvelopes });
+  const summary = useQuery({ queryKey: ["autopilot-approvals"], queryFn: getExecutionApprovalsSummary });
+
+  return { executionApprovals, reviewQueue, envelopes, summary };
 }
 
 export type ApprovalsData = ReturnType<typeof useApprovals>;

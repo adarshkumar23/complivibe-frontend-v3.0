@@ -1,22 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getPolicies, getPolicyTemplates } from "@/lib/api/policies";
-import { getFrameworks, getObligations, getComplianceOverview, getComplianceEvidence } from "@/lib/api/compliance";
-
-function useEndpoint<T = unknown>(key: string, fn: () => Promise<T>) {
-  return useQuery({ queryKey: [key], queryFn: fn });
-}
+import { getPolicies, getPolicySummary, getPolicyTemplates } from "@/lib/api/policies";
 
 export function usePolicies() {
-  const policies = useEndpoint("policies", getPolicies);
-  const templates = useEndpoint("policy-templates", getPolicyTemplates);
-  const frameworks = useEndpoint("cmp-frameworks", getFrameworks);
-  const obligations = useEndpoint("cmp-obligations", getObligations);
-  const overview = useEndpoint("cmp-overview", getComplianceOverview);
-  const evidence = useEndpoint("cmp-evidence", getComplianceEvidence);
+  const policies = useQuery({ queryKey: ["policies"], queryFn: getPolicies });
+  const summary = useQuery({ queryKey: ["policy-summary"], queryFn: getPolicySummary });
+  const templates = useQuery({ queryKey: ["policy-templates"], queryFn: () => getPolicyTemplates(20) });
 
-  return { policies, templates, frameworks, obligations, overview, evidence };
+  return { policies, summary, templates };
 }
 
 export type PoliciesData = ReturnType<typeof usePolicies>;

@@ -1,31 +1,68 @@
 "use client";
 
-import { Building, ShieldAlert, CalendarClock, FileCheck2 } from "lucide-react";
+import { Building, Flame, ClockAlert, Share2 } from "lucide-react";
 import { RegistryKpi } from "@/components/ui/RegistryKpi";
-import { normalizeVendors, isHighRisk, isReviewDue } from "@/lib/api/vendor-risk-normalizers";
 import type { VendorRiskData } from "@/lib/hooks/useVendorRisk";
 
 export function VendorRiskKpis({ data }: { data: VendorRiskData }) {
-  const { vendors } = data;
-  const list = vendors.isSuccess ? normalizeVendors(vendors.data) : null;
-  const loading = vendors.isLoading;
+  const { summary, vendors, concentration } = data;
+  const s = summary.data;
 
-  const tracked = list ? list.length : null;
-  // High-risk only when the backend actually provides a risk level on at least one vendor.
-  const anyRiskLevel = list ? list.some((v) => v.riskLevel) : false;
-  const highRisk = list && anyRiskLevel ? list.filter((v) => isHighRisk(v.riskLevel)).length : null;
-  // Reviews due only when review dates/status fields exist.
-  const anyReviewField = list ? list.some((v) => v.nextReview || v.status) : false;
-  const reviewsDue = list && anyReviewField ? list.filter(isReviewDue).length : null;
-  const anyEvidence = list ? list.some((v) => v.evidenceCount != null) : false;
-  const evidenceLinked = list && anyEvidence ? list.filter((v) => v.evidenceCount != null && v.evidenceCount > 0).length : null;
+  const criticalHigh = s ? (s.by_risk_tier["critical"] ?? 0) + (s.by_risk_tier["high"] ?? 0) : null;
+  const overdue = vendors.isSuccess ? vendors.data.filter((v) => v.has_overdue_assessment).length : null;
+  const nthParty = vendors.isSuccess ? vendors.data.filter((v) => v.nth_party_risk_flag).length : null;
+  const c = concentration.data;
 
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <RegistryKpi label="Vendors Tracked" icon={Building} accent="blue" value={tracked} caption={tracked != null ? "in registry" : undefined} loading={loading} unavailableHint="Vendors unavailable" />
-      <RegistryKpi label="High-Risk Vendors" icon={ShieldAlert} accent="red" value={highRisk} caption={highRisk != null ? "backend-rated" : undefined} loading={loading} unavailableHint="No risk levels" />
-      <RegistryKpi label="Reviews Due" icon={CalendarClock} accent="amber" value={reviewsDue} caption={reviewsDue != null ? "need re-assessment" : undefined} loading={loading} unavailableHint="No review data" />
-      <RegistryKpi label="Evidence-Linked" icon={FileCheck2} accent="green" value={evidenceLinked} caption={evidenceLinked != null ? "with documents" : undefined} loading={loading} unavailableHint="No evidence data" />
+      <RegistryKpi
+        label="Active Vendors"
+        icon={Building}
+        accent="blue"
+        value={s ? s.active_vendors : null}
+        caption={s ? `${s.total_vendors} total · ${s.archived_vendors} archived` : undefined}
+        loading={summary.isLoading}
+        unavailableHint="Vendor summary unavailable"
+      />
+      <RegistryKpi
+        label="Critical / High Tier"
+        icon={Flame}
+        accent="red"
+        value={criticalHigh}
+        caption={
+          vendors.isSuccess
+            ? `${vendors.data.filter((v) => v.processes_personal_data).length} process personal data`
+            : undefined
+        }
+        loading={summary.isLoading}
+        unavailableHint="Vendor summary unavailable"
+      />
+      <RegistryKpi
+        label="Overdue Assessments"
+        icon={ClockAlert}
+        accent="amber"
+        value={overdue}
+        caption={overdue != null && overdue > 0 ? "stale reviews hide new vendor risk" : overdue === 0 ? "assessments current" : undefined}
+        loading={vendors.isLoading}
+        unavailableHint="Vendors unavailable"
+      />
+      <RegistryKpi
+        label="Concentration (HHI)"
+        icon={Share2}
+        accent="purple"
+        value={c && c.status !== "not_computed" ? c.hhi_score : null}
+        caption={
+          c
+            ? c.status === "not_computed"
+              ? "not computed yet — run a recompute"
+              : c.hhi_score >= c.threshold_hhi_score
+                ? `above ${c.threshold_hhi_score} threshold${c.top_vendor_name ? ` — ${c.top_vendor_name} dominates` : ""}`
+                : `below ${c.threshold_hhi_score} threshold`
+            : undefined
+        }
+        loading={concentration.isLoading}
+        unavailableHint="Concentration risk unavailable"
+      />
     </div>
   );
 }

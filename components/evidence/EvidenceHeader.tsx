@@ -1,9 +1,8 @@
 "use client";
 
 import { FileCheck2 } from "lucide-react";
-import { UploadEvidenceButton } from "@/components/evidence/UploadEvidenceButton";
 
-export function EvidenceHeader({ onUploaded }: { onUploaded?: () => void }) {
+export function EvidenceHeader() {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex flex-col gap-1">
@@ -18,7 +17,6 @@ export function EvidenceHeader({ onUploaded }: { onUploaded?: () => void }) {
           Track audit-ready evidence, freshness, ownership, linked controls, and AI system proof in one place.
         </p>
       </div>
-      <UploadEvidenceButton onUploaded={onUploaded} />
     </div>
   );
 }

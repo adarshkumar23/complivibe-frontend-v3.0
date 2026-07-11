@@ -1,124 +1,58 @@
 "use client";
 
-import { ShieldCheck, BrainCircuit, Database, ClipboardCheck } from "lucide-react";
-import { StatCard } from "@/components/ui/StatCard";
-import { pickScore, type CommandCenter } from "@/lib/hooks/useCommandCenter";
-import type { GovernanceCoverage } from "@/lib/hooks/useGovernanceCoverage";
-import type { Accent } from "@/components/ui/accent";
+import { ClipboardList, TriangleAlert, ListTodo, Gauge } from "lucide-react";
+import { RegistryKpi } from "@/components/ui/RegistryKpi";
+import type { CommandCenterData } from "@/lib/hooks/useCommandCenter";
 
-type Kpi = {
-  label: string;
-  icon: typeof ShieldCheck;
-  accent: Accent;
-  paths: string[];
-  /**
-   * Honest fallback shown when no official score endpoint/field is available, derived from real
-   * source-record coverage. Never fabricates a score; returns null when no source records exist.
-   */
-  derive: (coverage: GovernanceCoverage) => string | null;
-};
-
-/** Sum real counts for a set of coverage ids (only counts that returned records). */
-function sumCounts(coverage: GovernanceCoverage, ids: string[]): number {
-  return ids.reduce((total, id) => total + (coverage.byId[id]?.count ?? 0), 0);
-}
-
-const KPIS: Kpi[] = [
-  {
-    label: "Governance Health",
-    icon: BrainCircuit,
-    accent: "purple",
-    paths: [
-      "governance_health",
-      "governance_score",
-      "ai_governance",
-      "governance",
-      "scores.governance",
-      "ai_governance_score"
-    ],
-    derive: (c) => {
-      const n = sumCounts(c, ["ai-systems"]);
-      return n > 0 ? `Source records available · ${n.toLocaleString()} AI systems` : null;
-    }
-  },
-  {
-    label: "Compliance Readiness",
-    icon: ShieldCheck,
-    accent: "blue",
-    paths: [
-      "compliance_readiness",
-      "compliance_score",
-      "compliance",
-      "scores.compliance",
-      "readiness.compliance",
-      "overall_compliance"
-    ],
-    derive: (c) => {
-      const n = sumCounts(c, ["evidence", "risks", "deadlines"]);
-      return n > 0 ? `Coverage available · ${n.toLocaleString()} source records` : null;
-    }
-  },
-  {
-    label: "Data Health",
-    icon: Database,
-    accent: "cyan",
-    paths: [
-      "data_health",
-      "data_health_score",
-      "data_observability",
-      "data",
-      "scores.data_health",
-      "observability_score"
-    ],
-    derive: (c) => {
-      const obs = c.byId["data-observability"];
-      if (!obs || obs.status === "unavailable") return null;
-      return obs.count != null && obs.count > 0
-        ? `Records available · ${obs.count.toLocaleString()} data sources`
-        : "Records available";
-    }
-  },
-  {
-    label: "Audit Readiness",
-    icon: ClipboardCheck,
-    accent: "teal",
-    paths: [
-      "audit_readiness",
-      "audit_readiness_score",
-      "audit_score",
-      "audit",
-      "scores.audit",
-      "readiness.audit"
-    ],
-    derive: (c) => {
-      const n = sumCounts(c, ["audit-packs", "reports", "evidence"]);
-      return n > 0 ? `Derived coverage available · ${n.toLocaleString()} records` : null;
-    }
-  }
-];
-
-export function KpiRow({ data, coverage }: { data: CommandCenter; coverage: GovernanceCoverage }) {
-  const sources = [data.scores.data, data.unified.data, data.executive.data];
-  const loading = data.scores.isLoading && data.unified.isLoading && data.executive.isLoading;
+export function KpiRow({ data }: { data: CommandCenterData }) {
+  const { summary, issues } = data;
+  const s = summary.data;
+  const iss = issues.data;
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {KPIS.map((kpi) => {
-        const score = pickScore(sources, kpi.paths);
-        // Only derive a coverage hint when there is genuinely no official score.
-        const hint = score == null ? kpi.derive(coverage) : null;
-        return (
-          <StatCard
-            key={kpi.label}
-            label={kpi.label}
-            icon={kpi.icon}
-            accent={kpi.accent}
-            value={score}
-            loading={loading}
-            unavailableHint={hint ?? "Awaiting score endpoint"}
-          />
-        );
-      })}
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <RegistryKpi
+        label="Compliance Score"
+        icon={Gauge}
+        accent="blue"
+        value={s?.current_score ?? null}
+        caption={
+          s
+            ? s.current_score != null
+              ? `grade ${s.current_score_grade ?? "—"}`
+              : "no score snapshot computed yet"
+            : undefined
+        }
+        loading={summary.isLoading}
+        unavailableHint="Score not yet computed"
+      />
+      <RegistryKpi
+        label="Open Obligations"
+        icon={ClipboardList}
+        accent="purple"
+        value={s ? s.open_obligations : null}
+        caption={s ? `${s.total_controls} controls · ${s.total_policies} policies` : undefined}
+        loading={summary.isLoading}
+        unavailableHint="Dashboard summary unavailable"
+      />
+      <RegistryKpi
+        label="Open Risks"
+        icon={TriangleAlert}
+        accent="red"
+        value={s ? s.open_risks : null}
+        caption={iss ? `${iss.open_critical_count} critical issues open` : undefined}
+        loading={summary.isLoading}
+        unavailableHint="Dashboard summary unavailable"
+      />
+      <RegistryKpi
+        label="Pending Tasks"
+        icon={ListTodo}
+        accent="amber"
+        value={s ? s.pending_tasks : null}
+        caption={iss && iss.unassigned_count > 0 ? `${iss.unassigned_count} issues unassigned` : undefined}
+        loading={summary.isLoading}
+        unavailableHint="Dashboard summary unavailable"
+      />
     </div>
   );
 }

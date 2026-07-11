@@ -1,25 +1,23 @@
-import { apiFetch } from "@/lib/api/client";
+import { apiFetch, ApiError } from "@/lib/api/client";
 
-export function getTrustCenter() {
-  return apiFetch<unknown>("/api/v1/trust-center");
-}
+/**
+ * Trust center API — typed against the live backend schema
+ * (/api/v1/compliance/trust-center/configuration; public page is /api/v1/trust-center/{slug}).
+ */
 
-export function getTrustCenterPublic() {
-  return apiFetch<unknown>("/api/v1/trust-center/public");
-}
+export type TrustCenterConfiguration = {
+  id?: string;
+  slug?: string | null;
+  is_published?: boolean | null;
+  [key: string]: unknown;
+};
 
-export function getTrustCenterAssets() {
-  return apiFetch<unknown>("/api/v1/trust-center/assets");
-}
-
-export function getTrustCenterMetrics() {
-  return apiFetch<unknown>("/api/v1/trust-center/metrics");
-}
-
-export function publishTrustCenter() {
-  return apiFetch<unknown>("/api/v1/trust-center/publish", { method: "POST", body: "{}" });
-}
-
-export function getCertifications() {
-  return apiFetch<unknown>("/api/v1/certifications");
+/** Returns null when the trust center has not been configured yet (404). */
+export async function getTrustCenterConfiguration(): Promise<TrustCenterConfiguration | null> {
+  try {
+    return await apiFetch<TrustCenterConfiguration>("/api/v1/compliance/trust-center/configuration");
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
 }

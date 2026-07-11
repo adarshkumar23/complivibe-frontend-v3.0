@@ -2,35 +2,27 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
-  getFrameworks,
-  getObligations,
-  getComplianceEvidence,
-  getRisks,
-  getCertifications,
-  getComplianceOverview,
-  getComplianceGaps,
-  getComplianceScore
+  getPostureSummary,
+  getFrameworkReadiness,
+  getControlHealth,
+  getRecentActivity,
+  getDeadlines,
+  getDeadlineSummary,
+  getIssues,
+  getIssueDashboard
 } from "@/lib/api/compliance";
-import { getScoresSummary, getRegulatoryDeadlines, getControlCenterFeed } from "@/lib/api/command";
-
-function useEndpoint<T = unknown>(key: string, fn: () => Promise<T>) {
-  return useQuery({ queryKey: [key], queryFn: fn });
-}
 
 export function useCompliance() {
-  const frameworks = useEndpoint("cmp-frameworks", getFrameworks);
-  const obligations = useEndpoint("cmp-obligations", getObligations);
-  const evidence = useEndpoint("cmp-evidence", getComplianceEvidence);
-  const risks = useEndpoint("cmp-risks", getRisks);
-  const certifications = useEndpoint("cmp-certifications", getCertifications);
-  const overview = useEndpoint("cmp-overview", getComplianceOverview);
-  const gaps = useEndpoint("cmp-gaps", getComplianceGaps);
-  const score = useEndpoint("cmp-score", getComplianceScore);
-  const scores = useEndpoint("scores-summary", getScoresSummary);
-  const deadlines = useEndpoint("regulatory-deadlines", getRegulatoryDeadlines);
-  const feed = useEndpoint("control-center-feed", getControlCenterFeed);
+  const posture = useQuery({ queryKey: ["cmp-posture"], queryFn: getPostureSummary });
+  const readiness = useQuery({ queryKey: ["cmp-readiness"], queryFn: getFrameworkReadiness });
+  const controlHealth = useQuery({ queryKey: ["cmp-control-health"], queryFn: getControlHealth });
+  const activity = useQuery({ queryKey: ["cmp-activity"], queryFn: () => getRecentActivity(12) });
+  const deadlines = useQuery({ queryKey: ["cmp-deadlines"], queryFn: () => getDeadlines() });
+  const deadlineSummary = useQuery({ queryKey: ["cmp-deadline-summary"], queryFn: getDeadlineSummary });
+  const issues = useQuery({ queryKey: ["cmp-issues"], queryFn: getIssues });
+  const issueDashboard = useQuery({ queryKey: ["cmp-issue-dashboard"], queryFn: getIssueDashboard });
 
-  return { frameworks, obligations, evidence, risks, certifications, overview, gaps, score, scores, deadlines, feed };
+  return { posture, readiness, controlHealth, activity, deadlines, deadlineSummary, issues, issueDashboard };
 }
 
 export type Compliance = ReturnType<typeof useCompliance>;

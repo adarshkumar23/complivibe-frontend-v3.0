@@ -1,14 +1,12 @@
 "use client";
 
 import { motion, type Variants } from "framer-motion";
-import { EmployeeComplianceHeader } from "@/components/employee-compliance/EmployeeComplianceHeader";
-import { EmployeeComplianceKpis } from "@/components/employee-compliance/EmployeeComplianceKpis";
-import { EmployeeComplianceActions } from "@/components/employee-compliance/EmployeeComplianceActions";
-import { EmployeeRosterPanel } from "@/components/employee-compliance/EmployeeRosterPanel";
-import { PolicyAcknowledgementPanel } from "@/components/employee-compliance/PolicyAcknowledgementPanel";
-import { TrainingAttestationPanel } from "@/components/employee-compliance/TrainingAttestationPanel";
-import { OverdueActionsPanel } from "@/components/employee-compliance/OverdueActionsPanel";
-import { PoliciesEvidencePanel } from "@/components/employee-compliance/PoliciesEvidencePanel";
+import { UserCheck } from "lucide-react";
+import {
+  EmployeeComplianceKpis,
+  TrainingRecordsPanel,
+  AttestationCampaignsPanel
+} from "@/components/employee-compliance/EmployeePanels";
 import { useEmployeeCompliance } from "@/lib/hooks/useEmployeeCompliance";
 
 const fade: Variants = {
@@ -22,33 +20,33 @@ export default function EmployeeCompliancePage() {
   return (
     <div className="space-y-7">
       <motion.div variants={fade} custom={0} initial="hidden" animate="show">
-        <EmployeeComplianceHeader />
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2.5">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-cv-brand text-white shadow-tile">
+              <UserCheck size={15} />
+            </span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-cv-blue">Workforce</span>
+          </div>
+          <h1 className="text-[30px] font-extrabold leading-tight tracking-tight text-cv-ink sm:text-[34px]">
+            Employee Compliance
+          </h1>
+          <p className="max-w-2xl text-[15px] text-cv-slate">
+            Training completion and policy attestation campaigns across the workforce.
+          </p>
+        </div>
       </motion.div>
 
       <motion.div variants={fade} custom={1} initial="hidden" animate="show">
         <EmployeeComplianceKpis data={data} />
       </motion.div>
 
-      <motion.div variants={fade} custom={2} initial="hidden" animate="show">
-        <EmployeeComplianceActions />
-      </motion.div>
-
-      <motion.div variants={fade} custom={3} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <EmployeeRosterPanel data={data} />
+          <TrainingRecordsPanel data={data} />
         </div>
         <div>
-          <PolicyAcknowledgementPanel data={data} />
+          <AttestationCampaignsPanel data={data} />
         </div>
-      </motion.div>
-
-      <motion.div variants={fade} custom={4} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <TrainingAttestationPanel data={data} />
-        <OverdueActionsPanel data={data} />
-      </motion.div>
-
-      <motion.div variants={fade} custom={5} initial="hidden" animate="show">
-        <PoliciesEvidencePanel data={data} />
       </motion.div>
     </div>
   );

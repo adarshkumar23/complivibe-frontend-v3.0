@@ -1,31 +1,52 @@
 "use client";
 
-import { FlaskConical, XCircle, ShieldCheck, ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, FileEdit, CheckCircle2, BookOpenCheck } from "lucide-react";
 import { RegistryKpi } from "@/components/ui/RegistryKpi";
-import { normalizeTesting, isTestPassed, isTestFailed, needsReview } from "@/lib/api/ai-testing-normalizers";
 import type { AiTestingData } from "@/lib/hooks/useAiTesting";
 
 export function AiTestingKpis({ data }: { data: AiTestingData }) {
-  const { systems, list, testingById, anyTesting, testingLoading } = data;
-  const loading = systems.isLoading || testingLoading;
-
-  // Per-system overall testing status from real testing summaries only.
-  const statuses = list
-    .map((s) => (s.rawId ? testingById.get(s.rawId) : undefined))
-    .filter((e) => e?.isSuccess)
-    .map((e) => normalizeTesting(e!.data));
-
-  const tested = systems.isSuccess && anyTesting ? statuses.filter((t) => t.hasAny).length : null;
-  const failures = anyTesting ? statuses.filter((t) => isTestFailed(t.overallStatus)).length : null;
-  const passed = anyTesting ? statuses.filter((t) => isTestPassed(t.overallStatus)).length : null;
-  const review = anyTesting ? statuses.filter((t) => needsReview(t.overallStatus)).length : null;
+  const { summary, iso42001 } = data;
+  const s = summary.data;
+  const iso = iso42001.data;
 
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <RegistryKpi label="AI Systems Tested" icon={FlaskConical} accent="blue" value={tested} caption={tested != null ? "with test results" : undefined} loading={loading} unavailableHint="Testing unavailable" />
-      <RegistryKpi label="Open Test Failures" icon={XCircle} accent="red" value={failures} caption={failures != null ? "failed checks" : undefined} loading={loading} unavailableHint="No test status" />
-      <RegistryKpi label="Safety Checks Passed" icon={ShieldCheck} accent="green" value={passed} caption={passed != null ? "passing systems" : undefined} loading={loading} unavailableHint="No test status" />
-      <RegistryKpi label="Systems Needing Review" icon={ClipboardCheck} accent="amber" value={review} caption={review != null ? "flagged for review" : undefined} loading={loading} unavailableHint="No test status" />
+      <RegistryKpi
+        label="Risk Assessments"
+        icon={ClipboardCheck}
+        accent="purple"
+        value={s ? s.total_assessments : null}
+        caption={s && s.latest_completed_at == null ? "none completed yet" : undefined}
+        loading={summary.isLoading}
+        unavailableHint="Assessment summary unavailable"
+      />
+      <RegistryKpi
+        label="Drafts / In Review"
+        icon={FileEdit}
+        accent="amber"
+        value={s ? s.draft_assessments + s.in_review_assessments : null}
+        caption={s ? `${s.draft_assessments} draft · ${s.in_review_assessments} in review` : undefined}
+        loading={summary.isLoading}
+        unavailableHint="Assessment summary unavailable"
+      />
+      <RegistryKpi
+        label="Completed"
+        icon={CheckCircle2}
+        accent="green"
+        value={s ? s.completed_assessments : null}
+        caption={s && s.completed_assessments === 0 ? "complete assessments to establish risk levels" : undefined}
+        loading={summary.isLoading}
+        unavailableHint="Assessment summary unavailable"
+      />
+      <RegistryKpi
+        label="ISO 42001 Progress"
+        icon={BookOpenCheck}
+        accent="blue"
+        value={iso ? Math.round(iso.implementation_pct) : null}
+        caption={iso ? `${iso.by_status["implemented"] ?? 0} of ${iso.total_clauses} clauses implemented` : undefined}
+        loading={iso42001.isLoading}
+        unavailableHint="ISO 42001 tracker unavailable"
+      />
     </div>
   );
 }

@@ -1,46 +1,49 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { TriangleAlert, ShieldCheck, ArrowUpRight } from "lucide-react";
+import { Flame, CheckCircle2 } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
-import { topExecutiveRisks } from "@/lib/api/executive-normalizers";
-import { severityTone } from "@/lib/api/notification-normalizers";
-import { formatDate } from "@/lib/utils/format";
-import type { ExecutiveSummaryData } from "@/lib/hooks/useExecutiveSummary";
+import type { Severity } from "@/lib/api/types";
+import type { ExecutiveData } from "@/lib/hooks/useExecutiveSummary";
 
-export function TopExecutiveRisks({ data }: { data: ExecutiveSummaryData }) {
-  const { risks, incidents } = data;
-  const router = useRouter();
-  const items = topExecutiveRisks(risks.data, incidents.data).slice(0, 8);
-
-  const loading = risks.isLoading || incidents.isLoading;
-  const errored = risks.isError && incidents.isError;
+/** Board-level risk view: top open risks by inherent score. */
+export function TopExecutiveRisks({ data }: { data: ExecutiveData }) {
+  const { risks } = data;
+  const top = (risks.data ?? [])
+    .filter((r) => r.status !== "mitigated" && r.status !== "closed")
+    .sort((a, b) => (b.inherent_score ?? 0) - (a.inherent_score ?? 0))
+    .slice(0, 5);
 
   return (
-    <SectionCard title="Top Executive Risks" subtitle="Open risks & incidents by severity" icon={TriangleAlert} accent="red" className="h-full">
-      {loading ? (
-        <SkeletonRows rows={5} />
-      ) : errored ? (
+    <SectionCard title="Top Risks" subtitle="Highest exposure for board attention" icon={Flame} accent="red" className="h-full">
+      {risks.isLoading ? (
+        <SkeletonRows rows={4} />
+      ) : risks.isError ? (
         <ErrorState compact title="Unable to load risks" onRetry={() => risks.refetch()} />
-      ) : items.length === 0 ? (
-        <EmptyState icon={ShieldCheck} title="No open risks or incidents" description="Open risks and incidents will appear here once the backend reports them." />
+      ) : top.length === 0 ? (
+        <EmptyState compact icon={CheckCircle2} title="No open risks" description="The register has no open risks." />
       ) : (
-        <ul className="max-h-[420px] space-y-2.5 overflow-y-auto pr-1">
-          {items.map((r) => (
-            <li key={r.id} className="flex items-start justify-between gap-3 rounded-xl bg-white/55 px-3 py-2.5 ring-1 ring-white/60">
+        <ul className="space-y-2.5">
+          {top.map((r) => (
+            <li key={r.id} className="flex items-start justify-between gap-3 rounded-xl bg-white/50 px-3 py-2.5 ring-1 ring-white/60">
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-semibold text-cv-ink">{r.title}</p>
-                <p className="truncate text-[11px] text-cv-slate">
-                  {[r.kind, r.linked, r.status, r.dueDate ? `Due ${formatDate(r.dueDate)}` : null].filter(Boolean).join(" · ")}
+                <p className="text-[13px] font-semibold leading-snug text-cv-ink">{r.title}</p>
+                <p className="text-[11px] text-cv-slate">
+                  {[r.category?.replaceAll("_", " "), r.treatment_strategy ? `treatment: ${r.treatment_strategy}` : null]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </p>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                {r.severity ? <StatusBadge label={r.severity} tone={severityTone(r.severity)} /> : null}
-                <button type="button" onClick={() => router.push(r.route)} aria-label="Open" className="inline-flex h-7 w-7 items-center justify-center rounded-full text-cv-mist transition hover:bg-white/70 hover:text-cv-blue"><ArrowUpRight size={14} /></button>
+              <div className="flex shrink-0 items-center gap-1.5">
+                {r.inherent_score != null ? (
+                  <span className="rounded-full bg-rose-500/10 px-2 py-0.5 text-[11px] font-bold text-rose-600 ring-1 ring-rose-500/20">
+                    {r.inherent_score}
+                  </span>
+                ) : null}
+                {r.severity ? <SeverityBadge severity={r.severity as Severity} /> : null}
               </div>
             </li>
           ))}

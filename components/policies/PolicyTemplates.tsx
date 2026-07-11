@@ -1,34 +1,43 @@
 "use client";
 
-import { LayoutTemplate } from "lucide-react";
+import { LayoutTemplate, FileStack } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
-import { normalizePolicyTemplates } from "@/lib/api/policy-normalizers";
 import type { PoliciesData } from "@/lib/hooks/usePolicies";
 
+/** System policy templates from GET /api/v1/compliance/policy-templates. */
 export function PolicyTemplates({ data }: { data: PoliciesData }) {
   const { templates } = data;
-  const list = normalizePolicyTemplates(templates.data);
+  const items = (templates.data ?? []).slice(0, 6);
 
   return (
-    <SectionCard title="Policy Templates" subtitle="Reusable policy blueprints" icon={LayoutTemplate} accent="cyan" className="h-full">
+    <SectionCard title="Policy Templates" subtitle="Start from a framework-tagged template" icon={LayoutTemplate} accent="purple">
       {templates.isLoading ? (
         <SkeletonRows rows={4} />
       ) : templates.isError ? (
-        <EmptyState icon={LayoutTemplate} title="Templates unavailable" description="The policy templates endpoint is not available on this backend yet." />
-      ) : list.length === 0 ? (
-        <EmptyState icon={LayoutTemplate} title="No templates returned" description="Policy templates will appear here once the backend provides them." />
+        <ErrorState compact title="Unable to load templates" onRetry={() => templates.refetch()} />
+      ) : items.length === 0 ? (
+        <EmptyState compact icon={FileStack} title="No templates available" description="Policy templates will appear here." />
       ) : (
-        <ul className="max-h-[360px] space-y-2.5 overflow-y-auto pr-1">
-          {list.slice(0, 8).map((t) => (
-            <li key={t.id} className="rounded-2xl bg-white/55 p-3.5 ring-1 ring-white/70">
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-[13px] font-semibold leading-snug text-cv-ink">{t.name}</p>
-                {t.sectionCount != null ? <span className="shrink-0 rounded-full bg-cv-brand-soft px-2 py-0.5 text-[10px] font-semibold text-cv-blue ring-1 ring-white/60">{t.sectionCount} sections</span> : null}
+        <ul className="space-y-2.5">
+          {items.map((t) => (
+            <li key={t.id} className="rounded-xl bg-white/50 px-3 py-2.5 ring-1 ring-white/60">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-[13px] font-semibold leading-snug text-cv-ink">{t.title}</p>
+                {t.is_system ? <StatusBadge label="System" tone="info" /> : null}
               </div>
-              {t.category || t.framework ? <p className="mt-0.5 text-[11px] font-medium text-cv-slate">{[t.category, t.framework].filter(Boolean).join(" · ")}</p> : null}
-              {t.description ? <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-cv-slate">{t.description}</p> : null}
+              {t.framework_tags && t.framework_tags.length > 0 ? (
+                <p className="mt-1 flex flex-wrap gap-1">
+                  {t.framework_tags.map((tag) => (
+                    <span key={tag} className="rounded-full bg-cv-brand-soft px-2 py-0.5 text-[10px] font-semibold text-cv-blue">
+                      {tag}
+                    </span>
+                  ))}
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>
