@@ -1,12 +1,15 @@
 "use client";
 
-import { Building2, BadgeCheck, RefreshCcw, UsersRound } from "lucide-react";
+import { useState } from "react";
+import { Building2, BadgeCheck, Plus, RefreshCcw, UsersRound } from "lucide-react";
 import { RegistryKpi } from "@/components/ui/RegistryKpi";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
+import { BusinessUnitFormModal } from "@/components/enterprise/BusinessUnitFormModal";
+import { AccessCertCampaignModal } from "@/components/enterprise/AccessCertCampaignModal";
 import type { EnterpriseData } from "@/lib/hooks/useEnterpriseControl";
 
 export function EnterpriseKpis({ data }: { data: EnterpriseData }) {
@@ -93,9 +96,29 @@ export function RecertificationPanel({ data }: { data: EnterpriseData }) {
 export function AccessCertPanel({ data }: { data: EnterpriseData }) {
   const { accessCerts } = data;
   const list = accessCerts.data ?? [];
+  const [createOpen, setCreateOpen] = useState(false);
 
   return (
-    <SectionCard title="Access Certifications" subtitle="Periodic access review campaigns" icon={BadgeCheck} accent="purple" className="h-full">
+    <SectionCard
+      title="Access Certifications"
+      subtitle="Periodic access review campaigns"
+      icon={BadgeCheck}
+      accent="purple"
+      className="h-full"
+      action={
+        <>
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
+          >
+            <Plus size={13} strokeWidth={2.6} />
+            New campaign
+          </button>
+          <AccessCertCampaignModal open={createOpen} onClose={() => setCreateOpen(false)} />
+        </>
+      }
+    >
       {accessCerts.isLoading ? (
         <SkeletonRows rows={4} />
       ) : accessCerts.isError ? (
@@ -113,6 +136,61 @@ export function AccessCertPanel({ data }: { data: EnterpriseData }) {
             <li key={c.id} className="flex items-center justify-between gap-3 rounded-xl bg-white/50 px-3 py-2.5 ring-1 ring-white/60">
               <p className="truncate text-[13px] font-semibold text-cv-ink">{(c.name as string) ?? "Campaign"}</p>
               {c.status ? <StatusBadge label={String(c.status)} tone="info" /> : null}
+            </li>
+          ))}
+        </ul>
+      )}
+    </SectionCard>
+  );
+}
+
+/** Business units from GET /api/v1/compliance/business-units, with create. */
+export function BusinessUnitsPanel({ data }: { data: EnterpriseData }) {
+  const { businessUnits } = data;
+  const list = businessUnits.data ?? [];
+  const [createOpen, setCreateOpen] = useState(false);
+
+  return (
+    <SectionCard
+      title="Business Units"
+      subtitle="Organizational structure for scoping"
+      icon={Building2}
+      accent="blue"
+      className="h-full"
+      action={
+        <>
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
+          >
+            <Plus size={13} strokeWidth={2.6} />
+            New unit
+          </button>
+          <BusinessUnitFormModal open={createOpen} onClose={() => setCreateOpen(false)} businessUnits={list} />
+        </>
+      }
+    >
+      {businessUnits.isLoading ? (
+        <SkeletonRows rows={4} />
+      ) : businessUnits.isError ? (
+        <ErrorState compact title="Unable to load business units" onRetry={() => businessUnits.refetch()} />
+      ) : list.length === 0 ? (
+        <EmptyState
+          compact
+          icon={Building2}
+          title="No business units"
+          description="Create units to scope controls, readings, and reporting by org structure."
+        />
+      ) : (
+        <ul className="space-y-2.5">
+          {list.map((b) => (
+            <li key={b.id} className="flex items-center justify-between gap-3 rounded-xl bg-white/50 px-3 py-2.5 ring-1 ring-white/60">
+              <div className="min-w-0">
+                <p className="truncate text-[13px] font-semibold text-cv-ink">{(b.name as string) ?? b.id}</p>
+                {typeof b.code === "string" ? <p className="text-[11px] text-cv-slate">{b.code}</p> : null}
+              </div>
+              <StatusBadge label={b.is_active === false ? "inactive" : "active"} tone={b.is_active === false ? "neutral" : "good"} />
             </li>
           ))}
         </ul>

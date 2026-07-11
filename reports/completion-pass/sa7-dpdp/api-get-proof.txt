@@ -1,0 +1,46 @@
+=== GET /api/v1/privacy/dsr (records created via UI, run 1783802295839) ===
+{
+ "id": "a09dcd02-7381-45bd-8408-1aa70b122ae0",
+ "request_ref": "DSR-2026-004",
+ "request_type": "erasure",
+ "request_subtype": "grievance",
+ "status": "received",
+ "subject_email": "verify-grievance-1783802295839@example.com",
+ "regulatory_framework": "dpdp",
+ "response_deadline": "2026-10-09T20:38:35.633635",
+ "days_to_deadline": 89
+}
+{
+ "id": "17899804-63b4-49a8-a007-2f0ed116f3b4",
+ "request_ref": "DSR-2026-003",
+ "request_type": "access",
+ "request_subtype": "rights_request",
+ "status": "received",
+ "subject_email": "verify-dsar-1783802295839@example.com",
+ "regulatory_framework": "dpdp",
+ "response_deadline": "2026-08-10T20:38:34.105454",
+ "days_to_deadline": 29
+}
+=== GET /api/v1/privacy/consent?processing_activity_id=5941066f... ===
+{
+ "id": "39fad3f9-c9df-43f5-aa82-75a98bc440a9",
+ "processing_activity_id": "5941066f-4dfb-455f-b665-ddebaa96d6a3",
+ "subject_identifier_hash": "077400f06a7334b5e8281ff1945f886ba0ab46bc7d323c8424c78fe9ab681859",
+ "consent_mechanism": "written_form",
+ "consent_version": "v1.0",
+ "granted": true,
+ "granted_at": "2026-07-11T20:38:30.122150"
+}
+=== GET /api/v1/privacy/consent/summary ===
+{
+    "total_records": 2,
+    "active_consents": 2,
+    "withdrawn_count": 0,
+    "expired_count": 0,
+    "consent_rate_pct": 100.0,
+    "expiring_soon_30d": 0,
+    "active_without_notice_count": 2,
+    "context_flags": [
+        "active_consents_missing_notice_reference"
+    ]
+}

@@ -60,3 +60,46 @@ export function getAttestationCampaigns() {
     "/api/v1/compliance/attestation-campaigns"
   );
 }
+
+// ── POST /api/v1/compliance/attestation-campaigns ───────────────────────────
+export type AttestationCampaignCreatePayload = {
+  policy_id: string;
+  title: string;
+  due_date: string; // date
+  description?: string | null;
+  attestation_text?: string | null;
+};
+
+/** The create returns an AttestationSummaryResponse wrapping the new campaign. */
+export type AttestationCampaignSummary = {
+  campaign: AttestationCampaign;
+  total_members: number;
+  attested_count: number;
+  declined_count: number;
+  pending_count: number;
+  completion_pct: number;
+};
+
+export function createAttestationCampaign(payload: AttestationCampaignCreatePayload) {
+  return apiFetch<AttestationCampaignSummary>("/api/v1/compliance/attestation-campaigns", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+// ── POST /api/v1/training-analytics/records (TrainingCompletionRecordCreate) ─
+export type TrainingRecordCreatePayload = {
+  user_id: string;
+  training_type: string;
+  due_date: string; // date-time
+  business_unit_id?: string | null;
+  assigned_at?: string | null;
+  score?: number | null;
+};
+
+export function createTrainingRecord(payload: TrainingRecordCreatePayload) {
+  return apiFetch<TrainingRecord>("/api/v1/training-analytics/records", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}

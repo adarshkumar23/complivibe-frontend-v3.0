@@ -31,6 +31,52 @@ export function getAiSystems(params = "") {
   return apiFetch<AiSystem[]>(`/api/v1/ai-systems${params}`);
 }
 
+// ── POST /api/v1/ai-systems + PATCH /api/v1/ai-systems/{id} ─────────────────
+export const AI_SYSTEM_TYPES = [
+  "internal_model",
+  "third_party_model",
+  "ai_feature",
+  "agent",
+  "workflow_automation",
+  "other"
+] as const;
+
+export const AI_LIFECYCLE_STATUSES = [
+  "proposed",
+  "in_development",
+  "testing",
+  "production",
+  "retired",
+  "archived"
+] as const;
+
+export type AiSystemCreate = {
+  name: string;
+  system_type: (typeof AI_SYSTEM_TYPES)[number];
+  lifecycle_status?: (typeof AI_LIFECYCLE_STATUSES)[number];
+  description?: string | null;
+  deployment_environment?: string | null;
+  vendor_name?: string | null;
+  provider_name?: string | null;
+  model_name?: string | null;
+  model_version?: string | null;
+  intended_purpose?: string | null;
+  use_case?: string | null;
+};
+
+export type AiSystemUpdate = Partial<AiSystemCreate>;
+
+export function createAiSystem(body: AiSystemCreate) {
+  return apiFetch<AiSystem>("/api/v1/ai-systems", { method: "POST", body: JSON.stringify(body) });
+}
+
+export function updateAiSystem(id: string, body: AiSystemUpdate) {
+  return apiFetch<AiSystem>(`/api/v1/ai-systems/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify(body)
+  });
+}
+
 export function getAiSystem(id: string) {
   return apiFetch<AiSystem>(`/api/v1/ai-systems/${encodeURIComponent(id)}`);
 }
@@ -163,6 +209,38 @@ export type AiRiskAssessment = {
 
 export function getAiRiskAssessments(params = "") {
   return apiFetch<AiRiskAssessment[]>(`/api/v1/ai-governance/ai-risk/assessments${params}`);
+}
+
+// ── POST /api/v1/ai-governance/ai-risk/assessments ──────────────────────────
+export const ASSESSMENT_TYPES = [
+  "initial",
+  "periodic",
+  "material_change",
+  "incident_followup",
+  "pre_deployment"
+] as const;
+
+export const ASSESSMENT_RISK_LEVELS = ["unknown", "low", "medium", "high", "critical"] as const;
+
+export type AiRiskAssessmentCreate = {
+  ai_system_id: string;
+  title: string;
+  assessment_type: (typeof ASSESSMENT_TYPES)[number];
+  description?: string | null;
+  status?: "draft" | "in_review" | "completed" | "archived";
+  risk_level?: (typeof ASSESSMENT_RISK_LEVELS)[number];
+  likelihood?: (typeof ASSESSMENT_RISK_LEVELS)[number];
+  impact?: (typeof ASSESSMENT_RISK_LEVELS)[number];
+  mitigation_summary?: string | null;
+  assumptions?: string | null;
+  limitations?: string | null;
+};
+
+export function createAiRiskAssessment(body: AiRiskAssessmentCreate) {
+  return apiFetch<AiRiskAssessment>("/api/v1/ai-governance/ai-risk/assessments", {
+    method: "POST",
+    body: JSON.stringify(body)
+  });
 }
 
 // ── GET /api/v1/ai-governance/iso42001/summary ──────────────────────────────

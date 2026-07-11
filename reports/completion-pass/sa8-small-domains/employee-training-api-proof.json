@@ -1,0 +1,19 @@
+{
+  "request": "GET /api/v1/training-analytics/records",
+  "matched": {
+    "id": "7ee0afd1-dd99-48d1-859a-812e8aa537f3",
+    "organization_id": "3f663d8b-0d8a-439c-b5b5-be0f94198fe2",
+    "user_id": "3f3e1996-7e0c-4268-ac2e-5f34248b1852",
+    "business_unit_id": null,
+    "training_type": "security_awareness_323083",
+    "assigned_at": "2026-07-11T21:46:17.179478",
+    "due_date": "2026-08-31T23:59:59",
+    "completed_at": null,
+    "score": null,
+    "created_by": "3f3e1996-7e0c-4268-ac2e-5f34248b1852",
+    "created_at": "2026-07-11T21:46:17",
+    "updated_at": "2026-07-11T21:46:17",
+    "deleted_at": null,
+    "is_overdue": false
+  }
+}

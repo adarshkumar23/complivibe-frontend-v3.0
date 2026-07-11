@@ -1,6 +1,8 @@
 "use client";
 
-import { LayoutTemplate, FileStack } from "lucide-react";
+import { useState } from "react";
+import { LayoutTemplate, FileStack, Plus } from "lucide-react";
+import { PolicyFormModal } from "@/components/policies/PolicyFormModal";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -12,6 +14,7 @@ import type { PoliciesData } from "@/lib/hooks/usePolicies";
 export function PolicyTemplates({ data }: { data: PoliciesData }) {
   const { templates } = data;
   const items = (templates.data ?? []).slice(0, 6);
+  const [useTemplateId, setUseTemplateId] = useState<string | null>(null);
 
   return (
     <SectionCard title="Policy Templates" subtitle="Start from a framework-tagged template" icon={LayoutTemplate} accent="purple">
@@ -27,7 +30,18 @@ export function PolicyTemplates({ data }: { data: PoliciesData }) {
             <li key={t.id} className="rounded-xl bg-white/50 px-3 py-2.5 ring-1 ring-white/60">
               <div className="flex items-start justify-between gap-2">
                 <p className="text-[13px] font-semibold leading-snug text-cv-ink">{t.title}</p>
-                {t.is_system ? <StatusBadge label="System" tone="info" /> : null}
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {t.is_system ? <StatusBadge label="System" tone="info" /> : null}
+                  <button
+                    type="button"
+                    onClick={() => setUseTemplateId(t.id)}
+                    aria-label={`Create a policy from ${t.title}`}
+                    className="cv-ring-focus inline-flex items-center gap-1 rounded-full bg-cv-brand-soft px-2.5 py-1 text-[11px] font-bold text-cv-blue ring-1 ring-white/60 transition hover:bg-cv-brand hover:text-white"
+                  >
+                    <Plus size={11} strokeWidth={2.8} />
+                    Use
+                  </button>
+                </div>
               </div>
               {t.framework_tags && t.framework_tags.length > 0 ? (
                 <p className="mt-1 flex flex-wrap gap-1">
@@ -42,6 +56,12 @@ export function PolicyTemplates({ data }: { data: PoliciesData }) {
           ))}
         </ul>
       )}
+
+      <PolicyFormModal
+        open={Boolean(useTemplateId)}
+        onClose={() => setUseTemplateId(null)}
+        initialTemplateId={useTemplateId}
+      />
     </SectionCard>
   );
 }

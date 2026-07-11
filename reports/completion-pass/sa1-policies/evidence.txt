@@ -1,0 +1,17 @@
+CREATE: new policy visible in library without reload: true
+CREATE: backend GET status: draft id: 338a455e-09cc-47cf-98f4-6a9d5c909ab4
+CREATE: backend version: 1.0 draft
+REVIEW: modal shows pending request without reload: true
+REVIEW: modal shows under review badge: true
+REVIEW: backend policy status: under_review
+REVIEW: backend version status: submitted
+REVIEW: backend request status: pending approver: 7c9ece8f-c9d5-49ca-babf-c7b357651c2c
+APPROVE: modal shows approved + live version without reload: true
+APPROVE: backend policy: approved approved_by: 7c9ece8f-c9d5-49ca-babf-c7b357651c2c at: 2026-07-11T21:40:26.976448
+APPROVE: backend version: approved is_live: true
+APPROVE: backend request: approved decided_at: 2026-07-11T21:40:26.976448
+TEMPLATE: created policy visible without reload: true
+TEMPLATE: backend policy: draft seeded version: 1.0 draft
+REJECT: modal shows rejected version without reload: true
+REJECT: backend version: rejected review_notes: "Scope section needs org-specific detail before approval." | request: rejected | policy: under_review
+console errors: []

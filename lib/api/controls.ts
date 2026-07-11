@@ -28,6 +28,111 @@ export function getControls(params = "?limit=100") {
   return apiFetch<Control[]>(`/api/v1/controls${params}`);
 }
 
+// ── POST /api/v1/controls ───────────────────────────────────────────────────
+export const CONTROL_TYPES = [
+  "policy",
+  "technical",
+  "administrative",
+  "process",
+  "ai_governance",
+  "vendor",
+  "privacy",
+  "security"
+] as const;
+
+export const CONTROL_CRITICALITIES = ["low", "medium", "high", "critical"] as const;
+
+export type ControlCreateInput = {
+  title: string;
+  description?: string | null;
+  control_code?: string | null;
+  control_type: (typeof CONTROL_TYPES)[number];
+  criticality: (typeof CONTROL_CRITICALITIES)[number];
+  owner_user_id?: string | null;
+  testing_procedure?: string | null;
+  implementation_notes?: string | null;
+};
+
+export function createControl(body: ControlCreateInput) {
+  return apiFetch<Control>("/api/v1/controls", { method: "POST", body: JSON.stringify(body) });
+}
+
+// ── POST /api/v1/controls/{control_id}/obligations ──────────────────────────
+export const OBLIGATION_MAPPING_TYPES = ["satisfies", "partially_satisfies", "supports", "related"] as const;
+
+export type ControlObligationMapInput = {
+  obligation_id: string;
+  mapping_type: (typeof OBLIGATION_MAPPING_TYPES)[number];
+  /** manual_confirmed | system_suggested | imported | low_confidence (defaults to manual_confirmed) */
+  confidence?: string;
+  rationale?: string | null;
+};
+
+export type ControlObligationMap = {
+  obligation_id: string;
+  mapping_type: string;
+  confidence: string;
+  status: string;
+};
+
+export function mapControlToObligation(controlId: string, body: ControlObligationMapInput) {
+  return apiFetch<ControlObligationMap>(`/api/v1/controls/${controlId}/obligations`, {
+    method: "POST",
+    body: JSON.stringify(body)
+  });
+}
+
+// ── GET /api/v1/obligations/{obligation_id}/controls ────────────────────────
+export function getControlsForObligation(obligationId: string) {
+  return apiFetch<Control[]>(`/api/v1/obligations/${obligationId}/controls`);
+}
+
+// ── GET /api/v1/reports/framework-coverage-matrix?framework_id= ─────────────
+export type CoverageMatrixObligation = {
+  obligation_id: string;
+  reference: string;
+  title: string;
+  controls_count: number;
+  evidence_count: number;
+  coverage_status: string; // "covered" | "partial" | "uncovered"
+};
+
+export type FrameworkCoverageMatrix = {
+  framework_id: string;
+  framework_name: string;
+  total_obligations: number;
+  covered: number;
+  partial: number;
+  uncovered: number;
+  coverage_pct: number;
+  sections: { section_title: string; obligations: CoverageMatrixObligation[] }[];
+};
+
+export function getFrameworkCoverageMatrix(frameworkId: string) {
+  return apiFetch<FrameworkCoverageMatrix>(
+    `/api/v1/reports/framework-coverage-matrix?framework_id=${encodeURIComponent(frameworkId)}`
+  );
+}
+
+// ── POST /api/v1/compliance/policies/{policy_id}/links/controls ─────────────
+export type PolicyControlLink = {
+  id: string;
+  organization_id: string;
+  policy_id: string;
+  control_id: string;
+  link_reason: string | null;
+  status: string;
+  linked_by_user_id: string;
+  created_at: string;
+};
+
+export function linkControlToPolicy(policyId: string, body: { control_id: string; link_reason?: string | null }) {
+  return apiFetch<PolicyControlLink>(`/api/v1/compliance/policies/${policyId}/links/controls`, {
+    method: "POST",
+    body: JSON.stringify(body)
+  });
+}
+
 // ── GET /api/v1/controls/gaps/summary ───────────────────────────────────────
 export type ControlGapsSummary = {
   total_active_obligations: number;

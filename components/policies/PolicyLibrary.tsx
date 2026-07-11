@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Search, Library, FileText } from "lucide-react";
+import { PolicyDetailModal } from "@/components/policies/PolicyDetailModal";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -38,6 +39,7 @@ export function PolicyLibrary({ data }: { data: PoliciesData }) {
 
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
+  const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
 
   const statuses = useMemo(() => [...new Set(list.map((p) => p.status))], [list]);
 
@@ -108,7 +110,13 @@ export function PolicyLibrary({ data }: { data: PoliciesData }) {
               {filtered.map((p) => {
                 const days = reviewDays(p.review_due_date);
                 return (
-                  <li key={p.id} className="rounded-2xl bg-white/55 px-3.5 py-3 ring-1 ring-white/70 transition hover:bg-white/85">
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPolicyId(p.id)}
+                      data-testid={`policy-row-${p.id}`}
+                      className="cv-ring-focus w-full rounded-2xl bg-white/55 px-3.5 py-3 text-left ring-1 ring-white/70 transition hover:bg-white/85"
+                    >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-[13px] font-semibold leading-snug text-cv-ink">
@@ -130,6 +138,7 @@ export function PolicyLibrary({ data }: { data: PoliciesData }) {
                         <StatusBadge label={p.status.replaceAll("_", " ")} tone={statusTone(p.status)} />
                       </div>
                     </div>
+                    </button>
                   </li>
                 );
               })}
@@ -137,6 +146,8 @@ export function PolicyLibrary({ data }: { data: PoliciesData }) {
           )}
         </div>
       )}
+
+      <PolicyDetailModal policyId={selectedPolicyId} onClose={() => setSelectedPolicyId(null)} />
     </SectionCard>
   );
 }

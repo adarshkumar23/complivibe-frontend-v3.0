@@ -1,0 +1,23 @@
+{
+  "request": "GET /api/v1/access-certifications/campaigns",
+  "matched": {
+    "id": "16c6c4b8-6bcc-4c2f-b50d-bd20b0eec7ac",
+    "organization_id": "3f663d8b-0d8a-439c-b5b5-be0f94198fe2",
+    "name": "Q3 2026 production access review 323083",
+    "description": "Quarterly review of production system access.",
+    "scope_type": "systems",
+    "scope_config_json": null,
+    "status": "active",
+    "due_date": "2026-09-30",
+    "launched_at": "2026-07-11T21:46:08.200226",
+    "completed_at": null,
+    "created_by_user_id": "3f3e1996-7e0c-4268-ac2e-5f34248b1852",
+    "created_at": "2026-07-11T21:46:08",
+    "updated_at": "2026-07-11T21:46:08",
+    "total_items": 0,
+    "pending_items": 0,
+    "certified_items": 0,
+    "revoked_items": 0,
+    "flagged_items": 0
+  }
+}

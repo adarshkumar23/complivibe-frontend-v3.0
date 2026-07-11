@@ -1,0 +1,21 @@
+{
+  "request": "GET /api/v1/compliance/business-units",
+  "matched": {
+    "id": "420eae4e-bcf7-4f36-bf41-1587a5f4479c",
+    "organization_id": "3f663d8b-0d8a-439c-b5b5-be0f94198fe2",
+    "name": "India Engineering 323083",
+    "code": "IN-ENG-323083",
+    "parent_bu_id": null,
+    "description": "Engineering org in India.",
+    "cost_center": null,
+    "bu_lead_user_id": null,
+    "is_active": true,
+    "created_at": "2026-07-11T21:46:05",
+    "updated_at": "2026-07-11T21:46:05",
+    "deleted_at": null,
+    "active_child_count": 0,
+    "total_child_count": 0,
+    "tagged_entity_count": 0,
+    "context_flags": []
+  }
+}

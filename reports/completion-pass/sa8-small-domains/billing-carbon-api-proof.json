@@ -1,0 +1,61 @@
+{
+  "request": "GET /api/v1/carbon-accounting/dashboard",
+  "before": {
+    "totals_by_scope": {
+      "scope2": "0.5000",
+      "scope3": "3.2000"
+    },
+    "totals_by_scope3_category": [
+      {
+        "category": "business_travel",
+        "value": "3.2000"
+      }
+    ],
+    "totals_by_period": [
+      {
+        "period": "2026-06",
+        "value": "3.7000"
+      }
+    ],
+    "totals_by_business_unit": [
+      {
+        "business_unit_id": null,
+        "value": "3.7000"
+      }
+    ],
+    "reading_count": 2,
+    "canonical_unit": "tCO2e",
+    "insights": [
+      "14 of 15 GHG Protocol Scope 3 categories have no reported data: ['capital_goods', 'downstream_leased_assets', 'downstream_transportation_and_distribution', 'employee_commuting', 'end_of_life_treatment_of_sold_products']...."
+    ]
+  },
+  "after": {
+    "totals_by_scope": {
+      "scope2": "0.5000",
+      "scope3": "6.4000"
+    },
+    "totals_by_scope3_category": [
+      {
+        "category": "business_travel",
+        "value": "6.4000"
+      }
+    ],
+    "totals_by_period": [
+      {
+        "period": "2026-06",
+        "value": "6.9000"
+      }
+    ],
+    "totals_by_business_unit": [
+      {
+        "business_unit_id": null,
+        "value": "6.9000"
+      }
+    ],
+    "reading_count": 3,
+    "canonical_unit": "tCO2e",
+    "insights": [
+      "14 of 15 GHG Protocol Scope 3 categories have no reported data: ['capital_goods', 'downstream_leased_assets', 'downstream_transportation_and_distribution', 'employee_commuting', 'end_of_life_treatment_of_sold_products']...."
+    ]
+  }
+}

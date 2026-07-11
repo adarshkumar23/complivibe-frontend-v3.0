@@ -1,6 +1,7 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { IconTile } from "@/components/ui/IconTile";
 import { Sparkline } from "@/components/charts/Sparkline";
@@ -22,7 +23,8 @@ export function RegistryKpi({
   scoreToneFor,
   caption,
   loading = false,
-  unavailableHint = "Backend field missing"
+  unavailableHint = "Backend field missing",
+  action
 }: {
   label: string;
   icon: LucideIcon;
@@ -35,6 +37,8 @@ export function RegistryKpi({
   caption?: string;
   loading?: boolean;
   unavailableHint?: string;
+  /** optional element rendered in the card's top-right corner (e.g. a quick action) */
+  action?: ReactNode;
 }) {
   const hasValue = value != null && Number.isFinite(value);
   const useScoreTone = scoreToneFor != null;
@@ -53,6 +57,7 @@ export function RegistryKpi({
     <GlassCard hover className="flex flex-col gap-4 p-5">
       <div className="flex items-start justify-between">
         <IconTile icon={icon} accent={accent} size="md" />
+        {action ? <div className="shrink-0">{action}</div> : null}
       </div>
 
       <div>

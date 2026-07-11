@@ -1,11 +1,13 @@
 "use client";
 
-import { Scale, Gavel } from "lucide-react";
+import { useState } from "react";
+import { Scale, Gavel, Plus } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
+import { LegalMatterFormModal } from "@/components/legal/LegalMatterFormModal";
 import { formatDate } from "@/lib/utils/format";
 import type { LegalData } from "@/lib/hooks/useLegal";
 
@@ -13,6 +15,7 @@ import type { LegalData } from "@/lib/hooks/useLegal";
 export function LegalMattersTable({ data }: { data: LegalData }) {
   const { matters } = data;
   const list = matters.data ?? [];
+  const [createOpen, setCreateOpen] = useState(false);
 
   return (
     <SectionCard
@@ -22,11 +25,22 @@ export function LegalMattersTable({ data }: { data: LegalData }) {
       accent="blue"
       className="h-full"
       action={
-        matters.isSuccess ? (
-          <span className="rounded-full bg-cv-brand-soft px-2.5 py-1 text-[11px] font-semibold text-cv-blue ring-1 ring-white/60">
-            {list.length} matters
-          </span>
-        ) : null
+        <div className="flex items-center gap-2">
+          {matters.isSuccess ? (
+            <span className="rounded-full bg-cv-brand-soft px-2.5 py-1 text-[11px] font-semibold text-cv-blue ring-1 ring-white/60">
+              {list.length} matters
+            </span>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
+          >
+            <Plus size={13} strokeWidth={2.6} />
+            New matter
+          </button>
+          <LegalMatterFormModal open={createOpen} onClose={() => setCreateOpen(false)} />
+        </div>
       }
     >
       {matters.isLoading ? (

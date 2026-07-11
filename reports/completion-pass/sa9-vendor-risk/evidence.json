@@ -1,0 +1,120 @@
+{
+  "steps": [
+    {
+      "name": "initial-state",
+      "data": {
+        "hasP0Vendor": true,
+        "hasOverdueBadge": true
+      }
+    },
+    {
+      "name": "create-vendor-api-proof",
+      "data": {
+        "id": "391f3ddf-3134-4a59-a280-4754459ab876",
+        "created_at": "2026-07-11T21:45:10",
+        "updated_at": "2026-07-11T21:45:10",
+        "organization_id": "3f663d8b-0d8a-439c-b5b5-be0f94198fe2",
+        "name": "SA9 Verify Vendor 1783806301263",
+        "description": "Created by SA9 live verification",
+        "vendor_type": "data_processor",
+        "website": null,
+        "primary_contact_name": null,
+        "primary_contact_email": "security@sa9-verify.example.com",
+        "risk_tier": "high",
+        "status": "active",
+        "owner_user_id": "3f3e1996-7e0c-4268-ac2e-5f34248b1852",
+        "data_access": false,
+        "processes_personal_data": true,
+        "sub_processor": false,
+        "nth_party_risk_flag": false,
+        "nth_party_risk_severity": null,
+        "nth_party_risk_signal_type": null,
+        "nth_party_risk_updated_at": null,
+        "tags_json": null,
+        "notes": null,
+        "archived_at": null,
+        "archived_by_user_id": null,
+        "archive_reason": null,
+        "has_overdue_assessment": false,
+        "risk_tier_source": "computed",
+        "annual_spend_amount": "250000.00"
+      }
+    },
+    {
+      "name": "edit-form-prefill",
+      "data": {
+        "prefilledName": "SA9 Verify Vendor 1783806301263",
+        "prefilledOwner": "3f3e1996-7e0c-4268-ac2e-5f34248b1852",
+        "prefilledSpend": "250000"
+      }
+    },
+    {
+      "name": "edit-vendor-api-proof",
+      "data": {
+        "name": "SA9 Verify Vendor 1783806301263 (edited)",
+        "risk_tier": "critical",
+        "annual_spend_amount": "500000.00"
+      }
+    },
+    {
+      "name": "assessment-api-proof",
+      "data": [
+        {
+          "id": "5093f709-a107-4af0-af3d-09be4877062f",
+          "title": "SA9 triggered review 1783806301263",
+          "type": "triggered",
+          "status": "draft",
+          "due": "2026-08-15",
+          "overdue": false
+        }
+      ]
+    },
+    {
+      "name": "vendor-not-overdue-after-future-assessment",
+      "data": {
+        "has_overdue_assessment": false
+      }
+    },
+    {
+      "name": "concentration-before",
+      "data": {
+        "status": "breach",
+        "hhi": 5000
+      }
+    },
+    {
+      "name": "concentration-after-api-proof",
+      "data": {
+        "status": "breach",
+        "hhi_score": 5000,
+        "threshold": 1800,
+        "top_vendor": "SA9 Verify Vendor 1783802314874 (edited)",
+        "top_share_bp": 5000,
+        "exposures": 7,
+        "critical_vendors": 7,
+        "dependencies": 0,
+        "risk_id": "b2f1f566-cc1a-4eb9-88eb-940daa78d67b",
+        "recomputed_at": "2026-07-11T21:45:18.882510"
+      }
+    },
+    {
+      "name": "hhi-kpi-tile-no-reload",
+      "data": {
+        "kpiText": "Concentration (HHI)5000above 1800 threshold — SA9 Verify Vendor 1783802314874 (edited) dominates"
+      }
+    },
+    {
+      "name": "p0-vendor-intact",
+      "data": {
+        "present": true,
+        "still_overdue": true
+      }
+    },
+    {
+      "name": "console-errors",
+      "data": [
+        "Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: [\"cmp-issue-dashboard\"]"
+      ]
+    }
+  ]
+}

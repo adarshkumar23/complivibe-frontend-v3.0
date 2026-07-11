@@ -51,3 +51,69 @@ export type WhistleblowerReport = {
 export function getWhistleblowerReports(params = "") {
   return apiFetch<WhistleblowerReport[]>(`/api/v1/whistleblower/reports${params}`);
 }
+
+// ── POST /api/v1/legal-matters (LegalMatterCreate) ──────────────────────────
+/** Allowed matter_type values (pattern on LegalMatterCreate.matter_type). */
+export const LEGAL_MATTER_TYPES = [
+  "litigation",
+  "regulatory_inquiry",
+  "contract_dispute",
+  "ip_dispute",
+  "employment",
+  "other"
+] as const;
+export type LegalMatterType = (typeof LEGAL_MATTER_TYPES)[number];
+
+export type LegalMatterCreatePayload = {
+  title: string;
+  description?: string | null;
+  matter_type?: LegalMatterType;
+  opposing_party?: string | null;
+  outside_counsel?: string | null;
+  budget?: number | null;
+  owner_user_id?: string | null;
+};
+
+export function createLegalMatter(payload: LegalMatterCreatePayload) {
+  return apiFetch<LegalMatter>("/api/v1/legal-matters", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+// ── POST /api/v1/whistleblower/submit (WhistleblowerReportSubmitRequest) ────
+/** Allowed category values (pattern on WhistleblowerReportSubmitRequest.category). */
+export const WHISTLEBLOWER_CATEGORIES = [
+  "fraud",
+  "corruption",
+  "harassment",
+  "safety_violation",
+  "data_privacy",
+  "financial_misconduct",
+  "discrimination",
+  "retaliation",
+  "other"
+] as const;
+export type WhistleblowerCategory = (typeof WHISTLEBLOWER_CATEGORIES)[number];
+
+export type WhistleblowerSubmitResponse = {
+  tracking_code: string;
+  anonymous_id: string;
+  warning: string | null;
+};
+
+/**
+ * Anonymous channel: the backend requires organization_id in the body (the
+ * endpoint is designed to also work unauthenticated). We read the active org
+ * from local storage, same source apiFetch uses for the X-Organization-ID header.
+ */
+export function submitWhistleblowerReport(payload: { category: WhistleblowerCategory; description: string }) {
+  const orgId = typeof window !== "undefined" ? localStorage.getItem("cv_org") : null;
+  if (!orgId) {
+    return Promise.reject(new Error("No active organization — sign in again to submit a report."));
+  }
+  return apiFetch<WhistleblowerSubmitResponse>("/api/v1/whistleblower/submit", {
+    method: "POST",
+    body: JSON.stringify({ organization_id: orgId, ...payload })
+  });
+}

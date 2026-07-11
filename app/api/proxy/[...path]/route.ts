@@ -20,6 +20,13 @@ async function handler(request: NextRequest, { params }: { params: Promise<{ pat
     headers.set("x-organization-id", orgId);
   }
 
+  // Carbon-accounting ingest authenticates via this key instead of the bearer token
+  // (POST /api/v1/carbon-accounting/readings).
+  const carbonKey = request.headers.get("x-complivibe-key");
+  if (carbonKey) {
+    headers.set("x-complivibe-key", carbonKey);
+  }
+
   const init: RequestInit = {
     method: request.method,
     headers,

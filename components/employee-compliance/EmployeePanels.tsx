@@ -1,12 +1,15 @@
 "use client";
 
-import { GraduationCap, ClipboardSignature, TimerOff, UserCheck } from "lucide-react";
+import { useState } from "react";
+import { GraduationCap, ClipboardSignature, Plus, TimerOff, UserCheck } from "lucide-react";
 import { RegistryKpi } from "@/components/ui/RegistryKpi";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
+import { AttestationCampaignModal } from "@/components/employee-compliance/AttestationCampaignModal";
+import { TrainingRecordModal } from "@/components/employee-compliance/TrainingRecordModal";
 import type { EmployeeComplianceData } from "@/lib/hooks/useEmployeeCompliance";
 
 export function EmployeeComplianceKpis({ data }: { data: EmployeeComplianceData }) {
@@ -60,9 +63,29 @@ export function EmployeeComplianceKpis({ data }: { data: EmployeeComplianceData 
 export function TrainingRecordsPanel({ data }: { data: EmployeeComplianceData }) {
   const { records } = data;
   const list = records.data ?? [];
+  const [assignOpen, setAssignOpen] = useState(false);
 
   return (
-    <SectionCard title="Training Records" subtitle="Assignments and completion" icon={GraduationCap} accent="blue" className="h-full">
+    <SectionCard
+      title="Training Records"
+      subtitle="Assignments and completion"
+      icon={GraduationCap}
+      accent="blue"
+      className="h-full"
+      action={
+        <>
+          <button
+            type="button"
+            onClick={() => setAssignOpen(true)}
+            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
+          >
+            <Plus size={13} strokeWidth={2.6} />
+            Assign training
+          </button>
+          <TrainingRecordModal open={assignOpen} onClose={() => setAssignOpen(false)} />
+        </>
+      }
+    >
       {records.isLoading ? (
         <SkeletonRows rows={5} />
       ) : records.isError ? (
@@ -94,9 +117,28 @@ export function AttestationCampaignsPanel({ data }: { data: EmployeeComplianceDa
   const { campaigns } = data;
   const raw = campaigns.data;
   const list = Array.isArray(raw) ? raw : (raw?.items ?? []);
+  const [createOpen, setCreateOpen] = useState(false);
 
   return (
-    <SectionCard title="Attestation Campaigns" subtitle="Policy acknowledgement drives" icon={ClipboardSignature} accent="purple">
+    <SectionCard
+      title="Attestation Campaigns"
+      subtitle="Policy acknowledgement drives"
+      icon={ClipboardSignature}
+      accent="purple"
+      action={
+        <>
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
+          >
+            <Plus size={13} strokeWidth={2.6} />
+            New campaign
+          </button>
+          <AttestationCampaignModal open={createOpen} onClose={() => setCreateOpen(false)} />
+        </>
+      }
+    >
       {campaigns.isLoading ? (
         <SkeletonRows rows={4} />
       ) : campaigns.isError ? (
