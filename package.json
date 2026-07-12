@@ -21,6 +21,9 @@
     "zustand": "^5.0.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@next/bundle-analyzer": "^16.2.10",
+    "@sentry/nextjs": "^10.65.0",
     "@types/node": "^22.15.30",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",

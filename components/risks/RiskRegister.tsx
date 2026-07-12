@@ -77,6 +77,7 @@ export function RiskRegister({ data }: { data: RisksData }) {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
+              aria-label="Filter risks by category"
               className="cv-ring-focus rounded-full bg-white/60 px-3.5 py-2 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 focus:outline-none"
             >
               <option value="all">All categories</option>
