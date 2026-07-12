@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
+import { ConsentRecorder } from "@/components/privacy/ConsentRecorder";
+import { DsarSubmitForm } from "@/components/privacy/DsarSubmitForm";
 import { PrivacyHeader } from "@/components/privacy/PrivacyHeader";
 import { PrivacyKpis } from "@/components/privacy/PrivacyKpis";
 import { PrivacyRequestsPanel } from "@/components/privacy/PrivacyRequestsPanel";
@@ -40,6 +42,11 @@ export default function PrivacyPage() {
         <div>
           <PrivacyProgramPanels data={data} />
         </div>
+      </motion.div>
+
+      <motion.div variants={fade} custom={3} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ConsentRecorder />
+        <DsarSubmitForm />
       </motion.div>
     </div>
   );

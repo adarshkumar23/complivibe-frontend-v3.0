@@ -1,0 +1,29 @@
+{
+  "request": "GET /api/v1/legal-matters",
+  "matched": {
+    "id": "197d0934-1cef-46eb-a390-f231babc5809",
+    "organization_id": "3f663d8b-0d8a-439c-b5b5-be0f94198fe2",
+    "title": "Vendor DPA dispute — Acme SaaS 323083",
+    "description": "Dispute over data-processing addendum breach remedies.",
+    "matter_type": "contract_dispute",
+    "status": "open",
+    "opposing_party": "Acme Corp",
+    "outside_counsel": "Khaitan & Co",
+    "budget": "250000.00",
+    "related_risk_id": null,
+    "related_issue_id": null,
+    "risk_severity_at_link": null,
+    "owner_user_id": null,
+    "opened_at": "2026-07-11T21:45:31.341586",
+    "closed_at": null,
+    "closed_by": null,
+    "created_by": "3f3e1996-7e0c-4268-ac2e-5f34248b1852",
+    "created_at": "2026-07-11T21:45:31",
+    "updated_at": "2026-07-11T21:45:31",
+    "deleted_at": null,
+    "risk_escalated_since_linked": false,
+    "open_linked_issue_warning": null,
+    "linked_evidence_count": 0,
+    "linked_control_count": 0
+  }
+}

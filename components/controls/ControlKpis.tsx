@@ -1,10 +1,10 @@
 "use client";
 
-import { ShieldCheck, Unlink, FlaskConical, TriangleAlert } from "lucide-react";
+import { ShieldCheck, Unlink, FlaskConical, TriangleAlert, Link2 } from "lucide-react";
 import { RegistryKpi } from "@/components/ui/RegistryKpi";
 import type { ControlsData } from "@/lib/hooks/useControls";
 
-export function ControlKpis({ data }: { data: ControlsData }) {
+export function ControlKpis({ data, onMapGap }: { data: ControlsData; onMapGap?: () => void }) {
   const { gaps, tests } = data;
   const g = gaps.data;
   const t = tests.data;
@@ -34,6 +34,18 @@ export function ControlKpis({ data }: { data: ControlsData }) {
         }
         loading={gaps.isLoading}
         unavailableHint="Gap summary unavailable"
+        action={
+          onMapGap && g && g.obligations_without_controls > 0 ? (
+            <button
+              type="button"
+              onClick={onMapGap}
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1.5 text-[11px] font-bold text-amber-700 ring-1 ring-amber-400/25 transition hover:-translate-y-0.5 hover:bg-amber-500/20"
+            >
+              <Link2 size={12} strokeWidth={2.6} />
+              Map this
+            </button>
+          ) : null
+        }
       />
       <RegistryKpi
         label="High-Criticality Open"

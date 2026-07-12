@@ -1,0 +1,18 @@
+{
+  "request": "GET /api/v1/whistleblower/reports",
+  "matched": {
+    "id": "e87f695e-09a5-4063-ad4b-1899498e618e",
+    "organization_id": "3f663d8b-0d8a-439c-b5b5-be0f94198fe2",
+    "anonymous_id": "xOQ8hdWodQPlDXI3pBf6TL5BU5inKLhX",
+    "category": "data_privacy",
+    "description": "Observed customer PII exported to a personal drive without approval. (verify 323083)",
+    "status": "submitted",
+    "assigned_investigator_user_id": null,
+    "resolution_summary": null,
+    "created_at": "2026-07-11T21:45:34",
+    "updated_at": "2026-07-11T21:45:34",
+    "days_open": 0,
+    "context_flags": []
+  },
+  "tracking_code_shown": "CvCwUitQeR1VsA3uXIgCXkFZLz_ooezQrIdwjbTtFc4"
+}

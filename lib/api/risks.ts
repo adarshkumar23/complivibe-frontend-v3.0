@@ -32,6 +32,75 @@ export function getRisks(params = "?limit=100") {
   return apiFetch<Risk[]>(`/api/v1/risks${params}`);
 }
 
+/**
+ * Allowed values, taken from the live backend schema (reports/live-openapi.json):
+ * - likelihood / impact: integer 1–5 (RiskCreate/RiskUpdate min 1, max 5).
+ * - status: RiskUpdate pattern ^(identified|assessing|treatment_planned|in_treatment|accepted|mitigated|monitored|archived)$
+ * - treatment_strategy: pattern ^(mitigate|accept|transfer|avoid|undecided)$
+ * - category: free string in the schema (default "other"); the backend's formally
+ *   recognised category set is ALL_RISK_CATEGORIES in app/api/v1/risk_appetite.py
+ *   (operational, financial, compliance, reputational, technology, vendor,
+ *   ai_governance) — offered here plus the schema default "other".
+ */
+export const RISK_SCALE = [1, 2, 3, 4, 5] as const;
+
+export const RISK_STATUSES = [
+  "identified",
+  "assessing",
+  "treatment_planned",
+  "in_treatment",
+  "accepted",
+  "mitigated",
+  "monitored",
+  "archived"
+] as const;
+export type RiskStatus = (typeof RISK_STATUSES)[number];
+
+export const TREATMENT_STRATEGIES = ["mitigate", "accept", "transfer", "avoid", "undecided"] as const;
+export type TreatmentStrategy = (typeof TREATMENT_STRATEGIES)[number];
+
+export const RISK_CATEGORIES = [
+  "operational",
+  "financial",
+  "compliance",
+  "reputational",
+  "technology",
+  "vendor",
+  "ai_governance",
+  "other"
+] as const;
+
+// ── POST /api/v1/risks (RiskCreate) ─────────────────────────────────────────
+export type RiskCreatePayload = {
+  title: string;
+  description?: string | null;
+  category?: string;
+  likelihood: number;
+  impact: number;
+  treatment_strategy?: TreatmentStrategy;
+  owner_user_id?: string | null;
+};
+
+export function createRisk(payload: RiskCreatePayload) {
+  return apiFetch<Risk>("/api/v1/risks", { method: "POST", body: JSON.stringify(payload) });
+}
+
+// ── PATCH /api/v1/risks/{risk_id} (RiskUpdate — partial, send only changes) ─
+export type RiskUpdatePayload = Partial<{
+  title: string;
+  description: string | null;
+  category: string;
+  status: RiskStatus;
+  likelihood: number;
+  impact: number;
+  treatment_strategy: TreatmentStrategy;
+  owner_user_id: string | null;
+}>;
+
+export function updateRisk(riskId: string, payload: RiskUpdatePayload) {
+  return apiFetch<Risk>(`/api/v1/risks/${riskId}`, { method: "PATCH", body: JSON.stringify(payload) });
+}
+
 // ── GET /api/v1/risks/summary ───────────────────────────────────────────────
 export type RiskSummary = {
   total_risks: number;

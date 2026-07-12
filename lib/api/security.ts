@@ -59,3 +59,57 @@ export type SodFinding = {
 export function getSodFindings() {
   return apiFetch<SodFinding[]>("/api/v1/sod-conflicts/findings");
 }
+
+// ── GET /api/v1/non-human-identities (NonHumanIdentityRead[]) ───────────────
+export type NonHumanIdentity = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  description: string | null;
+  identity_type: string;
+  owner_user_id: string;
+  permissions_scope: string | null;
+  external_ref: string | null;
+  environment: string | null;
+  last_used_at: string | null;
+  rotation_due_at: string | null;
+  last_rotated_at: string | null;
+  status: string;
+  is_active: boolean;
+  is_orphaned: boolean;
+  risk_level: string;
+  risk_reason: string | null;
+};
+
+export function getNonHumanIdentities(params = "?limit=20") {
+  return apiFetch<NonHumanIdentity[]>(`/api/v1/non-human-identities${params}`);
+}
+
+// ── POST /api/v1/non-human-identities (NonHumanIdentityCreate) ──────────────
+/** Allowed identity_type values (pattern on NonHumanIdentityCreate.identity_type). */
+export const NHI_TYPES = ["service_account", "api_key", "bot"] as const;
+export type NhiType = (typeof NHI_TYPES)[number];
+
+/** Allowed risk_level values (pattern on NonHumanIdentityCreate.risk_level). */
+export const NHI_RISK_LEVELS = ["low", "medium", "high", "critical"] as const;
+export type NhiRiskLevel = (typeof NHI_RISK_LEVELS)[number];
+
+export type NhiCreatePayload = {
+  name: string;
+  identity_type: NhiType;
+  owner_user_id: string;
+  description?: string | null;
+  environment?: string | null;
+  permissions_scope?: string | null;
+  external_ref?: string | null;
+  risk_level?: NhiRiskLevel;
+  risk_reason?: string | null;
+};
+
+export function createNonHumanIdentity(payload: NhiCreatePayload) {
+  return apiFetch<NonHumanIdentity>("/api/v1/non-human-identities", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}

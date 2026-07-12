@@ -1,0 +1,129 @@
+[
+  {
+    "step": "engagement created (API GET proof)",
+    "data": {
+      "id": "11eca7c9-d981-4d0b-bd1d-10d727a1e791",
+      "created_at": "2026-07-11T21:44:13",
+      "updated_at": "2026-07-11T21:44:13",
+      "organization_id": "3f663d8b-0d8a-439c-b5b5-be0f94198fe2",
+      "title": "ISO 27001 surveillance audit — UI verify 2026-07-11 21:44",
+      "audit_type": "surveillance",
+      "scope_framework_ids": [],
+      "assigned_auditor_ids": [],
+      "status": "planning",
+      "start_date": "2026-07-20",
+      "end_date": "2026-08-28",
+      "report_issued_at": null,
+      "lead_auditor_name": "R. Menon",
+      "audit_firm": "Sentinel Assurance LLP",
+      "notes": null,
+      "created_by": "3f3e1996-7e0c-4268-ac2e-5f34248b1852"
+    }
+  },
+  {
+    "step": "finding created (API GET proof)",
+    "data": {
+      "id": "a2fe1be4-0416-423a-af4a-7d89968d8ebf",
+      "created_at": "2026-07-11T21:44:16",
+      "updated_at": "2026-07-11T21:44:16",
+      "organization_id": "3f663d8b-0d8a-439c-b5b5-be0f94198fe2",
+      "audit_engagement_id": "11eca7c9-d981-4d0b-bd1d-10d727a1e791",
+      "finding_ref": "F-2026-005",
+      "severity": "high",
+      "framework_ref": "ISO 27001 A.9.2.5",
+      "title": "Access reviews missing for prod DB — UI verify 2026-07-11 21:44",
+      "description": "Quarterly access reviews for the production database were not performed in Q1 or Q2.",
+      "assigned_owner_id": "3f3e1996-7e0c-4268-ac2e-5f34248b1852",
+      "remediation_action": "Run and document access reviews for Q1/Q2 retroactively; add recurring calendar control.",
+      "target_remediation_date": "2026-09-15",
+      "status": "open",
+      "risk_register_entry_id": null,
+      "control_id": null,
+      "control_name": null,
+      "control_status": null,
+      "control_archived": false,
+      "scope_changed_since_creation": false,
+      "closed_at": null,
+      "closed_by": null
+    }
+  },
+  {
+    "step": "finding transitioned (API GET proof)",
+    "data": {
+      "id": "a2fe1be4-0416-423a-af4a-7d89968d8ebf",
+      "status": "in_remediation"
+    }
+  },
+  {
+    "step": "pbc item created (API GET proof)",
+    "data": {
+      "id": "8e0fcf6f-4aac-487b-ac53-23bec2ecf5b8",
+      "created_at": "2026-07-11T21:44:20",
+      "updated_at": "2026-07-11T21:44:20",
+      "organization_id": "3f663d8b-0d8a-439c-b5b5-be0f94198fe2",
+      "audit_engagement_id": "11eca7c9-d981-4d0b-bd1d-10d727a1e791",
+      "title": "Q2 access review sign-off — UI verify 2026-07-11 21:44",
+      "description": "Signed quarterly access review covering production systems, PDF export.",
+      "requester_id": "3f3e1996-7e0c-4268-ac2e-5f34248b1852",
+      "assignee_id": null,
+      "due_date": "2026-08-10",
+      "status": "pending",
+      "evidence_id": null,
+      "submitted_at": null,
+      "accepted_at": null,
+      "rejected_at": null,
+      "rejection_reason": null,
+      "days_overdue": 0,
+      "fieldwork_deadline": "2026-08-28",
+      "overdue_relative_to_fieldwork_deadline": false,
+      "days_past_fieldwork_deadline": 0,
+      "acceptance_override_reason": null
+    }
+  },
+  {
+    "step": "pbc submitted (API GET proof)",
+    "data": {
+      "id": "8e0fcf6f-4aac-487b-ac53-23bec2ecf5b8",
+      "status": "submitted"
+    }
+  },
+  {
+    "step": "pbc accepted (API GET proof)",
+    "data": {
+      "id": "8e0fcf6f-4aac-487b-ac53-23bec2ecf5b8",
+      "status": "accepted",
+      "override": "Reviewed the signed report directly during fieldwork walkthrough; formal upload to evidence vault to follow."
+    }
+  },
+  {
+    "step": "engagement transitioned (API GET proof)",
+    "data": {
+      "id": "11eca7c9-d981-4d0b-bd1d-10d727a1e791",
+      "status": "fieldwork"
+    }
+  },
+  {
+    "step": "no-reload check",
+    "data": {
+      "jsContextStampSurvived": true,
+      "framenavigatedEvents": 0,
+      "urls": [
+        "http://127.0.0.1:3777/login",
+        "http://127.0.0.1:3777/login",
+        "http://127.0.0.1:3777/dashboard",
+        "http://127.0.0.1:3777/dashboard/audit-pack",
+        "http://127.0.0.1:3777/dashboard/audit-pack"
+      ]
+    }
+  },
+  {
+    "step": "console errors (raw)",
+    "data": [
+      "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+    ]
+  },
+  {
+    "step": "console errors (unexpected)",
+    "data": []
+  }
+]

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getConsentSummary,
   getDsrRequests,
@@ -9,7 +9,12 @@ import {
   getDpaSummary,
   getRopaSummary,
   getLawfulBasisSummary,
-  getCommonControlsSummary
+  getCommonControlsSummary,
+  getRopaActivities,
+  createConsent,
+  createDsr,
+  type ConsentCreateInput,
+  type DsrCreateInput
 } from "@/lib/api/privacy";
 
 export function usePrivacy() {
@@ -26,3 +31,31 @@ export function usePrivacy() {
 }
 
 export type PrivacyData = ReturnType<typeof usePrivacy>;
+
+/** RoPA processing activities — consent records must reference one. */
+export function useRopaActivities() {
+  return useQuery({ queryKey: ["ropa-activities"], queryFn: getRopaActivities });
+}
+
+/** POST /api/v1/privacy/consent — refreshes consent KPIs without a reload. */
+export function useCreateConsent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ConsentCreateInput) => createConsent(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["consent-summary"] });
+    }
+  });
+}
+
+/** POST /api/v1/privacy/dsr — DSARs and DPDP grievances (request_subtype = "grievance"). */
+export function useCreateDsr() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: DsrCreateInput) => createDsr(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dsr-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["dsr-summary"] });
+    }
+  });
+}

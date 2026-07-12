@@ -1,0 +1,66 @@
+{
+  "steps": [
+    {
+      "name": "baseline cell 2-2",
+      "data": "Likelihood 2, impact 2: 0 risks"
+    },
+    {
+      "name": "baseline cell 5-5",
+      "data": "Likelihood 5, impact 5: 0 risks"
+    },
+    {
+      "name": "register shows new risk without reload",
+      "data": true
+    },
+    {
+      "name": "matrix cell 2-2 after create",
+      "data": "Likelihood 2, impact 2: 1 risk"
+    },
+    {
+      "name": "API GET after create",
+      "data": {
+        "id": "dfaed130-222d-4004-a9d3-c7305dc0e2bd",
+        "title": "UI-Verify 799915: unpatched CVE backlog in build agents",
+        "category": "technology",
+        "likelihood": 2,
+        "impact": 2,
+        "inherent_score": 4,
+        "status": "identified",
+        "treatment_strategy": "mitigate",
+        "owner_user_id": "3f3e1996-7e0c-4268-ac2e-5f34248b1852"
+      }
+    },
+    {
+      "name": "matrix cell 2-2 after edit",
+      "data": "Likelihood 2, impact 2: 0 risks"
+    },
+    {
+      "name": "matrix cell 5-5 after edit",
+      "data": "Likelihood 5, impact 5: 1 risk"
+    },
+    {
+      "name": "API GET after edit",
+      "data": {
+        "status": 200,
+        "likelihood": 5,
+        "impact": 5,
+        "inherent_score": 25,
+        "risk_status": "in_treatment",
+        "severity": "critical"
+      }
+    },
+    {
+      "name": "API heatmap cell 5-5",
+      "data": {
+        "count": 1,
+        "risks": [
+          "UI-Verify 799915: unpatched CVE backlog in build agents"
+        ]
+      }
+    },
+    {
+      "name": "console errors",
+      "data": []
+    }
+  ]
+}

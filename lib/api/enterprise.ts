@@ -47,3 +47,39 @@ export type RecertificationSummary = {
 export function getRecertificationSummary() {
   return apiFetch<RecertificationSummary>("/api/v1/recertification/summary");
 }
+
+// ── POST /api/v1/compliance/business-units (BusinessUnitCreate) ─────────────
+export type BusinessUnitCreatePayload = {
+  name: string;
+  code: string;
+  parent_bu_id?: string | null;
+  description?: string | null;
+  cost_center?: string | null;
+  bu_lead_user_id?: string | null;
+};
+
+export function createBusinessUnit(payload: BusinessUnitCreatePayload) {
+  return apiFetch<BusinessUnit>("/api/v1/compliance/business-units", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+// ── POST /api/v1/access-certifications/campaigns ────────────────────────────
+/** Allowed status values (pattern on AccessCertificationCampaignCreate.status). */
+export const ACCESS_CERT_STATUSES = ["draft", "active", "completed", "cancelled", "archived"] as const;
+
+export type AccessCertCampaignCreatePayload = {
+  name: string;
+  description?: string | null;
+  scope_type?: string;
+  due_date?: string | null; // date
+  status?: (typeof ACCESS_CERT_STATUSES)[number];
+};
+
+export function createAccessCertCampaign(payload: AccessCertCampaignCreatePayload) {
+  return apiFetch<AccessCertCampaign>("/api/v1/access-certifications/campaigns", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}

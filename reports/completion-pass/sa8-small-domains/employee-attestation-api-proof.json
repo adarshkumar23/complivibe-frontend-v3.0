@@ -1,0 +1,18 @@
+{
+  "request": "GET /api/v1/compliance/attestation-campaigns",
+  "matched": {
+    "id": "a17d9216-4250-41ed-91cf-cabc525cc12a",
+    "organization_id": "3f663d8b-0d8a-439c-b5b5-be0f94198fe2",
+    "policy_id": "0388a863-f572-4145-9ecd-d9ba4419702b",
+    "policy_version_id": null,
+    "title": "AI acceptable-use attestation 323083",
+    "description": null,
+    "attestation_text_shown": "I have read and will comply with this policy.",
+    "content_hash": "0ce887bddc47308c89ddbbc120480f4fa5ad22bc9cbb75b05c75845c4a2e8283",
+    "due_date": "2026-08-15",
+    "status": "active",
+    "created_by": "3f3e1996-7e0c-4268-ac2e-5f34248b1852",
+    "created_at": "2026-07-11T21:46:51",
+    "updated_at": "2026-07-11T21:46:51"
+  }
+}

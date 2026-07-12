@@ -20,6 +20,61 @@ export function getConsentSummary() {
   return apiFetch<ConsentSummary>("/api/v1/privacy/consent/summary");
 }
 
+// ── GET /api/v1/privacy/ropa/activities ─────────────────────────────────────
+// Consent records must reference an existing processing activity (RoPA).
+export type ProcessingActivity = {
+  id: string;
+  name: string;
+  purpose: string | null;
+  legal_basis: string | null;
+  status: string | null;
+  risk_level: string | null;
+  created_at: string;
+};
+
+export function getRopaActivities() {
+  return apiFetch<ProcessingActivity[]>("/api/v1/privacy/ropa/activities");
+}
+
+// ── POST /api/v1/privacy/consent (ConsentRecordCreate → ConsentRecordRead) ──
+// Allowed consent_mechanism values (backend ALLOWED_CONSENT_MECHANISMS):
+// explicit_checkbox, cookie_banner, written_form, verbal_recorded, api_consent,
+// implied, ccpa_opt_out. Guardian fields are DPDP §9 verifiable-consent support.
+export type ConsentCreateInput = {
+  processing_activity_id: string;
+  subject_identifier: string;
+  consent_mechanism: string;
+  notice_id?: string | null;
+  consent_version?: string | null;
+  granted?: boolean;
+  expiry_date?: string | null;
+  metadata?: Record<string, unknown>;
+  is_minor_or_guardian_managed?: boolean;
+  guardian_relationship?: string | null;
+  guardian_identity_reference?: string | null;
+  guardian_verification_method?: string | null;
+};
+
+export type ConsentRecord = {
+  id: string;
+  processing_activity_id: string;
+  subject_identifier: string;
+  subject_identifier_hash: string | null;
+  consent_mechanism: string;
+  consent_version: string | null;
+  granted: boolean;
+  granted_at: string | null;
+  withdrawn_at: string | null;
+  expiry_date: string | null;
+  is_minor_or_guardian_managed: boolean | null;
+  guardian_relationship: string | null;
+  created_at: string;
+};
+
+export function createConsent(body: ConsentCreateInput) {
+  return apiFetch<ConsentRecord>("/api/v1/privacy/consent", { method: "POST", body: JSON.stringify(body) });
+}
+
 // ── GET /api/v1/privacy/dsr + /summary ──────────────────────────────────────
 export type DataSubjectRequest = {
   id: string;
@@ -45,6 +100,29 @@ export type DataSubjectRequest = {
 
 export function getDsrRequests(params = "") {
   return apiFetch<DataSubjectRequest[]>(`/api/v1/privacy/dsr${params}`);
+}
+
+// ── POST /api/v1/privacy/dsr (DataSubjectRequestCreate) ─────────────────────
+// Grievances are DSRs with request_subtype = "grievance" (90-day SLA, Rule 14(3)).
+// Allowed request_type values (backend ALLOWED_REQUEST_TYPES): access, erasure,
+// portability, rectification, restriction, objection, opt_out_of_sale,
+// limit_sensitive, know, correct. Frameworks: gdpr, ccpa, dpdp, lgpd, custom.
+export type DsrCreateInput = {
+  request_type: string;
+  subject_name: string;
+  subject_email: string;
+  subject_identifier?: string | null;
+  description?: string | null;
+  regulatory_framework?: string;
+  deadline_days?: number | null;
+  request_subtype?: "rights_request" | "grievance" | null;
+  data_categories?: string[];
+  submitted_by_nominee_id?: string | null;
+  relationship_end_date?: string | null;
+};
+
+export function createDsr(body: DsrCreateInput) {
+  return apiFetch<DataSubjectRequest>("/api/v1/privacy/dsr", { method: "POST", body: JSON.stringify(body) });
 }
 
 export type DsrSummary = {

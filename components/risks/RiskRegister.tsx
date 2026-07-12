@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, BookOpenCheck, ShieldAlert } from "lucide-react";
+import { Search, BookOpenCheck, ShieldAlert, SquarePen } from "lucide-react";
+import { RiskFormModal } from "@/components/risks/RiskFormModal";
+import type { Risk } from "@/lib/api/risks";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
@@ -17,6 +19,7 @@ export function RiskRegister({ data }: { data: RisksData }) {
 
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
+  const [editRisk, setEditRisk] = useState<Risk | null>(null);
 
   const categories = useMemo(
     () => [...new Set(list.map((r) => r.category).filter((c): c is string => Boolean(c)))],
@@ -105,6 +108,14 @@ export function RiskRegister({ data }: { data: RisksData }) {
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setEditRisk(r)}
+                        aria-label={`Edit risk: ${r.title}`}
+                        className="cv-ring-focus inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/60 text-cv-slate ring-1 ring-white/70 transition hover:bg-white hover:text-cv-ink"
+                      >
+                        <SquarePen size={13} />
+                      </button>
                       {r.inherent_score != null ? (
                         <span className="rounded-full bg-slate-500/10 px-2 py-0.5 text-[11px] font-bold text-cv-slate ring-1 ring-slate-400/20">
                           {r.inherent_score}
@@ -123,6 +134,8 @@ export function RiskRegister({ data }: { data: RisksData }) {
           )}
         </div>
       )}
+
+      <RiskFormModal open={editRisk !== null} onClose={() => setEditRisk(null)} risk={editRisk} />
     </SectionCard>
   );
 }

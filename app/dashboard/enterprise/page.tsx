@@ -2,7 +2,12 @@
 
 import { motion, type Variants } from "framer-motion";
 import { Building2 } from "lucide-react";
-import { EnterpriseKpis, RecertificationPanel, AccessCertPanel } from "@/components/enterprise/EnterprisePanels";
+import {
+  EnterpriseKpis,
+  RecertificationPanel,
+  AccessCertPanel,
+  BusinessUnitsPanel
+} from "@/components/enterprise/EnterprisePanels";
 import { useEnterpriseControl } from "@/lib/hooks/useEnterpriseControl";
 
 const fade: Variants = {
@@ -36,7 +41,8 @@ export default function EnterprisePage() {
         <EnterpriseKpis data={data} />
       </motion.div>
 
-      <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <BusinessUnitsPanel data={data} />
         <RecertificationPanel data={data} />
         <AccessCertPanel data={data} />
       </motion.div>

@@ -5,6 +5,10 @@ import { Bot } from "lucide-react";
 import { AutopilotKpis } from "@/components/autopilot/AutopilotKpis";
 import { AutopilotGuardrails } from "@/components/autopilot/AutopilotGuardrails";
 import { AutopilotPipeline } from "@/components/autopilot/AutopilotPipeline";
+import { AutopilotPolicies } from "@/components/autopilot/AutopilotPolicies";
+import { IntentsTable } from "@/components/autopilot/IntentsTable";
+import { ApprovalsTable } from "@/components/autopilot/ApprovalsTable";
+import { ExecutionsTable } from "@/components/autopilot/ExecutionsTable";
 import { useAutopilot } from "@/lib/hooks/useAutopilot";
 
 const fade: Variants = {
@@ -46,6 +50,19 @@ export default function AutopilotPage() {
         <div>
           <AutopilotGuardrails data={data} />
         </div>
+      </motion.div>
+
+      <motion.div variants={fade} custom={3} initial="hidden" animate="show">
+        <AutopilotPolicies />
+      </motion.div>
+
+      <motion.div variants={fade} custom={4} initial="hidden" animate="show">
+        <IntentsTable />
+      </motion.div>
+
+      <motion.div variants={fade} custom={5} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ApprovalsTable />
+        <ExecutionsTable />
       </motion.div>
     </div>
   );

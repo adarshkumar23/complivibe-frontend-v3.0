@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, ShieldCheck, Shield } from "lucide-react";
+import { Search, ShieldCheck, Shield, Plus, Link2, FileText } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import type { Severity } from "@/lib/api/types";
+import type { Control } from "@/lib/api/controls";
 import type { ControlsData } from "@/lib/hooks/useControls";
 
 function statusTone(status: string): "good" | "warn" | "bad" | "neutral" {
@@ -24,7 +25,17 @@ function statusTone(status: string): "good" | "warn" | "bad" | "neutral" {
   }
 }
 
-export function ControlsTable({ data }: { data: ControlsData }) {
+export function ControlsTable({
+  data,
+  onCreate,
+  onLinkObligation,
+  onLinkPolicy
+}: {
+  data: ControlsData;
+  onCreate?: () => void;
+  onLinkObligation?: (control: Control) => void;
+  onLinkPolicy?: (control: Control) => void;
+}) {
   const { controls } = data;
   const list = useMemo(() => controls.data ?? [], [controls.data]);
 
@@ -49,11 +60,23 @@ export function ControlsTable({ data }: { data: ControlsData }) {
       icon={ShieldCheck}
       accent="blue"
       action={
-        controls.isSuccess ? (
-          <span className="rounded-full bg-cv-brand-soft px-2.5 py-1 text-[11px] font-semibold text-cv-blue ring-1 ring-white/60">
-            {list.length} controls
-          </span>
-        ) : null
+        <div className="flex items-center gap-2">
+          {controls.isSuccess ? (
+            <span className="rounded-full bg-cv-brand-soft px-2.5 py-1 text-[11px] font-semibold text-cv-blue ring-1 ring-white/60">
+              {list.length} controls
+            </span>
+          ) : null}
+          {onCreate ? (
+            <button
+              type="button"
+              onClick={onCreate}
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3 py-1.5 text-[11px] font-bold text-white shadow-button transition hover:-translate-y-0.5"
+            >
+              <Plus size={12} strokeWidth={2.8} />
+              New control
+            </button>
+          ) : null}
+        </div>
       }
     >
       {controls.isLoading ? (
@@ -114,6 +137,30 @@ export function ControlsTable({ data }: { data: ControlsData }) {
                       <StatusBadge label={c.status.replaceAll("_", " ")} tone={statusTone(c.status)} />
                     </div>
                   </div>
+                  {onLinkObligation || onLinkPolicy ? (
+                    <div className="mt-2 flex items-center gap-2">
+                      {onLinkObligation ? (
+                        <button
+                          type="button"
+                          onClick={() => onLinkObligation(c)}
+                          className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1.5 text-[11px] font-semibold text-cv-ink ring-1 ring-white/70 transition hover:bg-white"
+                        >
+                          <Link2 size={11} strokeWidth={2.6} />
+                          Link obligation
+                        </button>
+                      ) : null}
+                      {onLinkPolicy ? (
+                        <button
+                          type="button"
+                          onClick={() => onLinkPolicy(c)}
+                          className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1.5 text-[11px] font-semibold text-cv-ink ring-1 ring-white/70 transition hover:bg-white"
+                        >
+                          <FileText size={11} strokeWidth={2.6} />
+                          Link policy
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </li>
               ))}
             </ul>

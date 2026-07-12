@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ClipboardList, TriangleAlert, ListTodo, Gauge } from "lucide-react";
 import { RegistryKpi } from "@/components/ui/RegistryKpi";
 import type { CommandCenterData } from "@/lib/hooks/useCommandCenter";
@@ -11,21 +12,28 @@ export function KpiRow({ data }: { data: CommandCenterData }) {
 
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <RegistryKpi
-        label="Compliance Score"
-        icon={Gauge}
-        accent="blue"
-        value={s?.current_score ?? null}
-        caption={
-          s
-            ? s.current_score != null
-              ? `grade ${s.current_score_grade ?? "—"}`
-              : "no score snapshot computed yet"
-            : undefined
-        }
-        loading={summary.isLoading}
-        unavailableHint="Score not yet computed"
-      />
+      {/* Deep-links to the score explainer (real /scoring breakdown of this number). */}
+      <Link
+        href="/dashboard/score-explainer"
+        aria-label="Explain the compliance score"
+        className="cv-ring-focus block rounded-3xl transition hover:-translate-y-0.5"
+      >
+        <RegistryKpi
+          label="Compliance Score"
+          icon={Gauge}
+          accent="blue"
+          value={s?.current_score ?? null}
+          caption={
+            s
+              ? s.current_score != null
+                ? `grade ${s.current_score_grade ?? "—"} · tap to explain`
+                : "no score snapshot computed yet"
+              : undefined
+          }
+          loading={summary.isLoading}
+          unavailableHint="Score not yet computed"
+        />
+      </Link>
       <RegistryKpi
         label="Open Obligations"
         icon={ClipboardList}

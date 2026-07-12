@@ -1,7 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { getAiRiskAssessments, getAiRiskAssessmentsSummary, getIso42001Summary } from "@/lib/api/ai-systems";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  getAiRiskAssessments,
+  getAiRiskAssessmentsSummary,
+  getIso42001Summary,
+  createAiRiskAssessment,
+  type AiRiskAssessmentCreate
+} from "@/lib/api/ai-systems";
 
 export function useAiTesting() {
   const assessments = useQuery({ queryKey: ["ai-risk-assessments"], queryFn: () => getAiRiskAssessments() });
@@ -12,3 +18,14 @@ export function useAiTesting() {
 }
 
 export type AiTestingData = ReturnType<typeof useAiTesting>;
+
+export function useCreateAiRiskAssessment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AiRiskAssessmentCreate) => createAiRiskAssessment(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ai-risk-assessments"] });
+      queryClient.invalidateQueries({ queryKey: ["ai-risk-assessments-summary"] });
+    }
+  });
+}

@@ -1,7 +1,9 @@
 "use client";
 
-import { Radar, Fingerprint, KeySquare, UsersRound } from "lucide-react";
+import { useState } from "react";
+import { Radar, Fingerprint, KeySquare, Plus, UsersRound } from "lucide-react";
 import { RegistryKpi } from "@/components/ui/RegistryKpi";
+import { NhiFormModal } from "@/components/security/NhiFormModal";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -99,28 +101,60 @@ export function ScanJobsPanel({ data }: { data: SecurityData }) {
   );
 }
 
-/** NHI risk mix from GET /api/v1/non-human-identities/summary. */
+/** NHI register from GET /api/v1/non-human-identities (+ /summary for KPIs). */
 export function NhiPanel({ data }: { data: SecurityData }) {
-  const { nhi } = data;
+  const { nhi, nhiList } = data;
   const n = nhi.data;
-  const byRisk = n ? Object.entries(n.by_risk_level) : [];
+  const list = nhiList.data ?? [];
+  const [createOpen, setCreateOpen] = useState(false);
 
   return (
-    <SectionCard title="Non-Human Identities" subtitle="Service accounts, keys, and tokens" icon={KeySquare} accent="purple">
-      {nhi.isLoading ? (
+    <SectionCard
+      title="Non-Human Identities"
+      subtitle="Service accounts, keys, and tokens"
+      icon={KeySquare}
+      accent="purple"
+      action={
+        <>
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
+          >
+            <Plus size={13} strokeWidth={2.6} />
+            Register
+          </button>
+          <NhiFormModal open={createOpen} onClose={() => setCreateOpen(false)} />
+        </>
+      }
+    >
+      {nhiList.isLoading || nhi.isLoading ? (
         <SkeletonRows rows={3} />
-      ) : nhi.isError ? (
-        <ErrorState compact title="Unable to load NHI summary" onRetry={() => nhi.refetch()} />
-      ) : !n || n.total_identities === 0 ? (
+      ) : nhiList.isError ? (
+        <ErrorState compact title="Unable to load identities" onRetry={() => nhiList.refetch()} />
+      ) : list.length === 0 ? (
         <EmptyState compact icon={KeySquare} title="No identities registered" description="Track service accounts and API keys here." />
       ) : (
         <ul className="space-y-2.5">
-          {byRisk.map(([level, count]) => (
-            <li key={level} className="flex items-center justify-between gap-3 rounded-xl bg-white/50 px-3 py-2.5 ring-1 ring-white/60">
-              <span className="text-[13px] font-semibold capitalize text-cv-ink">{level}</span>
-              <StatusBadge label={String(count)} tone={level === "high" || level === "critical" ? "bad" : "neutral"} />
+          {list.map((i) => (
+            <li key={i.id} className="flex items-center justify-between gap-3 rounded-xl bg-white/50 px-3 py-2.5 ring-1 ring-white/60">
+              <div className="min-w-0">
+                <p className="truncate text-[13px] font-semibold text-cv-ink">{i.name}</p>
+                <p className="text-[11px] text-cv-slate">
+                  {[i.identity_type.replaceAll("_", " "), i.environment].filter(Boolean).join(" · ")}
+                </p>
+              </div>
+              <StatusBadge
+                label={i.risk_level}
+                tone={i.risk_level === "critical" || i.risk_level === "high" ? "bad" : i.risk_level === "medium" ? "warn" : "neutral"}
+              />
             </li>
           ))}
+          {n && n.unrotated_identities + n.orphaned_identities > 0 ? (
+            <li className="rounded-xl bg-amber-400/10 px-3 py-2 text-[11px] font-semibold text-amber-600 ring-1 ring-amber-400/20">
+              {n.unrotated_identities} unrotated · {n.orphaned_identities} orphaned — hygiene attention needed
+            </li>
+          ) : null}
         </ul>
       )}
     </SectionCard>

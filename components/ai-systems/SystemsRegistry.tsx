@@ -1,12 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, BrainCircuit, Bot } from "lucide-react";
+import { Search, BrainCircuit, Bot, Plus, PencilLine } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
+import { AiSystemFormModal } from "@/components/ai-systems/AiSystemFormModal";
+import type { AiSystem } from "@/lib/api/ai-systems";
 import type { AiSystemsData } from "@/lib/hooks/useAiSystems";
 
 function lifecycleTone(status: string): "good" | "warn" | "bad" | "neutral" | "info" {
@@ -32,6 +34,8 @@ export function SystemsRegistry({ data }: { data: AiSystemsData }) {
 
   const [query, setQuery] = useState("");
   const [lifecycle, setLifecycle] = useState("all");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editing, setEditing] = useState<AiSystem | null>(null);
 
   const lifecycles = useMemo(() => [...new Set(list.map((s) => s.lifecycle_status))], [list]);
 
@@ -54,11 +58,21 @@ export function SystemsRegistry({ data }: { data: AiSystemsData }) {
       accent="purple"
       className="h-full"
       action={
-        systems.isSuccess ? (
-          <span className="rounded-full bg-cv-brand-soft px-2.5 py-1 text-[11px] font-semibold text-cv-blue ring-1 ring-white/60">
-            {list.length} systems
-          </span>
-        ) : null
+        <div className="flex items-center gap-2">
+          {systems.isSuccess ? (
+            <span className="rounded-full bg-cv-brand-soft px-2.5 py-1 text-[11px] font-semibold text-cv-blue ring-1 ring-white/60">
+              {list.length} systems
+            </span>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3 py-1.5 text-[11px] font-bold text-white shadow-button transition hover:-translate-y-0.5"
+          >
+            <Plus size={13} strokeWidth={2.6} />
+            Register system
+          </button>
+        </div>
       }
     >
       {systems.isLoading ? (
@@ -113,7 +127,18 @@ export function SystemsRegistry({ data }: { data: AiSystemsData }) {
                           .join(" · ")}
                       </p>
                     </div>
-                    <StatusBadge label={s.lifecycle_status.replaceAll("_", " ")} tone={lifecycleTone(s.lifecycle_status)} />
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <StatusBadge label={s.lifecycle_status.replaceAll("_", " ")} tone={lifecycleTone(s.lifecycle_status)} />
+                      <button
+                        type="button"
+                        onClick={() => setEditing(s)}
+                        aria-label={`Edit ${s.name}`}
+                        title={`Edit ${s.name}`}
+                        className="cv-ring-focus inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/60 text-cv-slate ring-1 ring-white/70 transition hover:bg-white hover:text-cv-ink"
+                      >
+                        <PencilLine size={13} strokeWidth={2.2} />
+                      </button>
+                    </div>
                   </div>
                 </li>
               ))}
@@ -121,6 +146,8 @@ export function SystemsRegistry({ data }: { data: AiSystemsData }) {
           )}
         </div>
       )}
+      <AiSystemFormModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <AiSystemFormModal open={editing != null} onClose={() => setEditing(null)} system={editing} />
     </SectionCard>
   );
 }

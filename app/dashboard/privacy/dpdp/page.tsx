@@ -4,6 +4,8 @@ import { motion, type Variants } from "framer-motion";
 import { Landmark } from "lucide-react";
 import { PrivacyKpis } from "@/components/privacy/PrivacyKpis";
 import { PrivacyRequestsPanel } from "@/components/privacy/PrivacyRequestsPanel";
+import { ConsentRecorder } from "@/components/privacy/ConsentRecorder";
+import { DsarSubmitForm } from "@/components/privacy/DsarSubmitForm";
 import { NominationManager } from "@/components/privacy/NominationManager";
 import { SdfDesignationPanel } from "@/components/privacy/SdfDesignationPanel";
 import { FrameworkReconPanel } from "@/components/privacy/FrameworkReconPanel";
@@ -41,11 +43,16 @@ export default function DpdpPage() {
       </motion.div>
 
       <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ConsentRecorder />
+        <DsarSubmitForm />
+      </motion.div>
+
+      <motion.div variants={fade} custom={3} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <NominationManager />
         <SdfDesignationPanel />
       </motion.div>
 
-      <motion.div variants={fade} custom={3} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <motion.div variants={fade} custom={4} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <PrivacyRequestsPanel data={data} />
         </div>

@@ -1,0 +1,5 @@
+{
+  "request": "GET /api/v1/billing/usage/dashboard",
+  "usage_spend_cap_enabled": true,
+  "usage_spend_cap_inr": 50000
+}

@@ -25,10 +25,10 @@ export function EvidenceFreshnessPanel({ data }: { data: EvidenceData }) {
           {list.map((g, i) => (
             <li key={(g.control_id as string) ?? i} className="rounded-xl bg-white/50 px-3 py-2.5 ring-1 ring-white/60">
               <p className="text-[13px] font-semibold leading-snug text-cv-ink">
-                {(g.control_title as string) ?? (g.control_id as string) ?? "Control"}
+                {(g.control_name as string) ?? (g.control_id as string) ?? "Control"}
               </p>
-              {g.gap_type ? (
-                <p className="mt-0.5 text-[11px] text-cv-slate">{String(g.gap_type).replaceAll("_", " ")}</p>
+              {g.reason ? (
+                <p className="mt-0.5 text-[11px] text-cv-slate">{String(g.reason).replaceAll("_", " ")}</p>
               ) : null}
             </li>
           ))}

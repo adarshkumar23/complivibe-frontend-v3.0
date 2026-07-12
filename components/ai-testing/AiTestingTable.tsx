@@ -1,7 +1,9 @@
 "use client";
 
-import { ClipboardCheck, FilePlus2 } from "lucide-react";
+import { useState } from "react";
+import { ClipboardCheck, FilePlus2, Plus } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { CreateAssessmentModal } from "@/components/ai-testing/CreateAssessmentModal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -16,6 +18,7 @@ export function AiTestingTable({ data }: { data: AiTestingData }) {
   const { assessments, summary } = data;
   const list = assessments.data ?? [];
   const caveat = summary.data?.caveat;
+  const [createOpen, setCreateOpen] = useState(false);
 
   return (
     <SectionCard
@@ -25,11 +28,21 @@ export function AiTestingTable({ data }: { data: AiTestingData }) {
       accent="purple"
       className="h-full"
       action={
-        assessments.isSuccess ? (
-          <span className="rounded-full bg-cv-brand-soft px-2.5 py-1 text-[11px] font-semibold text-cv-blue ring-1 ring-white/60">
-            {list.length} assessments
-          </span>
-        ) : null
+        <div className="flex items-center gap-2">
+          {assessments.isSuccess ? (
+            <span className="rounded-full bg-cv-brand-soft px-2.5 py-1 text-[11px] font-semibold text-cv-blue ring-1 ring-white/60">
+              {list.length} assessments
+            </span>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3 py-1.5 text-[11px] font-bold text-white shadow-button transition hover:-translate-y-0.5"
+          >
+            <Plus size={13} strokeWidth={2.6} />
+            New assessment
+          </button>
+        </div>
       }
     >
       {assessments.isLoading ? (
@@ -67,6 +80,7 @@ export function AiTestingTable({ data }: { data: AiTestingData }) {
         </ul>
       )}
       {caveat ? <p className="mt-3 text-[10px] leading-relaxed text-cv-mist">{caveat}</p> : null}
+      <CreateAssessmentModal open={createOpen} onClose={() => setCreateOpen(false)} />
     </SectionCard>
   );
 }

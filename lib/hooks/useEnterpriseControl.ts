@@ -1,7 +1,15 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { getBusinessUnits, getAccessCertCampaigns, getRecertificationSummary } from "@/lib/api/enterprise";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  createAccessCertCampaign,
+  createBusinessUnit,
+  getAccessCertCampaigns,
+  getBusinessUnits,
+  getRecertificationSummary,
+  type AccessCertCampaignCreatePayload,
+  type BusinessUnitCreatePayload
+} from "@/lib/api/enterprise";
 import { getSodFindings } from "@/lib/api/security";
 
 export function useEnterpriseControl() {
@@ -14,3 +22,25 @@ export function useEnterpriseControl() {
 }
 
 export type EnterpriseData = ReturnType<typeof useEnterpriseControl>;
+
+/** POST /api/v1/compliance/business-units — BU list + KPI refresh without a reload. */
+export function useCreateBusinessUnit() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: BusinessUnitCreatePayload) => createBusinessUnit(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["business-units"] });
+    }
+  });
+}
+
+/** POST /api/v1/access-certifications/campaigns — campaigns panel refreshes without a reload. */
+export function useCreateAccessCertCampaign() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AccessCertCampaignCreatePayload) => createAccessCertCampaign(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["access-cert-campaigns"] });
+    }
+  });
+}

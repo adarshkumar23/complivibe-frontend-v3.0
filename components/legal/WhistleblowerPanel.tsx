@@ -1,11 +1,13 @@
 "use client";
 
-import { Megaphone, ShieldCheck } from "lucide-react";
+import { useState } from "react";
+import { Megaphone, Plus, ShieldCheck } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
+import { WhistleblowerSubmitModal } from "@/components/legal/WhistleblowerSubmitModal";
 import type { LegalData } from "@/lib/hooks/useLegal";
 
 /** Anonymous reports from GET /api/v1/whistleblower/reports. */
@@ -13,6 +15,7 @@ export function WhistleblowerPanel({ data }: { data: LegalData }) {
   const { reports } = data;
   const list = reports.data ?? [];
   const open = list.filter((r) => r.status !== "resolved" && r.status !== "closed");
+  const [submitOpen, setSubmitOpen] = useState(false);
 
   return (
     <SectionCard
@@ -22,11 +25,22 @@ export function WhistleblowerPanel({ data }: { data: LegalData }) {
       accent="amber"
       className="h-full"
       action={
-        open.length > 0 ? (
-          <span className="rounded-full bg-amber-400/15 px-2.5 py-1 text-[11px] font-bold text-amber-600 ring-1 ring-amber-400/25">
-            {open.length} open
-          </span>
-        ) : null
+        <div className="flex items-center gap-2">
+          {open.length > 0 ? (
+            <span className="rounded-full bg-amber-400/15 px-2.5 py-1 text-[11px] font-bold text-amber-600 ring-1 ring-amber-400/25">
+              {open.length} open
+            </span>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setSubmitOpen(true)}
+            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
+          >
+            <Plus size={13} strokeWidth={2.6} />
+            Submit report
+          </button>
+          <WhistleblowerSubmitModal open={submitOpen} onClose={() => setSubmitOpen(false)} />
+        </div>
       }
     >
       {reports.isLoading ? (

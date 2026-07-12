@@ -37,9 +37,16 @@ export function BillingKpis({ data }: { data: BillingData }) {
         value={u ? Math.round(u.billable_units) : null}
         caption={
           u
-            ? u.is_usage_based_plan
-              ? `₹${u.projected_month_end_cost_inr} projected month-end`
-              : "flat plan — units informational"
+            ? [
+                u.is_usage_based_plan
+                  ? `₹${u.projected_month_end_cost_inr} projected month-end`
+                  : "flat plan — units informational",
+                u.usage_spend_cap_enabled && u.usage_spend_cap_inr != null
+                  ? `cap ₹${u.usage_spend_cap_inr}${u.is_spend_cap_breached ? " (breached)" : ""}`
+                  : null
+              ]
+                .filter(Boolean)
+                .join(" · ")
             : undefined
         }
         loading={usage.isLoading}

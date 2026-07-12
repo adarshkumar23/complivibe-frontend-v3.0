@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api/client";
+import { apiFetch, ApiError, type ApiErrorPayload } from "@/lib/api/client";
 
 /**
  * Billing + Carbon accounting API — typed against the live backend schema
@@ -89,4 +89,124 @@ export type CarbonDashboard = {
 
 export function getCarbonDashboard() {
   return apiFetch<CarbonDashboard>("/api/v1/carbon-accounting/dashboard");
+}
+
+// ── POST /api/v1/billing/usage/spend-cap (UsageSpendCapUpdateRequest) ───────
+export type SpendCapPayload = {
+  usage_spend_cap_enabled: boolean;
+  usage_spend_cap_inr?: number | null;
+};
+
+export function setUsageSpendCap(payload: SpendCapPayload) {
+  return apiFetch<Record<string, unknown>>("/api/v1/billing/usage/spend-cap", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+// ── POST /api/v1/carbon-accounting/api-key ──────────────────────────────────
+/**
+ * Provisions (or rotates) this org's carbon ingest API key. The readings
+ * endpoint authenticates ONLY via X-CompliVibe-Key — not the bearer token —
+ * so the UI provisions a key once and keeps it in local storage.
+ */
+export function provisionCarbonApiKey() {
+  return apiFetch<{ api_key: string; header_name: string }>("/api/v1/carbon-accounting/api-key", {
+    method: "POST",
+    body: JSON.stringify({})
+  });
+}
+
+// ── POST /api/v1/carbon-accounting/readings (CarbonEmissionsReadingIngest) ──
+/** GHG Protocol Scope 3 categories accepted for new ingests (backend rejects "unspecified_legacy"). */
+export const SCOPE3_CATEGORIES = [
+  "purchased_goods_and_services",
+  "capital_goods",
+  "fuel_and_energy_related_activities",
+  "upstream_transportation_and_distribution",
+  "waste_generated_in_operations",
+  "business_travel",
+  "employee_commuting",
+  "upstream_leased_assets",
+  "downstream_transportation_and_distribution",
+  "processing_of_sold_products",
+  "use_of_sold_products",
+  "end_of_life_treatment_of_sold_products",
+  "downstream_leased_assets",
+  "franchises",
+  "investments"
+] as const;
+
+/** Units accepted by the backend (422 "Unsupported emissions unit" otherwise). */
+export const EMISSION_UNITS = ["kgCO2e", "tCO2e", "MTCO2e"] as const;
+
+export type CarbonReadingPayload = {
+  scope: "scope1" | "scope2" | "scope3";
+  scope3_category?: string | null;
+  source: string;
+  period_start: string; // date
+  period_end: string; // date
+  value: number;
+  unit: (typeof EMISSION_UNITS)[number];
+};
+
+export type CarbonReading = {
+  id: string;
+  scope: string;
+  scope3_category: string | null;
+  source: string;
+  period_start: string;
+  period_end: string;
+  value: string;
+  unit: string;
+  ingested_at: string;
+};
+
+const CARBON_KEY_STORAGE = "cv_carbon_key";
+
+/**
+ * Raw fetch for the readings ingest: it must NOT go through apiFetch because
+ * apiFetch treats any 401 on a token-bearing request as an expired session and
+ * redirects to /login — a stale ingest key would log the user out. Instead we
+ * send only X-CompliVibe-Key, and on 401 provision a fresh key (bearer-authed)
+ * and retry once.
+ */
+async function postReading(key: string, payload: CarbonReadingPayload): Promise<CarbonReading> {
+  const response = await fetch("/api/proxy/api/v1/carbon-accounting/readings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CompliVibe-Key": key },
+    body: JSON.stringify(payload),
+    cache: "no-store"
+  });
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    body = undefined;
+  }
+  if (!response.ok) {
+    const typed = (body || {}) as ApiErrorPayload;
+    const detail = typeof typed.detail === "string" ? typed.detail : undefined;
+    throw new ApiError(typed.message || detail || `Request failed with status ${response.status}`, response.status, typed);
+  }
+  return body as CarbonReading;
+}
+
+export async function ingestCarbonReading(payload: CarbonReadingPayload): Promise<CarbonReading> {
+  let key = typeof window !== "undefined" ? localStorage.getItem(CARBON_KEY_STORAGE) : null;
+  if (!key) {
+    key = (await provisionCarbonApiKey()).api_key;
+    localStorage.setItem(CARBON_KEY_STORAGE, key);
+  }
+  try {
+    return await postReading(key, payload);
+  } catch (err) {
+    // Stale/rotated key → provision a new one and retry exactly once.
+    if (err instanceof ApiError && err.status === 401) {
+      const fresh = (await provisionCarbonApiKey()).api_key;
+      localStorage.setItem(CARBON_KEY_STORAGE, fresh);
+      return postReading(fresh, payload);
+    }
+    throw err;
+  }
 }

@@ -37,6 +37,7 @@ import {
   Calculator,
   Workflow,
   Briefcase,
+  Landmark,
   Lightbulb,
   Lock,
   Fingerprint,
@@ -102,7 +103,10 @@ const NAV: NavItem[] = [
   { label: "Notifications", icon: Inbox, href: "/dashboard/notifications", match: "prefix" },
   { label: "Legal", icon: Scale, href: "/dashboard/legal", match: "prefix" },
   { label: "Security", icon: Fingerprint, href: "/dashboard/security", match: "prefix" },
-  { label: "Privacy", icon: Lock, href: "/dashboard/privacy", match: "prefix" },
+  // Privacy is "exact" so the DPDP child entry below gets its own highlight
+  // (same parent/child pattern as Data Observability → Data Lineage above).
+  { label: "Privacy", icon: Lock, href: "/dashboard/privacy", match: "exact" },
+  { label: "DPDP (India)", icon: Landmark, href: "/dashboard/privacy/dpdp", match: "prefix" },
   { label: "Enterprise Control", icon: Building2, href: "/dashboard/enterprise", match: "prefix" },
   { label: "Employee Compliance", icon: UserCheck, href: "/dashboard/employee-compliance", match: "prefix" },
   { label: "Billing & ESG", icon: CreditCard, href: "/dashboard/billing", match: "prefix" },

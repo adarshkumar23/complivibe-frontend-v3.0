@@ -1,0 +1,104 @@
+[
+  {
+    "step": "initial page",
+    "at": "2026-07-11T21:43:30.626Z",
+    "data": "screenshot 01-initial.png"
+  },
+  {
+    "step": "M1 create policy — API proof",
+    "at": "2026-07-11T21:43:32.249Z",
+    "data": {
+      "found": true,
+      "id": "0a02e226-e848-46ac-88fa-9ad911a9e2de",
+      "mode": "require_approval",
+      "is_default": false
+    }
+  },
+  {
+    "step": "M2 plan action — modal result",
+    "at": "2026-07-11T21:43:34.352Z",
+    "data": "Intent created:approval requiredFind it in the Execution Intents table below — request approval from there if required."
+  },
+  {
+    "step": "M2 create intent — API proof",
+    "at": "2026-07-11T21:43:35.146Z",
+    "data": {
+      "found": true,
+      "id": "7d98efeb-1ad2-40e5-9d5a-0b3b8ba9aff4",
+      "status": "approval_required"
+    }
+  },
+  {
+    "step": "M3 request approval — API proof",
+    "at": "2026-07-11T21:43:36.620Z",
+    "data": {
+      "found": true,
+      "id": "cf2344fe-a2ee-45d4-a0ad-c14875c296d9",
+      "status": "requested"
+    }
+  },
+  {
+    "step": "M4 approve — API proof",
+    "at": "2026-07-11T21:43:37.285Z",
+    "data": {
+      "approval_status": "requested",
+      "readiness_state": "approval_required",
+      "ready_for_runner": false
+    }
+  },
+  {
+    "step": "M5 reject — API proof",
+    "at": "2026-07-11T21:43:42.503Z",
+    "data": {
+      "approval_status": "rejected",
+      "decision_reason": "Signals were refreshed manually this morning"
+    }
+  },
+  {
+    "step": "M6 opt-in toggle — API proof",
+    "at": "2026-07-11T21:43:44.761Z",
+    "data": {
+      "before": false,
+      "after": true
+    }
+  },
+  {
+    "step": "M7 auto-execute — API proof",
+    "at": "2026-07-11T21:43:50.113Z",
+    "data": {
+      "found": true,
+      "id": "b3cb9c09-8b50-4b00-818d-2b9014c397c6",
+      "action_key": "send_reminder",
+      "status": "executed",
+      "created_task": "35f06f44-7685-49ca-b095-28a0ea922612"
+    }
+  },
+  {
+    "step": "M8 reverse execution — API proof",
+    "at": "2026-07-11T21:43:51.622Z",
+    "data": {
+      "status": "reversed",
+      "reversed_at": "2026-07-11T21:43:50.897239"
+    }
+  },
+  {
+    "step": "M9 archive intent — API proof",
+    "at": "2026-07-11T21:43:53.815Z",
+    "data": {
+      "status": "archived",
+      "archived_at": "2026-07-11T21:43:52.374590"
+    }
+  },
+  {
+    "step": "M9 archived intent removed from UI without reload",
+    "at": "2026-07-11T21:43:53.820Z",
+    "data": {
+      "visibleRows": 2
+    }
+  },
+  {
+    "step": "console errors",
+    "at": "2026-07-11T21:43:54.299Z",
+    "data": []
+  }
+]

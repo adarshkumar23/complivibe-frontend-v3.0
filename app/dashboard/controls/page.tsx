@@ -1,11 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { motion, type Variants } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
 import { ControlKpis } from "@/components/controls/ControlKpis";
 import { ControlsTable } from "@/components/controls/ControlsTable";
 import { ControlTestHealth } from "@/components/controls/ControlTestHealth";
+import { CoverageGapPanel } from "@/components/controls/CoverageGapPanel";
+import { ControlCreateModal } from "@/components/controls/ControlCreateModal";
+import {
+  MapObligationModal,
+  type ObligationPreset,
+  type ControlPreset
+} from "@/components/controls/MapObligationModal";
+import { LinkPolicyModal } from "@/components/controls/LinkPolicyModal";
 import { useControls } from "@/lib/hooks/useControls";
+import type { Control } from "@/lib/api/controls";
 
 const fade: Variants = {
   hidden: { opacity: 0, y: 14 },
@@ -14,6 +24,30 @@ const fade: Variants = {
 
 export default function ControlsPage() {
   const data = useControls();
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [obligationPreset, setObligationPreset] = useState<ObligationPreset | null>(null);
+  const [controlPreset, setControlPreset] = useState<ControlPreset | null>(null);
+  const [policyControl, setPolicyControl] = useState<ControlPreset | null>(null);
+
+  function toControlPreset(c: Control): ControlPreset {
+    return { controlId: c.id, title: c.title, controlCode: c.control_code };
+  }
+
+  // From the coverage-gap KPI / panel row: obligation side is chosen, pick or create the control.
+  function openMapForObligation(preset: ObligationPreset | null) {
+    setObligationPreset(preset);
+    setControlPreset(null);
+    setMapOpen(true);
+  }
+
+  // From a control register row: control side is fixed, pick the obligation.
+  function openMapForControl(c: Control) {
+    setControlPreset(toControlPreset(c));
+    setObligationPreset(null);
+    setMapOpen(true);
+  }
 
   return (
     <div className="space-y-7">
@@ -33,17 +67,39 @@ export default function ControlsPage() {
       </motion.div>
 
       <motion.div variants={fade} custom={1} initial="hidden" animate="show">
-        <ControlKpis data={data} />
+        <ControlKpis data={data} onMapGap={() => openMapForObligation(null)} />
       </motion.div>
 
-      <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <motion.div variants={fade} custom={2} initial="hidden" animate="show">
+        <CoverageGapPanel onMap={(preset) => openMapForObligation(preset)} />
+      </motion.div>
+
+      <motion.div variants={fade} custom={3} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <ControlsTable data={data} />
+          <ControlsTable
+            data={data}
+            onCreate={() => setCreateOpen(true)}
+            onLinkObligation={openMapForControl}
+            onLinkPolicy={(c) => setPolicyControl(toControlPreset(c))}
+          />
         </div>
         <div>
           <ControlTestHealth data={data} />
         </div>
       </motion.div>
+
+      <ControlCreateModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <MapObligationModal
+        open={mapOpen}
+        onClose={() => {
+          setMapOpen(false);
+          setObligationPreset(null);
+          setControlPreset(null);
+        }}
+        obligationPreset={obligationPreset}
+        controlPreset={controlPreset}
+      />
+      <LinkPolicyModal open={policyControl != null} onClose={() => setPolicyControl(null)} control={policyControl} />
     </div>
   );
 }
