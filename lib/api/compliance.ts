@@ -118,18 +118,73 @@ export function getDeadlineSummary() {
   return apiFetch<DeadlineSummary>("/api/v1/compliance/deadlines/summary");
 }
 
-// ── GET /api/v1/compliance/issues + /dashboard ──────────────────────────────
+// ── /api/v1/compliance/issues (+ /dashboard, lifecycle) ─────────────────────
+// Router: app/api/v1/issues.py. Status changes always go through the single
+// POST /{issue_id}/transition endpoint — ALLOWED_TRANSITIONS is a strict,
+// one-step-forward chain (issue_service.py:22-27):
+//   open -> investigating -> mitigating -> resolved -> closed
+// resolved -> closed additionally requires a non-empty resolution_note.
+export const ISSUE_TYPES = [
+  "security_incident",
+  "compliance_violation",
+  "operational_failure",
+  "vendor_failure",
+  "data_loss",
+  "unauthorized_access",
+  "policy_violation",
+  "custom"
+] as const;
+export const ISSUE_SEVERITIES = ["critical", "high", "medium", "low"] as const;
+export const ISSUE_SOURCE_TYPES = [
+  "manual",
+  "monitoring_alert",
+  "audit_finding",
+  "vendor_assessment",
+  "external_report",
+  "data_incident",
+  "risk_assessment"
+] as const;
+export const ISSUE_STATUSES = ["open", "investigating", "mitigating", "resolved", "closed"] as const;
+
+export const ISSUE_ALLOWED_NEXT_STATUS: Record<string, string | null> = {
+  open: "investigating",
+  investigating: "mitigating",
+  mitigating: "resolved",
+  resolved: "closed",
+  closed: null
+};
+
+export type IssueInsight = {
+  hours_open: number;
+  response_sla_hours: number;
+  resolution_sla_hours: number;
+  response_breached: boolean | null;
+  resolution_breached: boolean | null;
+  response_remaining_hours: number | null;
+  resolution_remaining_hours: number | null;
+  rca_status: string;
+};
+
 export type Issue = {
   id: string;
+  organization_id: string;
   title: string;
-  description: string | null;
+  description: string;
   issue_type: string;
   severity: string;
   status: string;
   source_type: string | null;
-  owner_id: string | null;
+  source_id: string | null;
+  owner_id: string;
   assigned_to: string | null;
-  created_at?: string;
+  created_by: string;
+  resolution_note: string | null;
+  resolved_at: string | null;
+  closed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  insight: IssueInsight | null;
 };
 
 export type IssueDashboard = {
@@ -143,12 +198,51 @@ export type IssueDashboard = {
   overdue_count: number;
 };
 
-export function getIssues() {
-  return apiFetch<Issue[]>("/api/v1/compliance/issues");
+export type IssueCreate = {
+  title: string;
+  description: string;
+  issue_type: string;
+  severity: string;
+  source_type?: string;
+  owner_id: string;
+  assigned_to?: string | null;
+};
+
+export function getIssues(params: { status?: string; severity?: string; limit?: number } = {}) {
+  const qs = new URLSearchParams();
+  if (params.status) qs.set("status", params.status);
+  if (params.severity) qs.set("severity", params.severity);
+  qs.set("limit", String(params.limit ?? 100));
+  return apiFetch<Issue[]>(`/api/v1/compliance/issues?${qs.toString()}`);
 }
 
 export function getIssueDashboard() {
   return apiFetch<IssueDashboard>("/api/v1/compliance/issues/dashboard");
+}
+
+export function createIssue(body: IssueCreate) {
+  return apiFetch<Issue>("/api/v1/compliance/issues", {
+    method: "POST",
+    body: JSON.stringify(body)
+  });
+}
+
+export function transitionIssue(issueId: string, newStatus: string, opts: { notes?: string; resolutionNote?: string } = {}) {
+  return apiFetch<Issue>(`/api/v1/compliance/issues/${issueId}/transition`, {
+    method: "POST",
+    body: JSON.stringify({
+      new_status: newStatus,
+      notes: opts.notes ?? null,
+      resolution_note: opts.resolutionNote ?? null
+    })
+  });
+}
+
+export function assignIssue(issueId: string, assignedTo: string) {
+  return apiFetch<Issue>(`/api/v1/compliance/issues/${issueId}/assign`, {
+    method: "POST",
+    body: JSON.stringify({ assigned_to: assignedTo })
+  });
 }
 
 // ── GET /api/v1/compliance/dashboard/risk-heatmap ───────────────────────────

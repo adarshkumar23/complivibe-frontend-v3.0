@@ -203,6 +203,115 @@ export function getDataIncidentSummary() {
   return apiFetch<DataIncidentSummary>("/api/v1/data-observability/incidents/summary");
 }
 
+// ── /api/v1/data-observability/incidents (DataIncidentRead[] + lifecycle) ───
+// Router: app/data_observability/routers/incidents.py — status is server-managed,
+// terminal states (resolved/dismissed) reject further transitions with 422.
+export const DATA_INCIDENT_SEVERITIES = ["critical", "high", "medium", "low"] as const;
+export const DATA_INCIDENT_DETECTOR_TYPES = [
+  "manual",
+  "anomaly_rule",
+  "quality_breach",
+  "retention_violation",
+  "residency_violation"
+] as const;
+export const DATA_INCIDENT_TERMINAL_STATUSES = new Set(["resolved", "dismissed"]);
+
+export type IncidentStatusNote = {
+  status: string;
+  note: string | null;
+  user_id: string | null;
+  at: string;
+};
+
+export type DataIncident = {
+  id: string;
+  organization_id: string;
+  data_asset_id: string;
+  detector_type: string;
+  detector_ref_id: string | null;
+  title: string;
+  description: string;
+  severity: string;
+  status: string;
+  rule_type: string | null;
+  evidence_json: Record<string, unknown>;
+  linked_issue_id: string | null;
+  detected_by: string;
+  detected_at: string;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  status_notes_json: IncidentStatusNote[];
+  created_at: string;
+  updated_at: string;
+  age_hours: number;
+  recurrence_count: number;
+  escalated_to_issue: boolean;
+  context_flags: string[];
+};
+
+export type DataIncidentCreate = {
+  data_asset_id: string;
+  title: string;
+  description: string;
+  severity: string;
+  detector_type?: string;
+  detector_ref_id?: string | null;
+  rule_type?: string | null;
+  evidence_json?: Record<string, unknown>;
+  detected_by?: string;
+};
+
+export function getDataIncidents(params: { status?: string; severity?: string; limit?: number } = {}) {
+  const qs = new URLSearchParams();
+  if (params.status) qs.set("status", params.status);
+  if (params.severity) qs.set("severity", params.severity);
+  qs.set("limit", String(params.limit ?? 100));
+  return apiFetch<DataIncident[]>(`/api/v1/data-observability/incidents?${qs.toString()}`);
+}
+
+export function createDataIncident(body: DataIncidentCreate) {
+  return apiFetch<DataIncident>("/api/v1/data-observability/incidents", {
+    method: "POST",
+    body: JSON.stringify(body)
+  });
+}
+
+export function investigateIncident(incidentId: string, notes?: string | null) {
+  return apiFetch<DataIncident>(`/api/v1/data-observability/incidents/${incidentId}/investigate`, {
+    method: "POST",
+    body: JSON.stringify({ notes: notes ?? null })
+  });
+}
+
+export function containIncident(incidentId: string, notes?: string | null) {
+  return apiFetch<DataIncident>(`/api/v1/data-observability/incidents/${incidentId}/contain`, {
+    method: "POST",
+    body: JSON.stringify({ notes: notes ?? null })
+  });
+}
+
+export function resolveIncident(incidentId: string, notes?: string | null) {
+  return apiFetch<DataIncident>(`/api/v1/data-observability/incidents/${incidentId}/resolve`, {
+    method: "POST",
+    body: JSON.stringify({ notes: notes ?? null })
+  });
+}
+
+export function dismissIncident(incidentId: string, notes?: string | null) {
+  return apiFetch<DataIncident>(`/api/v1/data-observability/incidents/${incidentId}/dismiss`, {
+    method: "POST",
+    body: JSON.stringify({ notes: notes ?? null })
+  });
+}
+
+export type EscalateIncidentResult = { issue_id: string; incident_id: string };
+
+export function escalateIncidentToIssue(incidentId: string) {
+  return apiFetch<EscalateIncidentResult>(`/api/v1/data-observability/incidents/${incidentId}/escalate-to-issue`, {
+    method: "POST"
+  });
+}
+
 // ── GET /api/v1/data-observability/access/summary ────────────────────────────
 export type DataAccessSummary = {
   window_days: number;

@@ -19,7 +19,7 @@ export function useCompliance() {
   const activity = useQuery({ queryKey: ["cmp-activity"], queryFn: () => getRecentActivity(12) });
   const deadlines = useQuery({ queryKey: ["cmp-deadlines"], queryFn: () => getDeadlines() });
   const deadlineSummary = useQuery({ queryKey: ["cmp-deadline-summary"], queryFn: getDeadlineSummary });
-  const issues = useQuery({ queryKey: ["cmp-issues"], queryFn: getIssues });
+  const issues = useQuery({ queryKey: ["cmp-issues"], queryFn: () => getIssues() });
   const issueDashboard = useQuery({ queryKey: ["cmp-issue-dashboard"], queryFn: getIssueDashboard });
 
   return { posture, readiness, controlHealth, activity, deadlines, deadlineSummary, issues, issueDashboard };
