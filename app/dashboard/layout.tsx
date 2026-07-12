@@ -9,7 +9,7 @@ import { useAuthStore } from "@/store/auth-store";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const token = useAuthStore((s) => s.token);
+  const authenticated = useAuthStore((s) => s.authenticated);
   const hydrated = useAuthStore((s) => s.hydrated);
   const hydrate = useAuthStore((s) => s.hydrate);
 
@@ -18,12 +18,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [hydrated, hydrate]);
 
   useEffect(() => {
-    if (hydrated && !token) {
+    if (hydrated && !authenticated) {
       router.replace("/login");
     }
-  }, [hydrated, token, router]);
+  }, [hydrated, authenticated, router]);
 
-  if (!hydrated || !token) {
+  if (!hydrated || !authenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">

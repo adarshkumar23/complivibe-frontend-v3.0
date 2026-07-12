@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Mail, Lock, ArrowRight, Loader2, TriangleAlert, Eye, EyeOff, Sparkles } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
-import { login, extractToken, getMyOrganizations } from "@/lib/api/auth";
+import { login, getMyOrganizations } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import { useAuthStore } from "@/store/auth-store";
 import { cn } from "@/lib/utils/cn";
 
 export default function LoginPage() {
   const router = useRouter();
-  const setToken = useAuthStore((s) => s.setToken);
-  const token = useAuthStore((s) => s.token);
+  const setAuthenticated = useAuthStore((s) => s.setAuthenticated);
+  const authenticated = useAuthStore((s) => s.authenticated);
   const hydrate = useAuthStore((s) => s.hydrate);
 
   const [email, setEmail] = useState("");
@@ -27,21 +27,19 @@ export default function LoginPage() {
   }, [hydrate]);
 
   useEffect(() => {
-    if (token) router.replace("/dashboard");
-  }, [token, router]);
+    if (authenticated) router.replace("/dashboard");
+  }, [authenticated, router]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      const payload = await login({ email: email.trim(), password });
-      const newToken = extractToken(payload);
-      if (!newToken) {
-        setError("Login succeeded but no access token was returned by the server.");
-        return;
-      }
-      setToken(newToken);
+      await login({ email: email.trim(), password });
+      // The backend set the session as an httpOnly cookie on this response; there's no
+      // token in JS to store. The CSRF cookie's presence (checked by setAuthenticated via
+      // the store) is what we track client-side.
+      setAuthenticated();
       // Resolve the user's org so org-scoped endpoints get the X-Organization-ID header.
       try {
         const orgs = await getMyOrganizations();
@@ -179,7 +177,7 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-6 text-center text-[11px] text-cv-mist">
-            Secured by CompliVibe · Your session token is stored locally.
+            Secured by CompliVibe · Your session is protected by a secure, HTTP-only cookie.
           </p>
         </div>
       </motion.div>

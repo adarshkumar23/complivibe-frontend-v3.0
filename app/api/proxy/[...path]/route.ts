@@ -9,6 +9,11 @@ async function handler(request: NextRequest, { params }: { params: Promise<{ pat
   const auth = request.headers.get("authorization");
   const contentType = request.headers.get("content-type");
   const orgId = request.headers.get("x-organization-id");
+  // The session lives in an httpOnly cookie set by the backend; forward it through so the
+  // backend can authenticate the browser's request, and forward the CSRF header the client
+  // attaches on mutations (double-submit against the cookie).
+  const cookie = request.headers.get("cookie");
+  const csrfToken = request.headers.get("x-csrf-token");
 
   if (auth) {
     headers.set("authorization", auth);
@@ -18,6 +23,12 @@ async function handler(request: NextRequest, { params }: { params: Promise<{ pat
   }
   if (orgId) {
     headers.set("x-organization-id", orgId);
+  }
+  if (cookie) {
+    headers.set("cookie", cookie);
+  }
+  if (csrfToken) {
+    headers.set("x-csrf-token", csrfToken);
   }
 
   // Carbon-accounting ingest authenticates via this key instead of the bearer token
@@ -40,11 +51,18 @@ async function handler(request: NextRequest, { params }: { params: Promise<{ pat
   try {
     const response = await fetch(targetUrl, init);
     const text = await response.text();
+    const responseHeaders = new Headers({
+      "content-type": response.headers.get("content-type") || "application/json"
+    });
+    // response.headers.get("set-cookie") would incorrectly comma-join multiple cookies
+    // (Expires dates themselves contain commas); getSetCookie() preserves each one.
+    const setCookies = response.headers.getSetCookie?.() ?? [];
+    for (const cookieValue of setCookies) {
+      responseHeaders.append("set-cookie", cookieValue);
+    }
     return new NextResponse(text, {
       status: response.status,
-      headers: {
-        "content-type": response.headers.get("content-type") || "application/json"
-      }
+      headers: responseHeaders
     });
   } catch {
     return NextResponse.json({ message: "Proxy request failed" }, { status: 502 });

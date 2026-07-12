@@ -54,7 +54,10 @@ async function selectByText(sel, text) {
 }
 
 async function uiLogin(email, password) {
+  // Session lives in an httpOnly cookie now -- page JS can't clear it (that's the point),
+  // so force a clean logout via the browser-context cookie jar instead of localStorage.
   await page.goto(`${base}/login`, { waitUntil: "networkidle" });
+  await ctx.clearCookies();
   await page.evaluate(() => localStorage.clear());
   await page.goto(`${base}/login`, { waitUntil: "networkidle" });
   await page.fill('input[type="email"]', email);

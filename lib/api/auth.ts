@@ -22,8 +22,9 @@ export function login(input: LoginInput) {
   });
 }
 
-export function extractToken(payload: LoginResponse): string | null {
-  return payload.access_token || payload.token || payload.data?.access_token || payload.data?.token || null;
+/** Clears the httpOnly session cookie server-side and revokes the backing session. */
+export function logout() {
+  return apiFetch<{ message: string }>("/api/v1/auth/logout", { method: "POST" });
 }
 
 export type MyOrganization = {

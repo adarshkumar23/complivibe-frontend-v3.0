@@ -55,6 +55,7 @@ import { cn } from "@/lib/utils/cn";
 import { Logo } from "@/components/ui/Logo";
 import { useUiStore } from "@/store/ui-store";
 import { useAuthStore } from "@/store/auth-store";
+import { logout as logoutRequest } from "@/lib/api/auth";
 
 type NavItem = {
   label: string;
@@ -130,11 +131,13 @@ function isNavItemActive(item: NavItem, pathname: string | null): boolean {
 function SidebarBody() {
   const router = useRouter();
   const pathname = usePathname();
-  const clearToken = useAuthStore((s) => s.clearToken);
+  const clearAuthenticated = useAuthStore((s) => s.clearAuthenticated);
   const setSidebarOpen = useUiStore((s) => s.setSidebarOpen);
 
   const logout = () => {
-    clearToken();
+    void logoutRequest().catch(() => {});
+    window.localStorage.removeItem("cv_org");
+    clearAuthenticated();
     router.replace("/login");
   };
 

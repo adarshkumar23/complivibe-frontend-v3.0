@@ -4,12 +4,18 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 
+const CSRF_COOKIE_NAME = "cv_csrf";
+
+function hasSession(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.cookie.split("; ").some((entry) => entry.startsWith(`${CSRF_COOKIE_NAME}=`));
+}
+
 export default function RootPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? window.localStorage.getItem("cv_token") : null;
-    router.replace(token ? "/dashboard" : "/login");
+    router.replace(hasSession() ? "/dashboard" : "/login");
   }, [router]);
 
   return (

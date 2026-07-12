@@ -2,35 +2,30 @@
 
 import { create } from "zustand";
 
-const TOKEN_KEY = "cv_token";
+const CSRF_COOKIE_NAME = "cv_csrf";
 
 type AuthState = {
-  token: string | null;
+  /** True if we believe there's an active session (the httpOnly session cookie itself is
+   * never readable from JS — this reflects the presence of the non-httpOnly CSRF cookie
+   * the backend issues alongside it, which is a reliable proxy since both are set/cleared
+   * together on login/logout). An expired-but-still-present cookie is still caught by the
+   * normal 401 handling in apiFetch. */
+  authenticated: boolean;
   hydrated: boolean;
-  setToken: (token: string) => void;
-  clearToken: () => void;
+  setAuthenticated: () => void;
+  clearAuthenticated: () => void;
   hydrate: () => void;
 };
 
-function readToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(TOKEN_KEY);
+function hasCsrfCookie(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.cookie.split("; ").some((entry) => entry.startsWith(`${CSRF_COOKIE_NAME}=`));
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  token: null,
+  authenticated: false,
   hydrated: false,
-  setToken: (token) => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(TOKEN_KEY, token);
-    }
-    set({ token, hydrated: true });
-  },
-  clearToken: () => {
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem(TOKEN_KEY);
-    }
-    set({ token: null, hydrated: true });
-  },
-  hydrate: () => set({ token: readToken(), hydrated: true })
+  setAuthenticated: () => set({ authenticated: true, hydrated: true }),
+  clearAuthenticated: () => set({ authenticated: false, hydrated: true }),
+  hydrate: () => set({ authenticated: hasCsrfCookie(), hydrated: true })
 }));
