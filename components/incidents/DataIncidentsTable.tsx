@@ -145,6 +145,7 @@ export function DataIncidentsTable({ data }: { data: IncidentsPageData }) {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Filter by incident status"
               className="cv-ring-focus rounded-full bg-white/60 py-1.5 pl-7 pr-3 text-[11px] font-semibold text-cv-ink ring-1 ring-white/70 focus:outline-none"
             >
               <option value="all">All statuses</option>

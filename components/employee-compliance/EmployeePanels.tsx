@@ -24,7 +24,7 @@ export function EmployeeComplianceKpis({ data }: { data: EmployeeComplianceData 
         icon={GraduationCap}
         accent="blue"
         value={t ? t.total_assigned : null}
-        caption={t ? `${t.total_completed} completed (${Math.round(t.overall_completion_rate * 100)}%)` : undefined}
+        caption={t ? `${t.total_completed} completed (${Math.round(t.overall_completion_rate)}%)` : undefined}
         loading={training.isLoading}
         unavailableHint="Training summary unavailable"
       />
@@ -51,7 +51,7 @@ export function EmployeeComplianceKpis({ data }: { data: EmployeeComplianceData 
         icon={UserCheck}
         accent="amber"
         value={a ? a.pending_attestations_count : null}
-        caption={a ? `${Math.round(a.overall_completion_rate * 100)}% overall completion` : undefined}
+        caption={a ? `${Math.round(a.overall_completion_rate)}% overall completion` : undefined}
         loading={attestations.isLoading}
         unavailableHint="Attestation dashboard unavailable"
       />

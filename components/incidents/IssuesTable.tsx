@@ -94,6 +94,7 @@ function IssueActions({
         <select
           value={assignee}
           onChange={(e) => setAssignee(e.target.value)}
+          aria-label={`Assignee for ${issue.title}`}
           className="cv-ring-focus rounded-lg bg-white/50 px-2 py-1 text-[11px] text-cv-ink ring-1 ring-white/60 focus:outline-none"
         >
           <option value="">Unassigned</option>
@@ -138,6 +139,7 @@ export function IssuesTable({ data }: { data: IncidentsPageData }) {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
+            aria-label="Filter by issue status"
             className="cv-ring-focus rounded-full bg-white/60 px-3 py-1.5 text-[11px] font-semibold text-cv-ink ring-1 ring-white/70 focus:outline-none"
           >
             <option value="all">All statuses</option>

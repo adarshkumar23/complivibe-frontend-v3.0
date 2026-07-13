@@ -96,6 +96,7 @@ export function SystemsRegistry({ data }: { data: AiSystemsData }) {
             <select
               value={lifecycle}
               onChange={(e) => setLifecycle(e.target.value)}
+              aria-label="Filter by lifecycle stage"
               className="cv-ring-focus rounded-full bg-white/60 px-3.5 py-2 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 focus:outline-none"
             >
               <option value="all">All lifecycle stages</option>

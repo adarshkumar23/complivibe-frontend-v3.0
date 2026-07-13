@@ -85,6 +85,7 @@ export function ReviewerCapacitySimulator() {
             <select
               value={roleName}
               onChange={(e) => setRoleName(e.target.value)}
+              aria-label="Reviewer role (optional)"
               className="cv-ring-focus w-full rounded-xl bg-white/60 px-3.5 py-2.5 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 focus:outline-none"
             >
               <option value="">(all roles)</option>
@@ -111,6 +112,7 @@ export function ReviewerCapacitySimulator() {
               min={0}
               value={maxActive}
               onChange={(e) => setMaxActive(Number(e.target.value))}
+              aria-label="Max active assignments"
               className="cv-ring-focus w-full rounded-xl bg-white/60 px-3.5 py-2.5 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 focus:outline-none"
             />
           </div>
@@ -121,6 +123,7 @@ export function ReviewerCapacitySimulator() {
               min={0}
               value={maxOverdue}
               onChange={(e) => setMaxOverdue(Number(e.target.value))}
+              aria-label="Max overdue assignments"
               className="cv-ring-focus w-full rounded-xl bg-white/60 px-3.5 py-2.5 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 focus:outline-none"
             />
           </div>

@@ -32,7 +32,7 @@ export function QuickActions() {
     <GlassCard className="p-5 sm:p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-[15px] font-bold leading-tight text-cv-ink">Start Exploring</h3>
+          <h2 className="text-[15px] font-bold leading-tight text-cv-ink">Start Exploring</h2>
           <p className="mt-0.5 text-xs text-cv-slate">Jump straight into the seeded demo workspace.</p>
         </div>
       </div>

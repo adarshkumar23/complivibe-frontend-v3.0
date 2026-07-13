@@ -35,7 +35,7 @@ export function AuditPackKpis({ data }: { data: AuditPackData }) {
         icon={ClipboardList}
         accent="purple"
         value={p ? p.total_items : null}
-        caption={p ? `${Math.round(p.completion_rate * 100)}% complete · ${p.overdue_count} overdue` : undefined}
+        caption={p ? `${Math.round(p.completion_rate)}% complete · ${p.overdue_count} overdue` : undefined}
         loading={pbc.isLoading}
         unavailableHint="PBC summary unavailable"
       />

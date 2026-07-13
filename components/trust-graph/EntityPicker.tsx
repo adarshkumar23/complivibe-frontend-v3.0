@@ -49,6 +49,7 @@ export function EntityPicker({ kind, onKindChange, risks, vendors, selectedId, o
       <select
         value={selectedId ?? ""}
         onChange={(e) => onSelectId(e.target.value)}
+        aria-label="Select entity to inspect"
         className="cv-ring-focus min-w-0 flex-1 rounded-full bg-white/60 px-3.5 py-2 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 focus:outline-none"
       >
         <option value="" disabled>

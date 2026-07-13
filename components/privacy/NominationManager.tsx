@@ -87,7 +87,7 @@ export function NominationManager() {
           <input value={nomineeName} onChange={(e) => setNomineeName(e.target.value)} placeholder="Nominee name" className={inputCls} />
           <input value={nomineeContact} onChange={(e) => setNomineeContact(e.target.value)} placeholder="Nominee contact (optional)" className={inputCls} />
         </div>
-        <select value={trigger} onChange={(e) => setTrigger(e.target.value)} className={inputCls}>
+        <select value={trigger} onChange={(e) => setTrigger(e.target.value)} aria-label="Nomination activation trigger" className={inputCls}>
           <option value="death">Activates on death</option>
           <option value="incapacity">Activates on incapacity</option>
         </select>

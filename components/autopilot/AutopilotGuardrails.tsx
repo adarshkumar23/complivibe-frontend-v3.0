@@ -115,10 +115,10 @@ export function AutopilotGuardrails({ data }: { data: AutopilotData }) {
             </li>
           ))}
           {s ? (
-            <p className="pt-1 text-[10px] leading-relaxed text-cv-mist">
+            <li className="pt-1 text-[10px] leading-relaxed text-cv-mist">
               Blocked is the safe state: autopilot plans actions but cannot execute them without explicit policy grants
               and human approval.
-            </p>
+            </li>
           ) : null}
         </ul>
       )}

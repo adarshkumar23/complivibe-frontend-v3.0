@@ -1,6 +1,45 @@
 # Production Deploy Runbook (Frontend)
 
-## Status: pipeline built, NOT activated
+## Deploying the current demo/staging host today: use `scripts/deploy.sh`
+
+The demo instance on this box has historically been started by hand with a
+bare `nohup ... npm start &`. That pattern is how a stale build can end up
+silently serving forever: someone merges to `main`, but the running process
+is never restarted, and nothing notices — the old build still returns 200s
+for every route, so there's no visible symptom at all. This is exactly what
+happened in an earlier walkthrough.
+
+**`scripts/deploy.sh [port] [systemd-unit-name]` is now the single supported
+way to ship a build to this host.** It does not just build-and-restart and
+hope; it verifies the restart actually worked:
+
+1. Installs deps, runs `tsc --noEmit` and `next build` (the same two gates
+   as CI) — a broken build never touches the running process.
+2. Restarts the process (via `systemctl restart <unit>` if you pass a unit
+   name, otherwise it finds and kills whatever's bound to `port` using `ss`
+   and starts a fresh `npm start` in its place).
+3. Polls `GET /api/version` (`app/api/version/route.ts`) on the restarted
+   process and **fails the deploy** if the reported `gitSha` doesn't match
+   the commit that was just built. This is the part that actually closes
+   the staleness hole: it is no longer possible for a deploy to "succeed"
+   while the old build keeps running underneath it.
+
+Recommended for real hosting on this box: install
+`deploy/complivibe-frontend.service` as a systemd unit
+(`sudo cp deploy/complivibe-frontend.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable complivibe-frontend`),
+then always deploy with `scripts/deploy.sh 3000 complivibe-frontend` — this
+also gets you automatic restart-on-crash (`Restart=always`), which the old
+manual `nohup` process never had.
+
+If you don't want to install the systemd unit yet, `scripts/deploy.sh 3000`
+(no second argument) still works standalone in manual mode.
+
+Verify at any time which build is actually live with `curl
+http://<host>/api/version` — compare its `gitSha` against `git rev-parse
+HEAD` on the box. A mismatch means the last deploy didn't use
+`scripts/deploy.sh`, or the deploy is stale.
+
+## Status: real (Vercel) production pipeline built, NOT activated
 
 `ci.yml` runs `tsc --noEmit` and `next build` on every push/PR to `main`
 and is real today. `deploy.yml` exists but its `deploy` job deliberately

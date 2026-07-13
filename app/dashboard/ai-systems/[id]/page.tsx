@@ -103,9 +103,9 @@ export default function AiSystemDetailPage() {
                 </li>
               ))}
               {links.data.total_active_links === 0 ? (
-                <p className="pt-1 text-[11px] font-medium text-amber-600">
+                <li className="pt-1 text-[11px] font-medium text-amber-600">
                   Ungoverned system: no controls, evidence, or risks are linked yet.
-                </p>
+                </li>
               ) : null}
             </ul>
           ) : null}

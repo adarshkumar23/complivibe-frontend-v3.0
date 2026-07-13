@@ -61,6 +61,7 @@ export function CreateConnectorForm({ data }: { data: CloudConnectorsData }) {
         <select
           value={type}
           onChange={(e) => setType(e.target.value as ConnectorType)}
+          aria-label="Connector provider type"
           className="cv-ring-focus w-full rounded-xl bg-white/60 px-3.5 py-2.5 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 focus:outline-none"
         >
           {CONNECTOR_TYPES.map((t) => (

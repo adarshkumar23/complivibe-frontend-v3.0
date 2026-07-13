@@ -5,3 +5,5 @@ npm-debug.log*
 .env.local
 .DS_Store
 tsconfig.tsbuildinfo
+deploy/current-version.env
+deploy.log

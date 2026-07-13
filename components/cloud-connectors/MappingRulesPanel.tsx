@@ -76,6 +76,7 @@ export function MappingRulesPanel({ data }: { data: CloudConnectorsData }) {
           <select
             value={controlId}
             onChange={(e) => setControlId(e.target.value)}
+            aria-label="Target control"
             className="cv-ring-focus rounded-xl bg-white/60 px-3.5 py-2.5 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 focus:outline-none"
           >
             <option value="">Target control…</option>

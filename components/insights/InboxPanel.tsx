@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { formatRelativeTime } from "@/lib/utils/format";
+import { resolveInboxNavigatePath } from "@/lib/utils/navigate";
 import { humanizeLabel, inboxItemTone } from "@/components/insights/reasoning";
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { ComplianceInboxResponse } from "@/lib/api/insights";
@@ -43,7 +44,7 @@ export function InboxPanel({ inbox }: { inbox: UseQueryResult<ComplianceInboxRes
       ) : (
         <ul className="space-y-2.5">
           {items.map((item) => {
-            const path = item.navigate_path?.startsWith("/") ? `/dashboard${item.navigate_path}` : null;
+            const path = resolveInboxNavigatePath(item.navigate_path);
             const body = (
               <>
                 <div className="flex items-start justify-between gap-3">

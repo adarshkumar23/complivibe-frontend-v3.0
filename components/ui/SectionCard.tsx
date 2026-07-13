@@ -34,7 +34,7 @@ export function SectionCard({
         <div className="flex items-center gap-3">
           {icon ? <IconTile icon={icon} accent={accent} size="sm" /> : null}
           <div>
-            <h3 className="text-[15px] font-bold leading-tight text-cv-ink">{title}</h3>
+            <h2 className="text-[15px] font-bold leading-tight text-cv-ink">{title}</h2>
             {subtitle ? <p className="mt-0.5 text-xs text-cv-slate">{subtitle}</p> : null}
           </div>
         </div>

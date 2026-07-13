@@ -22,7 +22,7 @@ export function NotificationSettingsPanel({ data }: { data: NotificationsData })
       ) : list.length === 0 ? (
         <EmptyState compact icon={Settings2} title="No rules configured" description="Notification rules will list here." />
       ) : (
-        <ul className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
+        <ul className="max-h-[420px] space-y-2 overflow-y-auto pr-1" tabIndex={0} aria-label="Notification rules">
           {list.map((p) => (
             <li key={p.id} className="flex items-center justify-between gap-3 rounded-xl bg-white/50 px-3 py-2 ring-1 ring-white/60">
               <div className="min-w-0">

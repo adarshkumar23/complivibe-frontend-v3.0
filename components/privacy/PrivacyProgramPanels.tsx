@@ -26,7 +26,10 @@ export function PrivacyProgramPanels({ data }: { data: PrivacyData }) {
     { label: "DPIAs", value: firstNumber(dpias.data, ["total", "total_dpias", "total_records"]) },
     { label: "DPAs", value: firstNumber(dpas.data, ["total", "total_dpas", "total_records"]) },
     { label: "RoPA activities", value: firstNumber(ropa.data, ["total", "total_activities", "total_records"]) },
-    { label: "Lawful basis records", value: firstNumber(lawfulBasis.data, ["total", "total_records"]) }
+    {
+      label: "Lawful basis records",
+      value: firstNumber(lawfulBasis.data, ["total", "total_records", "total_activities_with_basis"])
+    }
   ];
 
   return (

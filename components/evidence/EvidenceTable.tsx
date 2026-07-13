@@ -84,6 +84,7 @@ export function EvidenceTable({ data }: { data: EvidenceData }) {
             <select
               value={review}
               onChange={(e) => setReview(e.target.value)}
+              aria-label="Filter by review state"
               className="cv-ring-focus rounded-full bg-white/60 px-3.5 py-2 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 focus:outline-none"
             >
               <option value="all">All review states</option>
