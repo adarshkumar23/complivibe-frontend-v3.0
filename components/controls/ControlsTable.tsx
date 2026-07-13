@@ -104,6 +104,7 @@ export function ControlsTable({
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
+              aria-label="Filter controls by status"
               className="cv-ring-focus rounded-full bg-white/60 px-3.5 py-2 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 focus:outline-none"
             >
               <option value="all">All statuses</option>
