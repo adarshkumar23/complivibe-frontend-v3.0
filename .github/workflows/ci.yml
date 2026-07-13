@@ -1,0 +1,61 @@
+name: Frontend CI
+
+# Fail-closed gate: must pass before any deploy workflow runs against this
+# commit. See docs/deploy.md for the activation runbook.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    name: tsc --noEmit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npx tsc --noEmit
+
+  build:
+    name: next build
+    runs-on: ubuntu-latest
+    env:
+      # Placeholder build-time values only — never real production API
+      # targets. This job proves the app *builds*, it is not a deploy.
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run build
+
+  # Deploy gate: any deploy workflow must require this job's success (either
+  # via `needs:` in the same workflow, or as a required status check in
+  # branch protection) so a red run makes deploy structurally impossible.
+  ci-gate:
+    name: CI gate (required for deploy)
+    runs-on: ubuntu-latest
+    needs: [typecheck, build]
+    if: always()
+    steps:
+      - name: Fail if any required job failed
+        run: |
+          if [ "${{ needs.typecheck.result }}" != "success" ] || [ "${{ needs.build.result }}" != "success" ]; then
+            echo "::error::One or more required checks failed. Deploy is blocked."
+            exit 1
+          fi
+          echo "All required checks passed. Safe to deploy."
