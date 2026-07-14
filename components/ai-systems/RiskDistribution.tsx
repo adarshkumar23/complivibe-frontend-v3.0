@@ -20,6 +20,9 @@ const tierColors: Record<string, string> = {
 export function RiskDistribution({ data }: { data: AiSystemsData }) {
   const { dashboard } = data;
   const byTier = dashboard.data?.ai_systems_by_tier ?? {};
+  // When the tier aggregation failed server-side, byTier is an all-zero
+  // placeholder — surface it as unavailable, not an empty "No systems" donut.
+  const tierUnavailable = (dashboard.data?.unavailable_metrics ?? []).includes("ai_systems_by_tier");
 
   const segments: DonutSegment[] = Object.entries(byTier)
     .map(([tier, count]) => ({ label: tier, value: count, color: tierColors[tier] ?? "#94A3B8" }))
@@ -33,6 +36,8 @@ export function RiskDistribution({ data }: { data: AiSystemsData }) {
         <LoadingSkeleton className="mx-auto h-36 w-full" />
       ) : dashboard.isError ? (
         <ErrorState compact title="Unable to load tier distribution" onRetry={() => dashboard.refetch()} />
+      ) : tierUnavailable ? (
+        <ErrorState compact title="Tier distribution unavailable" onRetry={() => dashboard.refetch()} />
       ) : segments.length === 0 ? (
         <EmptyState compact icon={PieChart} title="No systems yet" description="Tier distribution will appear here." />
       ) : (

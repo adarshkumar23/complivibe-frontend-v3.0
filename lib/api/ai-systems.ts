@@ -106,6 +106,12 @@ export type AiGovernanceDashboard = {
   shadow_ai_detected_count: number;
   high_risk_systems_without_approval: number;
   monitoring_alerts_by_system: { system_id?: string; system_name?: string; alert_count?: number }[];
+  /**
+   * Metric keys whose aggregation query failed server-side. A key listed here
+   * means the numeric field above is a placeholder (0) to be shown as
+   * "Unavailable", NOT a real value. Absent/empty on healthy responses.
+   */
+  unavailable_metrics?: string[];
 };
 
 export function getAiGovernanceDashboard() {

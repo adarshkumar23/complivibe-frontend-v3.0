@@ -9,7 +9,14 @@ export function AiSystemsKpis({ data }: { data: AiSystemsData }) {
   const s = summary.data;
   const d = dashboard.data;
 
-  const unassessed = d ? (d.ai_systems_by_tier["unassessed"] ?? 0) : null;
+  // A metric listed in unavailable_metrics failed server-side; its 0 is a
+  // placeholder and must render as "Unavailable", not a real value.
+  const unavailable = new Set(d?.unavailable_metrics ?? []);
+  const tierUnavailable = unavailable.has("ai_systems_by_tier");
+  const coverageUnavailable = unavailable.has("governance_coverage_pct");
+  const reviewsUnavailable = unavailable.has("outstanding_reviews_count");
+
+  const unassessed = d && !tierUnavailable ? (d.ai_systems_by_tier["unassessed"] ?? 0) : null;
   const production = s ? (s.by_lifecycle_status["production"] ?? 0) : null;
 
   return (
@@ -36,16 +43,22 @@ export function AiSystemsKpis({ data }: { data: AiSystemsData }) {
               : undefined
         }
         loading={dashboard.isLoading}
-        unavailableHint="Governance dashboard unavailable"
+        unavailableHint={tierUnavailable ? "Metric unavailable — query failed" : "Governance dashboard unavailable"}
       />
       <RegistryKpi
         label="Governance Coverage"
         icon={Gauge}
         accent="teal"
-        value={d ? Math.round(d.governance_coverage_pct) : null}
-        caption={d ? `${d.outstanding_reviews_count} reviews outstanding` : undefined}
+        value={d && !coverageUnavailable ? Math.round(d.governance_coverage_pct) : null}
+        caption={
+          d && !coverageUnavailable
+            ? reviewsUnavailable
+              ? "reviews outstanding: unavailable"
+              : `${d.outstanding_reviews_count} reviews outstanding`
+            : undefined
+        }
         loading={dashboard.isLoading}
-        unavailableHint="Governance dashboard unavailable"
+        unavailableHint={coverageUnavailable ? "Metric unavailable — query failed" : "Governance dashboard unavailable"}
       />
       <RegistryKpi
         label="Missing Technical Owner"
