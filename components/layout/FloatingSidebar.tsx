@@ -56,6 +56,12 @@ import { Logo } from "@/components/ui/Logo";
 import { useUiStore } from "@/store/ui-store";
 import { useAuthStore } from "@/store/auth-store";
 import { logout as logoutRequest } from "@/lib/api/auth";
+import { useQuery } from "@tanstack/react-query";
+import { getBillingStatus } from "@/lib/api/billing";
+
+// Plans whose feature set already includes the full AI governance suite — the
+// "Unlock full AI governance suite" upsell is meaningless for these tiers.
+const FULL_SUITE_PLANS = ["enterprise", "usage_flex"];
 
 type NavItem = {
   label: string;
@@ -134,6 +140,13 @@ function SidebarBody() {
   const clearAuthenticated = useAuthStore((s) => s.clearAuthenticated);
   const setSidebarOpen = useUiStore((s) => s.setSidebarOpen);
 
+  // Share the ["billing-status"] cache with the billing page so this adds no
+  // extra request when billing has already loaded. Only show the upgrade card
+  // once we know the plan is a lower tier (avoids flashing an upsell at
+  // Enterprise/usage-flex orgs on first paint).
+  const { data: billing } = useQuery({ queryKey: ["billing-status"], queryFn: getBillingStatus });
+  const showUpgradeCard = Boolean(billing) && !FULL_SUITE_PLANS.includes(billing!.plan);
+
   const logout = () => {
     void logoutRequest().catch(() => {});
     window.localStorage.removeItem("cv_org");
@@ -205,16 +218,18 @@ function SidebarBody() {
 
       {/* Upgrade / footer card */}
       <div className="mt-3 space-y-3">
-        <div className="relative overflow-hidden rounded-2xl bg-cv-brand p-4 text-white shadow-button">
-          <span className="pointer-events-none absolute -right-6 -top-8 h-24 w-24 rounded-full bg-white/20 blur-xl" />
-          <div className="relative">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2 py-1 text-[10px] font-bold uppercase tracking-wide">
-              <Sparkles size={12} /> Enterprise
-            </span>
-            <p className="mt-2 text-sm font-bold leading-snug">Unlock full AI governance suite</p>
-            <p className="mt-1 text-[11px] text-white/80">40+ modules, copilot & audit automation.</p>
+        {showUpgradeCard && (
+          <div className="relative overflow-hidden rounded-2xl bg-cv-brand p-4 text-white shadow-button">
+            <span className="pointer-events-none absolute -right-6 -top-8 h-24 w-24 rounded-full bg-white/20 blur-xl" />
+            <div className="relative">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2 py-1 text-[10px] font-bold uppercase tracking-wide">
+                <Sparkles size={12} /> Enterprise
+              </span>
+              <p className="mt-2 text-sm font-bold leading-snug">Unlock full AI governance suite</p>
+              <p className="mt-1 text-[11px] text-white/80">40+ modules, copilot & audit automation.</p>
+            </div>
           </div>
-        </div>
+        )}
 
         <button
           type="button"
