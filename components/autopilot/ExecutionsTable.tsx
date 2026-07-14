@@ -66,7 +66,7 @@ export function ExecutionsTable() {
         <ul className="space-y-2.5">
           {rows.map((ex) => {
             const reversed = Boolean(ex.reversed_at);
-            const deadline = ex.reversal_deadline_at ? new Date(ex.reversal_deadline_at + "Z") : null;
+            const deadline = ex.reversal_deadline_at ? new Date(ex.reversal_deadline_at) : null;
             const withinWindow = deadline ? deadline.getTime() > Date.now() : false;
             return (
               <li
@@ -83,7 +83,7 @@ export function ExecutionsTable() {
                     <StatusBadge label={`${ex.risk_tier} risk`} tone={ex.risk_tier === "low" ? "teal" : "warn"} />
                   </div>
                   <p className="mt-0.5 text-[11px] text-cv-slate">
-                    {ex.created_at ? new Date(ex.created_at + "Z").toLocaleString() : "—"}
+                    {ex.created_at ? new Date(ex.created_at).toLocaleString() : "—"}
                     {reversed
                       ? ` · reversed${ex.reversal_reason ? `: ${ex.reversal_reason}` : ""}`
                       : deadline

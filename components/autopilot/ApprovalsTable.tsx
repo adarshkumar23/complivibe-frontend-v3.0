@@ -98,7 +98,7 @@ export function ApprovalsTable() {
                     <StatusBadge label={prettify(a.approval_status)} tone={tone(a.approval_status)} />
                   </div>
                   <p className="mt-0.5 text-[11px] text-cv-slate">
-                    requested {a.requested_at ? new Date(a.requested_at + "Z").toLocaleString() : "—"}
+                    requested {a.requested_at ? new Date(a.requested_at).toLocaleString() : "—"}
                     {a.decision_reason ? ` · decision: ${a.decision_reason}` : ""}
                     {a.approval_note ? ` · note: ${a.approval_note}` : ""}
                   </p>
