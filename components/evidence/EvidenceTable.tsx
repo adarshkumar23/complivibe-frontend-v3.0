@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, FolderOpen, FileCheck2 } from "lucide-react";
+import { Search, FolderOpen, FileCheck2, ExternalLink, Paperclip } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -104,7 +104,19 @@ export function EvidenceTable({ data }: { data: EvidenceData }) {
                 <li key={e.id} className="rounded-2xl bg-white/55 px-3.5 py-3 ring-1 ring-white/70 transition hover:bg-white/85">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[13px] font-semibold leading-snug text-cv-ink">{e.title}</p>
+                      {e.external_reference_url ? (
+                        <a
+                          href={e.external_reference_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group inline-flex items-center gap-1 text-[13px] font-semibold leading-snug text-cv-blue hover:underline"
+                        >
+                          <span className="truncate">{e.title}</span>
+                          <ExternalLink size={12} className="shrink-0 opacity-70 group-hover:opacity-100" />
+                        </a>
+                      ) : (
+                        <p className="text-[13px] font-semibold leading-snug text-cv-ink">{e.title}</p>
+                      )}
                       <p className="mt-0.5 text-[11px] text-cv-slate">
                         {[
                           e.evidence_type?.replaceAll("_", " "),
@@ -114,6 +126,12 @@ export function EvidenceTable({ data }: { data: EvidenceData }) {
                           .filter(Boolean)
                           .join(" · ")}
                       </p>
+                      {e.file_name ? (
+                        <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-cv-mist">
+                          <Paperclip size={11} className="shrink-0" />
+                          <span className="truncate">{e.file_name}</span>
+                        </p>
+                      ) : null}
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5">
                       {e.freshness_status ? (
