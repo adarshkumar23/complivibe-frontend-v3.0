@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { notFound } from "next/navigation";
 import { Bug } from "lucide-react";
 import * as Sentry from "@sentry/nextjs";
 
@@ -18,6 +19,14 @@ import * as Sentry from "@sentry/nextjs";
  */
 export default function DebugSentryPage() {
   const [messageSent, setMessageSent] = useState(false);
+
+  // Never expose this deliberately-crashing test affordance in production builds.
+  // NODE_ENV is inlined at build time, so this whole page 404s in prod and the
+  // "Throw test error" button below is never reachable there. (Hook above is
+  // declared first so hook order stays stable regardless of environment.)
+  if (process.env.NODE_ENV === "production") {
+    notFound();
+  }
 
   return (
     <div className="space-y-6">
