@@ -7,3 +7,6 @@ npm-debug.log*
 tsconfig.tsbuildinfo
 deploy/current-version.env
 deploy.log
+
+e2e/.auth/
+e2e/partd-results.json
