@@ -10,6 +10,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { AttestationCampaignModal } from "@/components/employee-compliance/AttestationCampaignModal";
 import { TrainingRecordModal } from "@/components/employee-compliance/TrainingRecordModal";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { EmployeeComplianceData } from "@/lib/hooks/useEmployeeCompliance";
 
 export function EmployeeComplianceKpis({ data }: { data: EmployeeComplianceData }) {
@@ -64,6 +65,7 @@ export function TrainingRecordsPanel({ data }: { data: EmployeeComplianceData })
   const { records } = data;
   const list = records.data ?? [];
   const [assignOpen, setAssignOpen] = useState(false);
+  const canAssignTraining = useHasPermission("training_analytics:write");
 
   return (
     <SectionCard
@@ -74,14 +76,16 @@ export function TrainingRecordsPanel({ data }: { data: EmployeeComplianceData })
       className="h-full"
       action={
         <>
-          <button
-            type="button"
-            onClick={() => setAssignOpen(true)}
-            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
-          >
-            <Plus size={13} strokeWidth={2.6} />
-            Assign training
-          </button>
+          {canAssignTraining ? (
+            <button
+              type="button"
+              onClick={() => setAssignOpen(true)}
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
+            >
+              <Plus size={13} strokeWidth={2.6} />
+              Assign training
+            </button>
+          ) : null}
           <TrainingRecordModal open={assignOpen} onClose={() => setAssignOpen(false)} />
         </>
       }

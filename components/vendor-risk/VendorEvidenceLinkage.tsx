@@ -8,6 +8,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useRecomputeConcentration, type VendorRiskData } from "@/lib/hooks/useVendorRisk";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 
 /**
  * Concentration-risk panel from GET /api/v1/vendor-concentration-risk.
@@ -21,6 +22,7 @@ export function VendorEvidenceLinkage({ data }: { data: VendorRiskData }) {
   const c = concentration.data;
   const recompute = useRecomputeConcentration();
   const [recomputeError, setRecomputeError] = useState<string | null>(null);
+  const canManageConcentration = useHasPermission("vendor_concentration_risk:manage");
 
   function runRecompute() {
     setRecomputeError(null);
@@ -36,7 +38,7 @@ export function VendorEvidenceLinkage({ data }: { data: VendorRiskData }) {
       icon={Share2}
       accent="teal"
       action={
-        c && c.status !== "not_computed" ? (
+        canManageConcentration && c && c.status !== "not_computed" ? (
           <button
             type="button"
             onClick={runRecompute}
@@ -63,16 +65,18 @@ export function VendorEvidenceLinkage({ data }: { data: VendorRiskData }) {
             title="Not computed yet"
             description="HHI is computed from active critical/high-tier vendors and their supply-chain dependencies, weighted by annual spend where captured."
           />
-          <button
-            type="button"
-            onClick={runRecompute}
-            disabled={recompute.isPending}
-            data-testid="compute-concentration"
-            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-xl bg-cv-brand px-4 py-2 text-[12px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
-          >
-            {recompute.isPending ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} strokeWidth={2.4} />}
-            Compute now
-          </button>
+          {canManageConcentration ? (
+            <button
+              type="button"
+              onClick={runRecompute}
+              disabled={recompute.isPending}
+              data-testid="compute-concentration"
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-xl bg-cv-brand px-4 py-2 text-[12px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
+            >
+              {recompute.isPending ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} strokeWidth={2.4} />}
+              Compute now
+            </button>
+          ) : null}
           {recomputeError ? (
             <p className="mt-2 text-[12px] font-medium text-rose-600" data-testid="concentration-error">
               {recomputeError}

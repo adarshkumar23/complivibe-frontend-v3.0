@@ -9,6 +9,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { LegalMatterFormModal } from "@/components/legal/LegalMatterFormModal";
 import { formatDate } from "@/lib/utils/format";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { LegalData } from "@/lib/hooks/useLegal";
 
 /** Legal matters from GET /api/v1/legal-matters, with risk-escalation context. */
@@ -16,6 +17,7 @@ export function LegalMattersTable({ data }: { data: LegalData }) {
   const { matters } = data;
   const list = matters.data ?? [];
   const [createOpen, setCreateOpen] = useState(false);
+  const canCreateMatter = useHasPermission("legal_matters:write");
 
   return (
     <SectionCard
@@ -31,14 +33,16 @@ export function LegalMattersTable({ data }: { data: LegalData }) {
               {list.length} matters
             </span>
           ) : null}
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
-          >
-            <Plus size={13} strokeWidth={2.6} />
-            New matter
-          </button>
+          {canCreateMatter ? (
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
+            >
+              <Plus size={13} strokeWidth={2.6} />
+              New matter
+            </button>
+          ) : null}
           <LegalMatterFormModal open={createOpen} onClose={() => setCreateOpen(false)} />
         </div>
       }

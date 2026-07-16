@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { Plus, TriangleAlert } from "lucide-react";
 import { RiskFormModal } from "@/components/risks/RiskFormModal";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 
 export function RisksHeader() {
   const [createOpen, setCreateOpen] = useState(false);
+  const canCreateRisk = useHasPermission("risks:write");
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -24,14 +26,16 @@ export function RisksHeader() {
         </p>
       </div>
 
-      <button
-        type="button"
-        onClick={() => setCreateOpen(true)}
-        className="cv-ring-focus inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-cv-brand px-5 py-2.5 text-[13px] font-semibold text-white shadow-tile transition hover:opacity-90 sm:self-auto"
-      >
-        <Plus size={15} strokeWidth={2.6} />
-        New Risk
-      </button>
+      {canCreateRisk ? (
+        <button
+          type="button"
+          onClick={() => setCreateOpen(true)}
+          className="cv-ring-focus inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-cv-brand px-5 py-2.5 text-[13px] font-semibold text-white shadow-tile transition hover:opacity-90 sm:self-auto"
+        >
+          <Plus size={15} strokeWidth={2.6} />
+          New Risk
+        </button>
+      ) : null}
 
       <RiskFormModal open={createOpen} onClose={() => setCreateOpen(false)} />
     </div>

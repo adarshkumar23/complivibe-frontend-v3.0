@@ -32,6 +32,7 @@ import {
   useArchivePolicy,
   useCreatePolicyVersion
 } from "@/lib/hooks/usePolicies";
+import { usePermissions } from "@/lib/hooks/usePermissions";
 import type { Policy, PolicyVersion } from "@/lib/api/policies";
 
 const inputCls =
@@ -181,6 +182,16 @@ export function PolicyDetailModal({
   const canSendForReview =
     !pendingRequest && policy != null && (policy.status === "draft" || policy.status === "under_review");
 
+  // Approve/Reject authority mirrors the backend's _require_can_decide_approval_request:
+  // the assigned approver can act, OR anyone holding the blanket compliance_policies:approve.
+  // (Reviewers no longer carry the blanket grant, so an unassigned reviewer sees nothing to
+  // click instead of a button that would 403 — but an assigned reviewer still can approve.)
+  const perms = usePermissions();
+  const canDecidePending =
+    pendingRequest != null &&
+    (perms.has("compliance_policies:approve") ||
+      (myId != null && pendingRequest.approver_user_id === myId));
+
   const errOpts = {
     onError: (err: Error) => setActionError(err.message || "The backend rejected this action.")
   };
@@ -246,53 +257,57 @@ export function PolicyDetailModal({
                   You requested this review — the backend requires a different user to decide it.
                 </p>
               ) : null}
-              <div className="mt-2.5">
-                <label htmlFor="review-notes" className={labelCls}>
-                  Review notes (optional)
-                </label>
-                <textarea
-                  id="review-notes"
-                  value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
-                  rows={2}
-                  placeholder="Recorded on the version as reviewer notes"
-                  className={inputCls}
-                />
-              </div>
-              <div className="mt-2.5 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  disabled={approveRequest.isPending}
-                  data-testid="approve-request"
-                  onClick={() => {
-                    setActionError(null);
-                    approveRequest.mutate(
-                      { policyId: policy.id, requestId: pendingRequest.id, reviewNotes: reviewNotes || null },
-                      errOpts
-                    );
-                  }}
-                  className={primaryBtn}
-                >
-                  {approveRequest.isPending ? <Loader2 size={14} className="animate-spin" /> : <ThumbsUp size={14} />}
-                  Approve
-                </button>
-                <button
-                  type="button"
-                  disabled={rejectRequest.isPending}
-                  data-testid="reject-request"
-                  onClick={() => {
-                    setActionError(null);
-                    rejectRequest.mutate(
-                      { policyId: policy.id, requestId: pendingRequest.id, reviewNotes: reviewNotes || null },
-                      errOpts
-                    );
-                  }}
-                  className={subtleBtn}
-                >
-                  {rejectRequest.isPending ? <Loader2 size={14} className="animate-spin" /> : <ThumbsDown size={14} />}
-                  Reject
-                </button>
-              </div>
+              {canDecidePending ? (
+                <>
+                  <div className="mt-2.5">
+                    <label htmlFor="review-notes" className={labelCls}>
+                      Review notes (optional)
+                    </label>
+                    <textarea
+                      id="review-notes"
+                      value={reviewNotes}
+                      onChange={(e) => setReviewNotes(e.target.value)}
+                      rows={2}
+                      placeholder="Recorded on the version as reviewer notes"
+                      className={inputCls}
+                    />
+                  </div>
+                  <div className="mt-2.5 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={approveRequest.isPending}
+                      data-testid="approve-request"
+                      onClick={() => {
+                        setActionError(null);
+                        approveRequest.mutate(
+                          { policyId: policy.id, requestId: pendingRequest.id, reviewNotes: reviewNotes || null },
+                          errOpts
+                        );
+                      }}
+                      className={primaryBtn}
+                    >
+                      {approveRequest.isPending ? <Loader2 size={14} className="animate-spin" /> : <ThumbsUp size={14} />}
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      disabled={rejectRequest.isPending}
+                      data-testid="reject-request"
+                      onClick={() => {
+                        setActionError(null);
+                        rejectRequest.mutate(
+                          { policyId: policy.id, requestId: pendingRequest.id, reviewNotes: reviewNotes || null },
+                          errOpts
+                        );
+                      }}
+                      className={subtleBtn}
+                    >
+                      {rejectRequest.isPending ? <Loader2 size={14} className="animate-spin" /> : <ThumbsDown size={14} />}
+                      Reject
+                    </button>
+                  </div>
+                </>
+              ) : null}
               <div className="mt-2.5 flex items-end gap-2">
                 <div className="flex-1">
                   <label htmlFor="cancel-reason" className={labelCls}>

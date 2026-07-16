@@ -10,12 +10,14 @@ import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { Severity } from "@/lib/api/types";
 import type { RisksData } from "@/lib/hooks/useRisks";
 
 export function RiskRegister({ data }: { data: RisksData }) {
   const { risks } = data;
   const list = useMemo(() => risks.data ?? [], [risks.data]);
+  const canEditRisk = useHasPermission("risks:write");
 
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
@@ -109,14 +111,16 @@ export function RiskRegister({ data }: { data: RisksData }) {
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setEditRisk(r)}
-                        aria-label={`Edit risk: ${r.title}`}
-                        className="cv-ring-focus inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/60 text-cv-slate ring-1 ring-white/70 transition hover:bg-white hover:text-cv-ink"
-                      >
-                        <SquarePen size={13} />
-                      </button>
+                      {canEditRisk ? (
+                        <button
+                          type="button"
+                          onClick={() => setEditRisk(r)}
+                          aria-label={`Edit risk: ${r.title}`}
+                          className="cv-ring-focus inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/60 text-cv-slate ring-1 ring-white/70 transition hover:bg-white hover:text-cv-ink"
+                        >
+                          <SquarePen size={13} />
+                        </button>
+                      ) : null}
                       {r.inherent_score != null ? (
                         <span className="rounded-full bg-slate-500/10 px-2 py-0.5 text-[11px] font-bold text-cv-slate ring-1 ring-slate-400/20">
                           {r.inherent_score}

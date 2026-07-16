@@ -8,6 +8,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { RiskFormModal } from "@/components/risks/RiskFormModal";
 import { cn } from "@/lib/utils/cn";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { Risk } from "@/lib/api/risks";
 import type { RisksData } from "@/lib/hooks/useRisks";
 
@@ -35,6 +36,7 @@ export function RiskMatrix({ data }: { data: RisksData }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [editRisk, setEditRisk] = useState<Risk | null>(null);
   const [missingRiskTitle, setMissingRiskTitle] = useState<string | null>(null);
+  const canEditRisk = useHasPermission("risks:write");
 
   const selectedCell = selectedKey ? byKey.get(selectedKey) : undefined;
 
@@ -116,14 +118,20 @@ export function RiskMatrix({ data }: { data: RisksData }) {
                 <ul className="mt-2 space-y-1.5">
                   {selectedCell.risks.map((r) => (
                     <li key={r.id}>
-                      <button
-                        type="button"
-                        onClick={() => openEditor(r.id, r.title)}
-                        className="cv-ring-focus flex w-full items-center justify-between gap-2 rounded-xl bg-white/60 px-3 py-2 text-left ring-1 ring-white/70 transition hover:bg-white/90"
-                      >
-                        <span className="min-w-0 truncate text-xs font-semibold text-cv-ink">{r.title}</span>
-                        <SquarePen size={13} className="shrink-0 text-cv-slate" />
-                      </button>
+                      {canEditRisk ? (
+                        <button
+                          type="button"
+                          onClick={() => openEditor(r.id, r.title)}
+                          className="cv-ring-focus flex w-full items-center justify-between gap-2 rounded-xl bg-white/60 px-3 py-2 text-left ring-1 ring-white/70 transition hover:bg-white/90"
+                        >
+                          <span className="min-w-0 truncate text-xs font-semibold text-cv-ink">{r.title}</span>
+                          <SquarePen size={13} className="shrink-0 text-cv-slate" />
+                        </button>
+                      ) : (
+                        <div className="flex w-full items-center justify-between gap-2 rounded-xl bg-white/40 px-3 py-2 text-left ring-1 ring-white/60">
+                          <span className="min-w-0 truncate text-xs font-semibold text-cv-ink">{r.title}</span>
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>
