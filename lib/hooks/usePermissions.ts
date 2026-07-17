@@ -19,7 +19,15 @@ export function useMyPermissions() {
   return useQuery({
     queryKey: ["my-permissions"],
     queryFn: getMyPermissions,
-    staleTime: 300_000
+    staleTime: 300_000,
+    // A role/permission change made server-side must reflect in the UI without a
+    // hard reload. The global QueryClient sets refetchOnWindowFocus:false, and the
+    // 5-min staleTime means the default focus refetch wouldn't fire anyway -- so a
+    // de-scoped/upgraded user kept seeing stale gating until they manually reloaded
+    // (Part D, finding C4). "always" refetches this one query whenever the tab
+    // regains focus, regardless of staleTime, so returning to the tab picks up the
+    // new permission set. Backend still enforces authorization independently.
+    refetchOnWindowFocus: "always"
   });
 }
 
