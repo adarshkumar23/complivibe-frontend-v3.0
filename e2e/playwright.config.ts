@@ -23,14 +23,17 @@ export default defineConfig({
     { name: "setup", testMatch: /auth\.setup\.ts/ },
     ...PERSONAS.map((p) => ({
       name: p.key,
-      testMatch: /(smoke|gating|stubs)\.spec\.ts/,
+      // Per-persona: route smoke, hidden-button gating matrix, stub pages, and the
+      // direct-API RBAC (403) matrix -- all evaluated from THIS persona's session.
+      testMatch: /(smoke|gating|stubs|directapi)\.spec\.ts/,
       dependencies: ["setup"],
       use: { ...devices["Desktop Chrome"], storageState: `partd/.auth/${p.key}.json` },
     })),
-    // C3 (forced 500) and C4 (role change) run as their own admin-authed project.
+    // Admin-authed scenarios: C3 (forced 500), C4 (role change), the authorized
+    // create-via-UI mutations, and the multi-persona policy approval-quorum matrix.
     {
       name: "scenarios",
-      testMatch: /(error500|rolechange|mutation)\.spec\.ts/,
+      testMatch: /(error500|rolechange|mutation|policyapproval)\.spec\.ts/,
       dependencies: ["setup"],
       use: { ...devices["Desktop Chrome"], storageState: `partd/.auth/admin.json` },
     },

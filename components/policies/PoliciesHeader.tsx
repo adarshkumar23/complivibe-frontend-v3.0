@@ -3,9 +3,13 @@
 import { useState } from "react";
 import { Plus, ScrollText } from "lucide-react";
 import { PolicyFormModal } from "@/components/policies/PolicyFormModal";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 
 export function PoliciesHeader() {
   const [createOpen, setCreateOpen] = useState(false);
+  // Gate policy creation on compliance_policies:write (mirrors risks gating);
+  // the backend enforces the same permission, so an ungated button would 403.
+  const canCreatePolicy = useHasPermission("compliance_policies:write");
 
   return (
     <div className="flex flex-col gap-1">
@@ -23,15 +27,17 @@ export function PoliciesHeader() {
             for audit.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setCreateOpen(true)}
-          data-testid="new-policy"
-          className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90"
-        >
-          <Plus size={15} strokeWidth={2.6} />
-          New policy
-        </button>
+        {canCreatePolicy ? (
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            data-testid="new-policy"
+            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90"
+          >
+            <Plus size={15} strokeWidth={2.6} />
+            New policy
+          </button>
+        ) : null}
       </div>
 
       <PolicyFormModal open={createOpen} onClose={() => setCreateOpen(false)} />

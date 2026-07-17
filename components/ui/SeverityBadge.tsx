@@ -9,8 +9,19 @@ const styles: Record<Severity, { label: string; cls: string; dot: string }> = {
   info: { label: "Info", cls: "bg-blue-500/12 text-blue-600 ring-blue-500/20", dot: "bg-blue-500" }
 };
 
+// Neutral fallback for any value outside the known set (e.g. a vendor
+// risk_tier of "not_assessed"). Without this, an unknown severity made
+// styles[severity] undefined and `s.cls` threw, crashing the whole page into
+// the error boundary (hit on /dashboard/vendor-risk in the production build).
+const FALLBACK = { cls: "bg-slate-400/12 text-slate-600 ring-slate-400/20", dot: "bg-slate-400" };
+
+function titleize(value: string): string {
+  return value ? value.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : "Unknown";
+}
+
 export function SeverityBadge({ severity, className }: { severity: Severity; className?: string }) {
-  const s = styles[severity];
+  const known = styles[severity];
+  const s = known ?? { label: titleize(severity as string), ...FALLBACK };
   return (
     <span
       className={cn(

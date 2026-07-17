@@ -11,6 +11,7 @@ import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import type { Severity } from "@/lib/api/types";
 import type { Control } from "@/lib/api/controls";
 import type { ControlsData } from "@/lib/hooks/useControls";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 
 function statusTone(status: string): "good" | "warn" | "bad" | "neutral" {
   switch (status) {
@@ -38,6 +39,9 @@ export function ControlsTable({
 }) {
   const { controls } = data;
   const list = useMemo(() => controls.data ?? [], [controls.data]);
+  // Gate the create action on controls:write so the UI never offers an action
+  // the backend would 403 (mirrors the risks-domain useHasPermission gating).
+  const canWriteControls = useHasPermission("controls:write");
 
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
@@ -66,7 +70,7 @@ export function ControlsTable({
               {list.length} controls
             </span>
           ) : null}
-          {onCreate ? (
+          {onCreate && canWriteControls ? (
             <button
               type="button"
               onClick={onCreate}

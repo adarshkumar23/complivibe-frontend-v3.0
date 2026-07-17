@@ -13,6 +13,7 @@ import { VendorAssessmentModal } from "@/components/vendor-risk/VendorAssessment
 import type { Severity } from "@/lib/api/types";
 import type { Vendor } from "@/lib/api/vendor-risk";
 import type { VendorRiskData } from "@/lib/hooks/useVendorRisk";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 
 const TIER_ORDER: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
 
@@ -22,6 +23,9 @@ const rowActionCls =
 export function VendorRiskTable({ data }: { data: VendorRiskData }) {
   const { vendors } = data;
   const list = useMemo(() => vendors.data ?? [], [vendors.data]);
+  // Gate vendor create/edit on vendors:write (mirrors risks gating); the backend
+  // enforces the same permission, so an ungated button would 403 at submit.
+  const canWriteVendors = useHasPermission("vendors:write");
 
   const [query, setQuery] = useState("");
   const [tier, setTier] = useState("all");
@@ -54,17 +58,19 @@ export function VendorRiskTable({ data }: { data: VendorRiskData }) {
               {list.length} vendors
             </span>
           ) : null}
-          <button
-            type="button"
-            onClick={() => {
-              setEditVendor(null);
-              setFormOpen(true);
-            }}
-            data-testid="add-vendor"
-            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-bold text-white shadow-tile transition hover:opacity-90"
-          >
-            <Plus size={13} strokeWidth={2.6} /> Add vendor
-          </button>
+          {canWriteVendors ? (
+            <button
+              type="button"
+              onClick={() => {
+                setEditVendor(null);
+                setFormOpen(true);
+              }}
+              data-testid="add-vendor"
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-bold text-white shadow-tile transition hover:opacity-90"
+            >
+              <Plus size={13} strokeWidth={2.6} /> Add vendor
+            </button>
+          ) : null}
         </div>
       }
     >
@@ -126,29 +132,33 @@ export function VendorRiskTable({ data }: { data: VendorRiskData }) {
                           />
                         ) : null}
                         {v.risk_tier ? <SeverityBadge severity={v.risk_tier as Severity} /> : null}
-                        <button
-                          type="button"
-                          title={`Edit ${v.name}`}
-                          aria-label={`Edit ${v.name}`}
-                          data-testid={`edit-vendor-${v.id}`}
-                          onClick={() => {
-                            setEditVendor(v);
-                            setFormOpen(true);
-                          }}
-                          className={rowActionCls}
-                        >
-                          <Pencil size={12.5} strokeWidth={2.2} />
-                        </button>
-                        <button
-                          type="button"
-                          title={`New assessment for ${v.name}`}
-                          aria-label={`New assessment for ${v.name}`}
-                          data-testid={`assess-vendor-${v.id}`}
-                          onClick={() => setAssessVendor(v)}
-                          className={rowActionCls}
-                        >
-                          <ClipboardList size={12.5} strokeWidth={2.2} />
-                        </button>
+                        {canWriteVendors ? (
+                          <>
+                            <button
+                              type="button"
+                              title={`Edit ${v.name}`}
+                              aria-label={`Edit ${v.name}`}
+                              data-testid={`edit-vendor-${v.id}`}
+                              onClick={() => {
+                                setEditVendor(v);
+                                setFormOpen(true);
+                              }}
+                              className={rowActionCls}
+                            >
+                              <Pencil size={12.5} strokeWidth={2.2} />
+                            </button>
+                            <button
+                              type="button"
+                              title={`New assessment for ${v.name}`}
+                              aria-label={`New assessment for ${v.name}`}
+                              data-testid={`assess-vendor-${v.id}`}
+                              onClick={() => setAssessVendor(v)}
+                              className={rowActionCls}
+                            >
+                              <ClipboardList size={12.5} strokeWidth={2.2} />
+                            </button>
+                          </>
+                        ) : null}
                       </div>
                     </div>
                   </li>
