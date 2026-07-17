@@ -13,6 +13,8 @@ const ADMIN_ONLY = new Set(["admin"]);
 const ADMIN_CM_REVIEWER = new Set(["admin", "compliance_manager", "reviewer_unassigned", "reviewer_assigned"]);
 
 const DOMAINS: Domain[] = [
+  // evidence:write (new Evidence Vault create button)
+  { key: "evidence:new", route: "/dashboard/evidence", button: (p) => p.getByTestId("new-evidence"), allowed: ADMIN_CM },
   // ai_systems:write
   { key: "ai-systems:register", route: "/dashboard/ai-systems", button: (p) => p.getByRole("button", { name: /Register system/i }), allowed: ADMIN_CM },
   // audit:write

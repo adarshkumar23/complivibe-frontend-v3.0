@@ -14,6 +14,7 @@ import {
   type ControlPreset
 } from "@/components/controls/MapObligationModal";
 import { LinkPolicyModal } from "@/components/controls/LinkPolicyModal";
+import { AttachEvidenceModal } from "@/components/evidence/AttachEvidenceModal";
 import { useControls } from "@/lib/hooks/useControls";
 import type { Control } from "@/lib/api/controls";
 
@@ -30,6 +31,7 @@ export default function ControlsPage() {
   const [obligationPreset, setObligationPreset] = useState<ObligationPreset | null>(null);
   const [controlPreset, setControlPreset] = useState<ControlPreset | null>(null);
   const [policyControl, setPolicyControl] = useState<ControlPreset | null>(null);
+  const [attachEvidenceControl, setAttachEvidenceControl] = useState<Control | null>(null);
 
   function toControlPreset(c: Control): ControlPreset {
     return { controlId: c.id, title: c.title, controlCode: c.control_code };
@@ -81,6 +83,7 @@ export default function ControlsPage() {
             onCreate={() => setCreateOpen(true)}
             onLinkObligation={openMapForControl}
             onLinkPolicy={(c) => setPolicyControl(toControlPreset(c))}
+            onAttachEvidence={(c) => setAttachEvidenceControl(c)}
           />
         </div>
         <div>
@@ -100,6 +103,14 @@ export default function ControlsPage() {
         controlPreset={controlPreset}
       />
       <LinkPolicyModal open={policyControl != null} onClose={() => setPolicyControl(null)} control={policyControl} />
+      {attachEvidenceControl ? (
+        <AttachEvidenceModal
+          open
+          controlId={attachEvidenceControl.id}
+          controlTitle={attachEvidenceControl.title}
+          onClose={() => setAttachEvidenceControl(null)}
+        />
+      ) : null}
     </div>
   );
 }

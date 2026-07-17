@@ -120,3 +120,46 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 
   return payload as T;
 }
+
+/**
+ * Multipart POST for real file uploads (e.g. evidence file upload). Unlike
+ * apiFetch, this must NOT set Content-Type — the browser sets it to
+ * multipart/form-data with the correct boundary from the FormData body. Org +
+ * CSRF headers are still sent, and errors are surfaced as ApiError just like
+ * apiFetch (so a 413/415/503 from the backend carries its detail message).
+ */
+export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
+  const headers = new Headers();
+  const orgId = getOrgId();
+  if (orgId) {
+    headers.set("X-Organization-ID", orgId);
+  }
+  const csrfToken = getCsrfToken();
+  if (csrfToken) {
+    headers.set("X-CSRF-Token", csrfToken);
+  }
+
+  const response = await fetch(toProxyPath(path), {
+    method: "POST",
+    headers,
+    body: formData,
+    cache: "no-store"
+  });
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = undefined;
+  }
+
+  if (!response.ok) {
+    if (response.status === 401 && csrfToken) {
+      handleExpiredSession();
+    }
+    const typed = (payload || {}) as ApiErrorPayload;
+    throw new ApiError(errorMessage(response.status, typed), response.status, typed);
+  }
+
+  return payload as T;
+}

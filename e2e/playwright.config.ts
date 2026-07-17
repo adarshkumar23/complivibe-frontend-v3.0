@@ -33,7 +33,7 @@ export default defineConfig({
     // create-via-UI mutations, and the multi-persona policy approval-quorum matrix.
     {
       name: "scenarios",
-      testMatch: /(error500|rolechange|mutation|mutation_domains5_12|policyapproval|directapi_domains5_12)\.spec\.ts/,
+      testMatch: /(error500|rolechange|mutation|mutation_domains5_12|policyapproval|directapi_domains5_12|evidence_ui)\.spec\.ts/,
       dependencies: ["setup"],
       use: { ...devices["Desktop Chrome"], storageState: `partd/.auth/admin.json` },
     },

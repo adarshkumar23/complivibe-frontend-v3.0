@@ -45,7 +45,11 @@ async function handler(request: NextRequest, { params }: { params: Promise<{ pat
   };
 
   if (request.method !== "GET" && request.method !== "HEAD") {
-    init.body = await request.text();
+    // Read as an ArrayBuffer, not text(): text() corrupts binary/multipart bodies
+    // (real file uploads via multipart/form-data). ArrayBuffer preserves the exact
+    // bytes for both JSON and multipart, and the forwarded content-type header keeps
+    // the multipart boundary intact.
+    init.body = await request.arrayBuffer();
   }
 
   try {

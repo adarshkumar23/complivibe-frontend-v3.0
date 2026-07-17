@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { motion, type Variants } from "framer-motion";
 import { EvidenceHeader } from "@/components/evidence/EvidenceHeader";
 import { EvidenceKpis } from "@/components/evidence/EvidenceKpis";
 import { EvidenceTable } from "@/components/evidence/EvidenceTable";
 import { EvidenceFreshnessPanel } from "@/components/evidence/EvidenceFreshnessPanel";
+import { EvidenceCreateModal } from "@/components/evidence/EvidenceCreateModal";
+import { EvidenceDetailModal } from "@/components/evidence/EvidenceDetailModal";
 import { useEvidence } from "@/lib/hooks/useEvidence";
 
 const fade: Variants = {
@@ -14,6 +17,8 @@ const fade: Variants = {
 
 export default function EvidencePage() {
   const data = useEvidence();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   return (
     <div className="space-y-7">
@@ -27,12 +32,15 @@ export default function EvidencePage() {
 
       <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <EvidenceTable data={data} />
+          <EvidenceTable data={data} onCreate={() => setCreateOpen(true)} onSelect={setSelectedId} />
         </div>
         <div>
           <EvidenceFreshnessPanel data={data} />
         </div>
       </motion.div>
+
+      <EvidenceCreateModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <EvidenceDetailModal evidenceId={selectedId} open={selectedId != null} onClose={() => setSelectedId(null)} />
     </div>
   );
 }

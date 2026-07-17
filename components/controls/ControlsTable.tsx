@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, ShieldCheck, Shield, Plus, Link2, FileText } from "lucide-react";
+import { Search, ShieldCheck, Shield, Plus, Link2, FileText, Paperclip } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
@@ -30,18 +30,22 @@ export function ControlsTable({
   data,
   onCreate,
   onLinkObligation,
-  onLinkPolicy
+  onLinkPolicy,
+  onAttachEvidence
 }: {
   data: ControlsData;
   onCreate?: () => void;
   onLinkObligation?: (control: Control) => void;
   onLinkPolicy?: (control: Control) => void;
+  onAttachEvidence?: (control: Control) => void;
 }) {
   const { controls } = data;
   const list = useMemo(() => controls.data ?? [], [controls.data]);
   // Gate the create action on controls:write so the UI never offers an action
   // the backend would 403 (mirrors the risks-domain useHasPermission gating).
   const canWriteControls = useHasPermission("controls:write");
+  // Attach-evidence is an evidence:write action, gated on that permission.
+  const canWriteEvidence = useHasPermission("evidence:write");
 
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
@@ -142,7 +146,7 @@ export function ControlsTable({
                       <StatusBadge label={c.status.replaceAll("_", " ")} tone={statusTone(c.status)} />
                     </div>
                   </div>
-                  {onLinkObligation || onLinkPolicy ? (
+                  {onLinkObligation || onLinkPolicy || (onAttachEvidence && canWriteEvidence) ? (
                     <div className="mt-2 flex items-center gap-2">
                       {onLinkObligation ? (
                         <button
@@ -162,6 +166,17 @@ export function ControlsTable({
                         >
                           <FileText size={11} strokeWidth={2.6} />
                           Link policy
+                        </button>
+                      ) : null}
+                      {onAttachEvidence && canWriteEvidence ? (
+                        <button
+                          type="button"
+                          data-testid={`attach-evidence-${c.id}`}
+                          onClick={() => onAttachEvidence(c)}
+                          className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1.5 text-[11px] font-semibold text-cv-ink ring-1 ring-white/70 transition hover:bg-white"
+                        >
+                          <Paperclip size={11} strokeWidth={2.6} />
+                          Attach evidence
                         </button>
                       ) : null}
                     </div>

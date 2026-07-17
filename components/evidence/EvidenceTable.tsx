@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, FolderOpen, FileCheck2, ExternalLink, Paperclip } from "lucide-react";
+import { Search, FolderOpen, FileCheck2, ExternalLink, Paperclip, Plus } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -9,6 +9,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { formatDate } from "@/lib/utils/format";
 import type { EvidenceData } from "@/lib/hooks/useEvidence";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 
 function freshnessTone(status: string | null): "good" | "warn" | "bad" | "neutral" {
   switch (status) {
@@ -24,9 +25,11 @@ function freshnessTone(status: string | null): "good" | "warn" | "bad" | "neutra
   }
 }
 
-export function EvidenceTable({ data }: { data: EvidenceData }) {
+export function EvidenceTable({ data, onCreate, onSelect }: { data: EvidenceData; onCreate?: () => void; onSelect?: (id: string) => void }) {
   const { evidence } = data;
   const list = useMemo(() => evidence.data ?? [], [evidence.data]);
+  // Gate the create action on evidence:write (mirrors every other domain).
+  const canWriteEvidence = useHasPermission("evidence:write");
 
   const [query, setQuery] = useState("");
   const [review, setReview] = useState("all");
@@ -52,11 +55,24 @@ export function EvidenceTable({ data }: { data: EvidenceData }) {
       accent="green"
       className="h-full"
       action={
-        evidence.isSuccess ? (
-          <span className="rounded-full bg-cv-brand-soft px-2.5 py-1 text-[11px] font-semibold text-cv-blue ring-1 ring-white/60">
-            {list.length} items
-          </span>
-        ) : null
+        <div className="flex items-center gap-2">
+          {evidence.isSuccess ? (
+            <span className="rounded-full bg-cv-brand-soft px-2.5 py-1 text-[11px] font-semibold text-cv-blue ring-1 ring-white/60">
+              {list.length} items
+            </span>
+          ) : null}
+          {onCreate && canWriteEvidence ? (
+            <button
+              type="button"
+              data-testid="new-evidence"
+              onClick={onCreate}
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3 py-1.5 text-[11px] font-bold text-white shadow-button transition hover:-translate-y-0.5"
+            >
+              <Plus size={12} strokeWidth={2.8} />
+              New evidence
+            </button>
+          ) : null}
+        </div>
       }
     >
       {evidence.isLoading ? (
@@ -101,7 +117,15 @@ export function EvidenceTable({ data }: { data: EvidenceData }) {
           ) : (
             <ul className="space-y-2.5">
               {filtered.map((e) => (
-                <li key={e.id} className="rounded-2xl bg-white/55 px-3.5 py-3 ring-1 ring-white/70 transition hover:bg-white/85">
+                <li
+                  key={e.id}
+                  role={onSelect ? "button" : undefined}
+                  tabIndex={onSelect ? 0 : undefined}
+                  onClick={onSelect ? () => onSelect(e.id) : undefined}
+                  onKeyDown={onSelect ? (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); onSelect(e.id); } } : undefined}
+                  data-testid={`evidence-row-${e.id}`}
+                  className={`rounded-2xl bg-white/55 px-3.5 py-3 ring-1 ring-white/70 transition hover:bg-white/85 ${onSelect ? "cursor-pointer" : ""}`}
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       {e.external_reference_url ? (
@@ -109,6 +133,7 @@ export function EvidenceTable({ data }: { data: EvidenceData }) {
                           href={e.external_reference_url}
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={(ev) => ev.stopPropagation()}
                           className="group inline-flex items-center gap-1 text-[13px] font-semibold leading-snug text-cv-blue hover:underline"
                         >
                           <span className="truncate">{e.title}</span>
