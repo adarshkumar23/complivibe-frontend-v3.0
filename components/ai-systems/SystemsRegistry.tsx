@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { AiSystemFormModal } from "@/components/ai-systems/AiSystemFormModal";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { AiSystem } from "@/lib/api/ai-systems";
 import type { AiSystemsData } from "@/lib/hooks/useAiSystems";
 
@@ -36,6 +37,9 @@ export function SystemsRegistry({ data }: { data: AiSystemsData }) {
   const [lifecycle, setLifecycle] = useState("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<AiSystem | null>(null);
+  // Gate AI-system create/edit on ai_systems:write (mirrors risks gating);
+  // backend enforces the same, so an ungated button would 403.
+  const canWriteAiSystems = useHasPermission("ai_systems:write");
 
   const lifecycles = useMemo(() => [...new Set(list.map((s) => s.lifecycle_status))], [list]);
 
@@ -64,14 +68,16 @@ export function SystemsRegistry({ data }: { data: AiSystemsData }) {
               {list.length} systems
             </span>
           ) : null}
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3 py-1.5 text-[11px] font-bold text-white shadow-button transition hover:-translate-y-0.5"
-          >
-            <Plus size={13} strokeWidth={2.6} />
-            Register system
-          </button>
+          {canWriteAiSystems ? (
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3 py-1.5 text-[11px] font-bold text-white shadow-button transition hover:-translate-y-0.5"
+            >
+              <Plus size={13} strokeWidth={2.6} />
+              Register system
+            </button>
+          ) : null}
         </div>
       }
     >
@@ -130,15 +136,17 @@ export function SystemsRegistry({ data }: { data: AiSystemsData }) {
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5">
                       <StatusBadge label={s.lifecycle_status.replaceAll("_", " ")} tone={lifecycleTone(s.lifecycle_status)} />
-                      <button
-                        type="button"
-                        onClick={() => setEditing(s)}
-                        aria-label={`Edit ${s.name}`}
-                        title={`Edit ${s.name}`}
-                        className="cv-ring-focus inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/60 text-cv-slate ring-1 ring-white/70 transition hover:bg-white hover:text-cv-ink"
-                      >
-                        <PencilLine size={13} strokeWidth={2.2} />
-                      </button>
+                      {canWriteAiSystems ? (
+                        <button
+                          type="button"
+                          onClick={() => setEditing(s)}
+                          aria-label={`Edit ${s.name}`}
+                          title={`Edit ${s.name}`}
+                          className="cv-ring-focus inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/60 text-cv-slate ring-1 ring-white/70 transition hover:bg-white hover:text-cv-ink"
+                        >
+                          <PencilLine size={13} strokeWidth={2.2} />
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 </li>

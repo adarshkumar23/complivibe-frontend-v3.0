@@ -9,6 +9,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { PlanActionModal } from "@/components/autopilot/PlanActionModal";
 import { ApiError } from "@/lib/api/client";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { ExecutionIntent } from "@/lib/api/autopilot";
 import {
   useArchiveIntent,
@@ -47,6 +48,9 @@ export function IntentsTable() {
   const approvals = useExecutionApprovals();
   const requestApproval = useRequestApproval();
   const archive = useArchiveIntent();
+  // Gate autopilot mutations on ai_systems:write (mirrors risks gating);
+  // backend enforces the same, so an ungated action would 403.
+  const canManageAutopilot = useHasPermission("ai_systems:write");
   const [planOpen, setPlanOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -79,10 +83,12 @@ export function IntentsTable() {
       icon={ClipboardList}
       accent="purple"
       action={
-        <button type="button" onClick={() => setPlanOpen(true)} className={smallBtn} data-testid="plan-action">
-          <Plus size={13} strokeWidth={2.6} />
-          Plan action
-        </button>
+        canManageAutopilot ? (
+          <button type="button" onClick={() => setPlanOpen(true)} className={smallBtn} data-testid="plan-action">
+            <Plus size={13} strokeWidth={2.6} />
+            Plan action
+          </button>
+        ) : null
       }
     >
       {intents.isLoading ? (
@@ -136,7 +142,7 @@ export function IntentsTable() {
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  {canRequest ? (
+                  {canManageAutopilot && canRequest ? (
                     <button
                       type="button"
                       className={smallBtn}
@@ -151,19 +157,21 @@ export function IntentsTable() {
                       Request approval
                     </button>
                   ) : null}
-                  <button
-                    type="button"
-                    className={smallBtn}
-                    disabled={busyId === intent.id && archive.isPending}
-                    onClick={() => run(intent.id, () => archive.mutateAsync({ intentId: intent.id }))}
-                  >
-                    {busyId === intent.id && archive.isPending ? (
-                      <Loader2 size={12} className="animate-spin" />
-                    ) : (
-                      <Archive size={12} />
-                    )}
-                    Archive
-                  </button>
+                  {canManageAutopilot ? (
+                    <button
+                      type="button"
+                      className={smallBtn}
+                      disabled={busyId === intent.id && archive.isPending}
+                      onClick={() => run(intent.id, () => archive.mutateAsync({ intentId: intent.id }))}
+                    >
+                      {busyId === intent.id && archive.isPending ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : (
+                        <Archive size={12} />
+                      )}
+                      Archive
+                    </button>
+                  ) : null}
                 </div>
               </li>
             );

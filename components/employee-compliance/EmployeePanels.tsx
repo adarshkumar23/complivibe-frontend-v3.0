@@ -122,6 +122,9 @@ export function AttestationCampaignsPanel({ data }: { data: EmployeeComplianceDa
   const raw = campaigns.data;
   const list = Array.isArray(raw) ? raw : (raw?.items ?? []);
   const [createOpen, setCreateOpen] = useState(false);
+  // Gate campaign creation on compliance_policies:write (mirrors risks gating);
+  // backend enforces the same, so an ungated button would 403.
+  const canManageCampaigns = useHasPermission("compliance_policies:write");
 
   return (
     <SectionCard
@@ -131,14 +134,16 @@ export function AttestationCampaignsPanel({ data }: { data: EmployeeComplianceDa
       accent="purple"
       action={
         <>
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
-          >
-            <Plus size={13} strokeWidth={2.6} />
-            New campaign
-          </button>
+          {canManageCampaigns ? (
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
+            >
+              <Plus size={13} strokeWidth={2.6} />
+              New campaign
+            </button>
+          ) : null}
           <AttestationCampaignModal open={createOpen} onClose={() => setCreateOpen(false)} />
         </>
       }

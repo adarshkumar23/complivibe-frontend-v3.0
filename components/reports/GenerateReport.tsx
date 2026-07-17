@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Sparkles, Loader2, CheckCircle2, TriangleAlert } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { generateReport } from "@/lib/api/reports";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { ReportsData } from "@/lib/hooks/useReports";
 
 const CORE_TYPES = [
@@ -17,6 +18,9 @@ export function GenerateReport({ data }: { data: ReportsData }) {
   const [reportType, setReportType] = useState(CORE_TYPES[0].value);
   const [state, setState] = useState<"idle" | "working" | "done" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
+  // Gate report generation on reports:generate (mirrors risks gating);
+  // backend enforces the same, so an ungated button would 403.
+  const canGenerate = useHasPermission("reports:generate");
 
   async function handleGenerate() {
     setState("working");
@@ -48,15 +52,19 @@ export function GenerateReport({ data }: { data: ReportsData }) {
             </option>
           ))}
         </select>
-        <button
-          type="button"
-          onClick={handleGenerate}
-          disabled={state === "working"}
-          className="cv-ring-focus inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
-        >
-          {state === "working" ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-          {state === "working" ? "Generating…" : "Generate"}
-        </button>
+        {canGenerate ? (
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={state === "working"}
+            className="cv-ring-focus inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
+          >
+            {state === "working" ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+            {state === "working" ? "Generating…" : "Generate"}
+          </button>
+        ) : (
+          <p className="text-[11px] text-cv-mist">You do not have permission to generate reports.</p>
+        )}
         {message ? (
           <p
             className={`flex items-center gap-1.5 text-[12px] font-medium ${

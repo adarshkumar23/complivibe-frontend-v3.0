@@ -8,6 +8,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { cn } from "@/lib/utils/cn";
 import { ApiError } from "@/lib/api/client";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import { useGovernanceSettings, useUpdateGovernanceSettings, type AutopilotData } from "@/lib/hooks/useAutopilot";
 
 /**
@@ -19,6 +20,9 @@ function AutoExecuteOptIn() {
   const settings = useGovernanceSettings();
   const update = useUpdateGovernanceSettings();
   const [error, setError] = useState<string | null>(null);
+  // Gate the auto-execute kill-switch on org:update (mirrors risks gating);
+  // backend enforces the same, so an ungated toggle would 403.
+  const canToggle = useHasPermission("org:update");
 
   if (settings.isLoading) return <SkeletonRows rows={1} />;
   if (settings.isError || !settings.data) {
@@ -44,30 +48,32 @@ function AutoExecuteOptIn() {
             {enabled ? "Org has opted in — eligible low-risk actions may execute" : "Off — autopilot plans but never executes"}
           </p>
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={enabled}
-          aria-label="Auto-execution opt-in"
-          disabled={update.isPending}
-          onClick={toggle}
-          data-testid="auto-execute-toggle"
-          className={cn(
-            "cv-ring-focus relative h-5 w-9 shrink-0 rounded-full transition disabled:opacity-60",
-            enabled ? "bg-amber-500" : "bg-slate-300/70"
-          )}
-        >
-          {update.isPending ? (
-            <Loader2 size={11} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin text-white" />
-          ) : (
-            <span
-              className={cn(
-                "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all",
-                enabled ? "left-[18px]" : "left-0.5"
-              )}
-            />
-          )}
-        </button>
+        {canToggle ? (
+          <button
+            type="button"
+            role="switch"
+            aria-checked={enabled}
+            aria-label="Auto-execution opt-in"
+            disabled={update.isPending}
+            onClick={toggle}
+            data-testid="auto-execute-toggle"
+            className={cn(
+              "cv-ring-focus relative h-5 w-9 shrink-0 rounded-full transition disabled:opacity-60",
+              enabled ? "bg-amber-500" : "bg-slate-300/70"
+            )}
+          >
+            {update.isPending ? (
+              <Loader2 size={11} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin text-white" />
+            ) : (
+              <span
+                className={cn(
+                  "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all",
+                  enabled ? "left-[18px]" : "left-0.5"
+                )}
+              />
+            )}
+          </button>
+        ) : null}
       </div>
       {error ? (
         <p role="alert" className="mt-2 rounded-lg bg-rose-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-rose-600 ring-1 ring-rose-400/25">

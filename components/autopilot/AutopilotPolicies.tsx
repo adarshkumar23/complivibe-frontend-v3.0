@@ -9,6 +9,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { PolicyFormModal } from "@/components/autopilot/PolicyFormModal";
 import { ApiError } from "@/lib/api/client";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import { useArchivePolicy, useAutopilotPolicies, useSetDefaultPolicy } from "@/lib/hooks/useAutopilot";
 
 function prettify(v: string) {
@@ -27,6 +28,9 @@ export function AutopilotPolicies() {
   const policies = useAutopilotPolicies();
   const setDefault = useSetDefaultPolicy();
   const archive = useArchivePolicy();
+  // Gate autopilot policy mutations on ai_systems:write (mirrors risks gating);
+  // backend enforces the same, so an ungated action would 403.
+  const canManageAutopilot = useHasPermission("ai_systems:write");
   const [createOpen, setCreateOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -53,10 +57,12 @@ export function AutopilotPolicies() {
       accent="teal"
       className="h-full"
       action={
-        <button type="button" onClick={() => setCreateOpen(true)} className={smallBtn} data-testid="new-policy">
-          <Plus size={13} strokeWidth={2.6} />
-          New policy
-        </button>
+        canManageAutopilot ? (
+          <button type="button" onClick={() => setCreateOpen(true)} className={smallBtn} data-testid="new-policy">
+            <Plus size={13} strokeWidth={2.6} />
+            New policy
+          </button>
+        ) : null
       }
     >
       {policies.isLoading ? (
@@ -92,7 +98,7 @@ export function AutopilotPolicies() {
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                {!p.is_default ? (
+                {canManageAutopilot && !p.is_default ? (
                   <button
                     type="button"
                     className={smallBtn}
@@ -107,19 +113,21 @@ export function AutopilotPolicies() {
                     Set default
                   </button>
                 ) : null}
-                <button
-                  type="button"
-                  className={smallBtn}
-                  disabled={busyId === p.id && archive.isPending}
-                  onClick={() => run(p.id, () => archive.mutateAsync({ policyId: p.id }))}
-                >
-                  {busyId === p.id && archive.isPending ? (
-                    <Loader2 size={12} className="animate-spin" />
-                  ) : (
-                    <Archive size={12} />
-                  )}
-                  Archive
-                </button>
+                {canManageAutopilot ? (
+                  <button
+                    type="button"
+                    className={smallBtn}
+                    disabled={busyId === p.id && archive.isPending}
+                    onClick={() => run(p.id, () => archive.mutateAsync({ policyId: p.id }))}
+                  >
+                    {busyId === p.id && archive.isPending ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <Archive size={12} />
+                    )}
+                    Archive
+                  </button>
+                ) : null}
               </div>
             </li>
           ))}

@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { formatDate } from "@/lib/utils/format";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { AuditPackData } from "@/lib/hooks/useAuditPack";
 import { EngagementCreateModal } from "@/components/audit-pack/EngagementCreateModal";
 
@@ -32,6 +33,9 @@ export function AuditPackLibrary({
   const { engagements } = data;
   const list = engagements.data ?? [];
   const [createOpen, setCreateOpen] = useState(false);
+  // Gate engagement creation on audit:write (mirrors risks gating);
+  // backend enforces the same, so an ungated button would 403.
+  const canWriteAudit = useHasPermission("audit:write");
 
   return (
     <SectionCard
@@ -47,15 +51,17 @@ export function AuditPackLibrary({
               {list.length} engagements
             </span>
           ) : null}
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3 py-1.5 text-[11px] font-bold text-white shadow-button transition hover:-translate-y-0.5"
-            data-testid="open-engagement-modal"
-          >
-            <Plus size={12} />
-            New engagement
-          </button>
+          {canWriteAudit ? (
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3 py-1.5 text-[11px] font-bold text-white shadow-button transition hover:-translate-y-0.5"
+              data-testid="open-engagement-modal"
+            >
+              <Plus size={12} />
+              New engagement
+            </button>
+          ) : null}
         </div>
       }
     >

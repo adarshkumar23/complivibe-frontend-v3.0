@@ -25,7 +25,7 @@ export default defineConfig({
       name: p.key,
       // Per-persona: route smoke, hidden-button gating matrix, stub pages, and the
       // direct-API RBAC (403) matrix -- all evaluated from THIS persona's session.
-      testMatch: /(smoke|gating|stubs|directapi)\.spec\.ts/,
+      testMatch: /(smoke|gating|gating_domains5_12|stubs|directapi)\.spec\.ts/,
       dependencies: ["setup"],
       use: { ...devices["Desktop Chrome"], storageState: `partd/.auth/${p.key}.json` },
     })),
@@ -33,7 +33,7 @@ export default defineConfig({
     // create-via-UI mutations, and the multi-persona policy approval-quorum matrix.
     {
       name: "scenarios",
-      testMatch: /(error500|rolechange|mutation|policyapproval)\.spec\.ts/,
+      testMatch: /(error500|rolechange|mutation|mutation_domains5_12|policyapproval|directapi_domains5_12)\.spec\.ts/,
       dependencies: ["setup"],
       use: { ...devices["Desktop Chrome"], storageState: `partd/.auth/admin.json` },
     },

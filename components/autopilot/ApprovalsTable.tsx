@@ -9,6 +9,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { cn } from "@/lib/utils/cn";
 import { ApiError } from "@/lib/api/client";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import { useApproveApproval, useExecutionApprovals, useExecutionIntents, useRejectApproval } from "@/lib/hooks/useAutopilot";
 
 function prettify(v: string) {
@@ -40,6 +41,9 @@ export function ApprovalsTable() {
   const intents = useExecutionIntents();
   const approve = useApproveApproval();
   const reject = useRejectApproval();
+  // Gate approve/reject on ai_systems:write (mirrors risks gating);
+  // backend enforces the same, so an ungated action would 403.
+  const canManageAutopilot = useHasPermission("ai_systems:write");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -103,7 +107,7 @@ export function ApprovalsTable() {
                     {a.approval_note ? ` · note: ${a.approval_note}` : ""}
                   </p>
                 </div>
-                {a.approval_status === "requested" ? (
+                {canManageAutopilot && a.approval_status === "requested" ? (
                   <div className="flex shrink-0 items-center gap-2">
                     <button
                       type="button"

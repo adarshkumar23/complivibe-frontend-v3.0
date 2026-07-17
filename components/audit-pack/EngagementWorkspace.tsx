@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { formatDate } from "@/lib/utils/format";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import {
   ENGAGEMENT_NEXT_STATUSES,
   FINDING_NEXT_STATUSES,
@@ -76,6 +77,10 @@ export function EngagementWorkspace({ engagement }: { engagement: AuditEngagemen
   const [pbcModalOpen, setPbcModalOpen] = useState(false);
   const [pbcTarget, setPbcTarget] = useState<{ item: PbcItem; action: PbcAction } | null>(null);
   const [transitionError, setTransitionError] = useState<string | null>(null);
+  // Gate all audit-pack mutations (create + transition PBC/findings/engagement)
+  // on audit:write (mirrors risks gating); backend enforces the same, so an
+  // ungated action would 403.
+  const canWriteAudit = useHasPermission("audit:write");
 
   const engagementStatus = String(engagement.status ?? "planning");
   const nextEngagementStatuses = ENGAGEMENT_NEXT_STATUSES[engagementStatus] ?? [];
@@ -118,19 +123,21 @@ export function EngagementWorkspace({ engagement }: { engagement: AuditEngagemen
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge label={engagementStatus.replaceAll("_", " ")} tone={engagementStatus === "closed" ? "good" : engagementStatus === "cancelled" ? "neutral" : "info"} />
-          {nextEngagementStatuses.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => moveEngagement(s)}
-              disabled={transitionEngagement.isPending}
-              className={transitionBtn}
-              data-testid={`engagement-transition-${s}`}
-            >
-              {transitionEngagement.isPending ? <Loader2 size={11} className="animate-spin" /> : <ArrowRight size={11} />}
-              {s.replaceAll("_", " ")}
-            </button>
-          ))}
+          {canWriteAudit
+            ? nextEngagementStatuses.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => moveEngagement(s)}
+                  disabled={transitionEngagement.isPending}
+                  className={transitionBtn}
+                  data-testid={`engagement-transition-${s}`}
+                >
+                  {transitionEngagement.isPending ? <Loader2 size={11} className="animate-spin" /> : <ArrowRight size={11} />}
+                  {s.replaceAll("_", " ")}
+                </button>
+              ))
+            : null}
         </div>
       </div>
 
@@ -148,10 +155,12 @@ export function EngagementWorkspace({ engagement }: { engagement: AuditEngagemen
           accent="red"
           className="h-full"
           action={
-            <button type="button" onClick={() => setFindingModalOpen(true)} className={addBtn} data-testid="open-finding-modal">
-              <FilePlus2 size={12} />
-              New finding
-            </button>
+            canWriteAudit ? (
+              <button type="button" onClick={() => setFindingModalOpen(true)} className={addBtn} data-testid="open-finding-modal">
+                <FilePlus2 size={12} />
+                New finding
+              </button>
+            ) : null
           }
         >
           {findings.isLoading ? (
@@ -193,7 +202,7 @@ export function EngagementWorkspace({ engagement }: { engagement: AuditEngagemen
                         <StatusBadge label={f.status.replaceAll("_", " ")} tone={findingTone(f.status)} />
                       </div>
                     </div>
-                    {nexts.length > 0 ? (
+                    {canWriteAudit && nexts.length > 0 ? (
                       <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-white/60 pt-2">
                         <span className="text-[10px] font-bold uppercase tracking-wide text-cv-mist">Move to</span>
                         {nexts.map((s) => (
@@ -225,10 +234,12 @@ export function EngagementWorkspace({ engagement }: { engagement: AuditEngagemen
           accent="purple"
           className="h-full"
           action={
-            <button type="button" onClick={() => setPbcModalOpen(true)} className={addBtn} data-testid="open-pbc-modal">
-              <ClipboardPlus size={12} />
-              New request
-            </button>
+            canWriteAudit ? (
+              <button type="button" onClick={() => setPbcModalOpen(true)} className={addBtn} data-testid="open-pbc-modal">
+                <ClipboardPlus size={12} />
+                New request
+              </button>
+            ) : null
           }
         >
           {pbcItems.isLoading ? (
@@ -264,7 +275,7 @@ export function EngagementWorkspace({ engagement }: { engagement: AuditEngagemen
                       </div>
                       <StatusBadge className="shrink-0" label={item.status.replaceAll("_", " ")} tone={pbcTone(item.status)} />
                     </div>
-                    {actions.length > 0 ? (
+                    {canWriteAudit && actions.length > 0 ? (
                       <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-white/60 pt-2">
                         {actions.map((a) => (
                           <button
