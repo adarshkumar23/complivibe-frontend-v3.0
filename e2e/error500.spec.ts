@@ -31,12 +31,22 @@ for (const { route, type } of SAMPLE) {
 
     await page.goto(route, { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
-    await page.waitForTimeout(1200); // let react-query settle into error state
+    // Global QueryClient uses retry:1 (~1s backoff), so an error state can take
+    // >1.2s to appear. Wait long enough for retries to exhaust before classifying.
+    await page.waitForTimeout(4000);
 
     const errorBoundary = await page.locator('[data-testid="dashboard-error-boundary"]').count();
     const rawCrash = await page.getByText(/Application error: a client-side exception/i).count();
-    const body = (await page.locator("main, body").first().innerText()).slice(0, 6000);
-    const hasErrorText = /(failed to load|something went wrong|couldn.t load|unable to load|try again|error loading|an error occurred|please try again|failed to fetch|went wrong)/i.test(body);
+    const body = (await page.locator("main, body").first().innerText()).slice(0, 8000);
+    // PRECISE detection: the shared <ErrorState> renders a "Retry section" button
+    // whenever onRetry is passed (every data panel does). This is the reliable
+    // signal, independent of each panel's error-title wording. Also keep a
+    // broadened text fallback (the original regex missed "could not load" /
+    // "unavailable" / raw axios messages — the cause of the Part-D C3 false alarms).
+    const retryButtons = await page.getByRole("button", { name: /Retry section/i }).count();
+    const hasErrorText =
+      retryButtons > 0 ||
+      /(could not load|couldn.t load|unable to load|failed to load|failed to fetch|unavailable|something went wrong|went wrong|error loading|an error occurred|please try again|recalculation failed|status code 5\d\d|request failed)/i.test(body);
 
     let verdict: string;
     if (rawCrash > 0) verdict = "RAW_CRASH";
@@ -45,7 +55,7 @@ for (const { route, type } of SAMPLE) {
     else verdict = "SILENT_EMPTY"; // rendered, no data, no error shown — the UX gap
 
     await testInfo.attach("c3", {
-      body: JSON.stringify({ route, type, verdict, errorBoundary, rawCrash, hasErrorText, pageErrors, sample: body.slice(0, 500) }, null, 2),
+      body: JSON.stringify({ route, type, verdict, errorBoundary, rawCrash, retryButtons, hasErrorText, pageErrors, sample: body.slice(0, 500) }, null, 2),
       contentType: "application/json",
     });
     console.log(`C3 ${route} => ${verdict}${pageErrors.length ? " (+pageError)" : ""}`);

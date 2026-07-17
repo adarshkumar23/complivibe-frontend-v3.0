@@ -42,13 +42,19 @@ test("C4 role-change UI reflection latency (New Risk button, risks:write)", asyn
   await page.waitForTimeout(3000);
   const aNoReload = await newRisk().count();
 
-  // Observation B: simulate window refocus (react-query refetchOnWindowFocus)
+  // Observation B: simulate the user leaving and returning to the tab.
+  // @tanstack/react-query 5.101 focusManager listens on WINDOW for "visibilitychange"
+  // and checks document.visibilityState. The original Part-D test dispatched a
+  // non-bubbling event on document, which never reached react-query's listener; a
+  // real tab-refocus fires visibilitychange on window, which is what we do here.
   await page.evaluate(() => {
     Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true });
-    document.dispatchEvent(new Event("visibilitychange"));
+    window.dispatchEvent(new Event("visibilitychange"));
+  });
+  await page.waitForTimeout(300);
+  await page.evaluate(() => {
     Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true });
-    document.dispatchEvent(new Event("visibilitychange"));
-    window.dispatchEvent(new Event("focus"));
+    window.dispatchEvent(new Event("visibilitychange"));
   });
   await page.waitForTimeout(3000);
   const bRefocus = await newRisk().count();
