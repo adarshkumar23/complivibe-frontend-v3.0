@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { createMappingRule, deleteMappingRule } from "@/lib/api/cloud-connectors";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { CloudConnectorsData } from "@/lib/hooks/useCloudConnectors";
 
 /**
@@ -15,6 +16,7 @@ import type { CloudConnectorsData } from "@/lib/hooks/useCloudConnectors";
  * (GET/POST/DELETE /api/v1/cloud-connectors/mapping-rules).
  */
 export function MappingRulesPanel({ data }: { data: CloudConnectorsData }) {
+  const canWriteConnectors = useHasPermission("connectors:write");
   const { mappingRules, controls } = data;
   const rules = mappingRules.data ?? [];
   const controlList = controls.data ?? [];
@@ -87,15 +89,18 @@ export function MappingRulesPanel({ data }: { data: CloudConnectorsData }) {
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            onClick={handleCreate}
-            disabled={busy}
-            className="cv-ring-focus inline-flex items-center justify-center gap-1.5 rounded-xl bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
-          >
-            {busy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-            Add rule
-          </button>
+          {canWriteConnectors ? (
+            <button
+              type="button"
+              data-testid="add-mapping-rule"
+              onClick={handleCreate}
+              disabled={busy}
+              className="cv-ring-focus inline-flex items-center justify-center gap-1.5 rounded-xl bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
+            >
+              {busy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+              Add rule
+            </button>
+          ) : null}
         </div>
         {error ? <p className="text-[12px] font-medium text-rose-600">{error}</p> : null}
 
@@ -122,14 +127,16 @@ export function MappingRulesPanel({ data }: { data: CloudConnectorsData }) {
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
                   <StatusBadge label={r.is_active ? "Active" : "Inactive"} tone={r.is_active ? "good" : "neutral"} />
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(r.id)}
-                    className="cv-ring-focus rounded-lg p-1.5 text-cv-mist transition hover:bg-rose-500/10 hover:text-rose-600"
-                    aria-label="Delete rule"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  {canWriteConnectors ? (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(r.id)}
+                      className="cv-ring-focus rounded-lg p-1.5 text-cv-mist transition hover:bg-rose-500/10 hover:text-rose-600"
+                      aria-label="Delete rule"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  ) : null}
                 </div>
               </li>
             ))}

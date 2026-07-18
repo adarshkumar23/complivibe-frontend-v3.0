@@ -10,11 +10,13 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { formatRelativeTime } from "@/lib/utils/format";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { Severity } from "@/lib/api/types";
 import type { AiTestingData } from "@/lib/hooks/useAiTesting";
 
 /** Manual AI risk assessments from GET /api/v1/ai-governance/ai-risk/assessments. */
 export function AiTestingTable({ data }: { data: AiTestingData }) {
+  const canWriteAiSystems = useHasPermission("ai_systems:write");
   const { assessments, summary } = data;
   const list = assessments.data ?? [];
   const caveat = summary.data?.caveat;
@@ -34,14 +36,17 @@ export function AiTestingTable({ data }: { data: AiTestingData }) {
               {list.length} assessments
             </span>
           ) : null}
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3 py-1.5 text-[11px] font-bold text-white shadow-button transition hover:-translate-y-0.5"
-          >
-            <Plus size={13} strokeWidth={2.6} />
-            New assessment
-          </button>
+          {canWriteAiSystems ? (
+            <button
+              type="button"
+              data-testid="new-ai-assessment"
+              onClick={() => setCreateOpen(true)}
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3 py-1.5 text-[11px] font-bold text-white shadow-button transition hover:-translate-y-0.5"
+            >
+              <Plus size={13} strokeWidth={2.6} />
+              New assessment
+            </button>
+          ) : null}
         </div>
       }
     >

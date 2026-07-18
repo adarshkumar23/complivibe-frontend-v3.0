@@ -12,6 +12,7 @@ import { IssueCreateModal } from "@/components/incidents/IssueCreateModal";
 import { IssueResolutionNoteModal } from "@/components/incidents/IssueResolutionNoteModal";
 import { ISSUE_ALLOWED_NEXT_STATUS, type Issue } from "@/lib/api/compliance";
 import { ApiError } from "@/lib/api/client";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import { useAssignIssue, useTransitionIssue, type IncidentsPageData } from "@/lib/hooks/useIncidentsPage";
 import type { Severity } from "@/lib/api/types";
 import type { OrgUser } from "@/lib/api/users";
@@ -42,6 +43,7 @@ function IssueActions({
   users: OrgUser[];
   onRequestClose: (issue: Issue) => void;
 }) {
+  const canWriteIssues = useHasPermission("issues:write");
   const transition = useTransitionIssue();
   const assign = useAssignIssue();
   const [assignee, setAssignee] = useState(issue.assigned_to ?? "");
@@ -77,15 +79,17 @@ function IssueActions({
   return (
     <div className="flex flex-col gap-2">
       {nextStatus ? (
-        <button
-          type="button"
-          onClick={advance}
-          disabled={transition.isPending}
-          className="cv-ring-focus inline-flex w-fit items-center gap-1.5 rounded-full bg-cv-brand/10 px-2.5 py-1 text-[11px] font-bold text-cv-brand ring-1 ring-cv-brand/25 transition hover:bg-cv-brand/20 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {transition.isPending ? <Loader2 size={11} className="animate-spin" /> : <ArrowRight size={11} />}
-          Move to {prettify(nextStatus)}
-        </button>
+        canWriteIssues ? (
+          <button
+            type="button"
+            onClick={advance}
+            disabled={transition.isPending}
+            className="cv-ring-focus inline-flex w-fit items-center gap-1.5 rounded-full bg-cv-brand/10 px-2.5 py-1 text-[11px] font-bold text-cv-brand ring-1 ring-cv-brand/25 transition hover:bg-cv-brand/20 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {transition.isPending ? <Loader2 size={11} className="animate-spin" /> : <ArrowRight size={11} />}
+            Move to {prettify(nextStatus)}
+          </button>
+        ) : null
       ) : (
         <StatusBadge label="Closed — terminal" tone="neutral" />
       )}
@@ -104,15 +108,17 @@ function IssueActions({
             </option>
           ))}
         </select>
-        <button
-          type="button"
-          onClick={doAssign}
-          disabled={assign.isPending || !assignee || assignee === issue.assigned_to}
-          className="cv-ring-focus inline-flex items-center gap-1 rounded-full bg-white/60 px-2 py-1 text-[11px] font-bold text-cv-slate ring-1 ring-white/70 transition hover:bg-white hover:text-cv-ink disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {assign.isPending ? <Loader2 size={11} className="animate-spin" /> : null}
-          Assign
-        </button>
+        {canWriteIssues ? (
+          <button
+            type="button"
+            onClick={doAssign}
+            disabled={assign.isPending || !assignee || assignee === issue.assigned_to}
+            className="cv-ring-focus inline-flex items-center gap-1 rounded-full bg-white/60 px-2 py-1 text-[11px] font-bold text-cv-slate ring-1 ring-white/70 transition hover:bg-white hover:text-cv-ink disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {assign.isPending ? <Loader2 size={11} className="animate-spin" /> : null}
+            Assign
+          </button>
+        ) : null}
       </div>
 
       {rowError ? <p className="max-w-xs text-[11px] font-semibold text-rose-600">{rowError}</p> : null}
@@ -121,6 +127,7 @@ function IssueActions({
 }
 
 export function IssuesTable({ data }: { data: IncidentsPageData }) {
+  const canWriteIssues = useHasPermission("issues:write");
   const { issues, users } = data;
   const [modalOpen, setModalOpen] = useState(false);
   const [closingIssue, setClosingIssue] = useState<Issue | null>(null);
@@ -149,14 +156,17 @@ export function IssuesTable({ data }: { data: IncidentsPageData }) {
             <option value="resolved">Resolved</option>
             <option value="closed">Closed</option>
           </select>
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-4 py-2 text-xs font-bold text-white shadow-button transition hover:-translate-y-0.5"
-          >
-            <Plus size={14} strokeWidth={2.6} />
-            Open issue
-          </button>
+          {canWriteIssues ? (
+            <button
+              type="button"
+              data-testid="open-issue"
+              onClick={() => setModalOpen(true)}
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-4 py-2 text-xs font-bold text-white shadow-button transition hover:-translate-y-0.5"
+            >
+              <Plus size={14} strokeWidth={2.6} />
+              Open issue
+            </button>
+          ) : null}
         </div>
       }
     >

@@ -9,6 +9,7 @@ import { CarbonPanel } from "@/components/billing/CarbonPanel";
 import { SpendCapModal } from "@/components/billing/SpendCapModal";
 import { CarbonReadingModal } from "@/components/billing/CarbonReadingModal";
 import { useBilling } from "@/lib/hooks/useBilling";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 
 const fade: Variants = {
   hidden: { opacity: 0, y: 14 },
@@ -17,6 +18,8 @@ const fade: Variants = {
 
 export default function BillingPage() {
   const data = useBilling();
+  const canSetSpendCap = useHasPermission("billing_usage_spend_cap:write");
+  const canRecordCarbon = useHasPermission("carbon_accounting:write");
   const [capOpen, setCapOpen] = useState(false);
   const [readingOpen, setReadingOpen] = useState(false);
 
@@ -40,22 +43,28 @@ export default function BillingPage() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2.5 self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => setCapOpen(true)}
-              className="cv-ring-focus inline-flex items-center gap-2 rounded-full bg-white/60 px-4 py-2.5 text-[13px] font-semibold text-cv-ink ring-1 ring-white/70 transition hover:bg-white"
-            >
-              <PiggyBank size={15} strokeWidth={2.4} />
-              Spend cap
-            </button>
-            <button
-              type="button"
-              onClick={() => setReadingOpen(true)}
-              className="cv-ring-focus inline-flex items-center gap-2 rounded-full bg-cv-brand px-5 py-2.5 text-[13px] font-semibold text-white shadow-tile transition hover:opacity-90"
-            >
-              <Leaf size={15} strokeWidth={2.4} />
-              Record emissions
-            </button>
+            {canSetSpendCap ? (
+              <button
+                type="button"
+                data-testid="open-spend-cap"
+                onClick={() => setCapOpen(true)}
+                className="cv-ring-focus inline-flex items-center gap-2 rounded-full bg-white/60 px-4 py-2.5 text-[13px] font-semibold text-cv-ink ring-1 ring-white/70 transition hover:bg-white"
+              >
+                <PiggyBank size={15} strokeWidth={2.4} />
+                Spend cap
+              </button>
+            ) : null}
+            {canRecordCarbon ? (
+              <button
+                type="button"
+                data-testid="open-record-emissions"
+                onClick={() => setReadingOpen(true)}
+                className="cv-ring-focus inline-flex items-center gap-2 rounded-full bg-cv-brand px-5 py-2.5 text-[13px] font-semibold text-white shadow-tile transition hover:opacity-90"
+              >
+                <Leaf size={15} strokeWidth={2.4} />
+                Record emissions
+              </button>
+            ) : null}
           </div>
         </div>
 

@@ -6,6 +6,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/utils/cn";
 import { useCreateDsr } from "@/lib/hooks/usePrivacy";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { DataSubjectRequest } from "@/lib/api/privacy";
 
 const inputCls =
@@ -41,6 +42,7 @@ const FRAMEWORKS = [
  * and get a 90-day SLA (DPDP Rules 2025, Rule 14(3)) computed by the backend.
  */
 export function DsarSubmitForm() {
+  const canWritePrivacy = useHasPermission("privacy:write");
   const createDsr = useCreateDsr();
 
   const [subtype, setSubtype] = useState<"rights_request" | "grievance">("rights_request");
@@ -180,15 +182,18 @@ export function DsarSubmitForm() {
           />
         </div>
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={createDsr.isPending}
-          className="cv-ring-focus inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
-        >
-          {createDsr.isPending ? <Loader2 size={14} className="animate-spin" /> : isGrievance ? <MessageSquareWarning size={14} /> : <MailPlus size={14} />}
-          {isGrievance ? "Submit grievance" : "Submit request"}
-        </button>
+        {canWritePrivacy ? (
+          <button
+            type="button"
+            data-testid="submit-dsr"
+            onClick={handleSubmit}
+            disabled={createDsr.isPending}
+            className="cv-ring-focus inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
+          >
+            {createDsr.isPending ? <Loader2 size={14} className="animate-spin" /> : isGrievance ? <MessageSquareWarning size={14} /> : <MailPlus size={14} />}
+            {isGrievance ? "Submit grievance" : "Submit request"}
+          </button>
+        ) : null}
 
         {formError ? <p className="text-[12px] font-medium text-rose-600">{formError}</p> : null}
         {created ? (

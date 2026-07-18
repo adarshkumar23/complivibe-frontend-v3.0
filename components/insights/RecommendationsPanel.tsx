@@ -8,6 +8,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { IconTile } from "@/components/ui/IconTile";
 import { buildReason, categoryLabel, humanizeLabel, PRIORITY_ACCENT, PRIORITY_TONE } from "@/components/insights/reasoning";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { RecommendationWithSystem } from "@/lib/hooks/useInsights";
 import type { UseMutationResult } from "@tanstack/react-query";
 import type { AiRiskRecommendation } from "@/lib/api/insights";
@@ -30,6 +31,7 @@ export function RecommendationsPanel({
   applyMutation: UseMutationResult<AiRiskRecommendation, unknown, string>;
   dismissMutation: UseMutationResult<AiRiskRecommendation, unknown, string>;
 }) {
+  const canManageInsights = useHasPermission("ai_governance:write");
   const items = recommendations.data ?? [];
   const active = items
     .filter((r) => r.status === "active")
@@ -120,24 +122,28 @@ export function RecommendationsPanel({
                           </p>
                         ) : null}
                         <div className="mt-3 flex items-center gap-2">
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => applyMutation.mutate(rec.id)}
-                            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3 py-1.5 text-[11.5px] font-bold text-white shadow-button transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <Check size={12} />
-                            {isApplying ? "Applying..." : "Apply"}
-                          </button>
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => dismissMutation.mutate(rec.id)}
-                            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1.5 text-[11.5px] font-bold text-cv-ink ring-1 ring-white/70 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <X size={12} />
-                            {isDismissing ? "Dismissing..." : "Dismiss"}
-                          </button>
+                          {canManageInsights ? (
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => applyMutation.mutate(rec.id)}
+                              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3 py-1.5 text-[11.5px] font-bold text-white shadow-button transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <Check size={12} />
+                              {isApplying ? "Applying..." : "Apply"}
+                            </button>
+                          ) : null}
+                          {canManageInsights ? (
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => dismissMutation.mutate(rec.id)}
+                              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1.5 text-[11.5px] font-bold text-cv-ink ring-1 ring-white/70 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <X size={12} />
+                              {isDismissing ? "Dismissing..." : "Dismiss"}
+                            </button>
+                          ) : null}
                         </div>
                       </div>
                     </div>

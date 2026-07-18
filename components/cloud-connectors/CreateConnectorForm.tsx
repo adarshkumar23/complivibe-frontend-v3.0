@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CloudCog, Loader2, CheckCircle2, TriangleAlert, KeyRound } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import {
   createCloudConnector,
   getConnectorSetup,
@@ -22,6 +23,7 @@ const PROVIDER_AUTH_NOTES: Record<ConnectorType, string> = {
 };
 
 export function CreateConnectorForm({ data }: { data: CloudConnectorsData }) {
+  const canWriteConnectors = useHasPermission("connectors:write");
   const [type, setType] = useState<ConnectorType>("aws");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -77,15 +79,18 @@ export function CreateConnectorForm({ data }: { data: CloudConnectorsData }) {
           placeholder="Display name (e.g. AWS prod account)"
           className="cv-ring-focus w-full rounded-xl bg-white/60 px-3.5 py-2.5 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 placeholder:text-cv-mist focus:outline-none"
         />
-        <button
-          type="button"
-          onClick={handleCreate}
-          disabled={busy}
-          className="cv-ring-focus inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
-        >
-          {busy ? <Loader2 size={14} className="animate-spin" /> : <CloudCog size={14} />}
-          Register connector
-        </button>
+        {canWriteConnectors ? (
+          <button
+            type="button"
+            data-testid="register-connector"
+            onClick={handleCreate}
+            disabled={busy}
+            className="cv-ring-focus inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
+          >
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <CloudCog size={14} />}
+            Register connector
+          </button>
+        ) : null}
         {message ? (
           <p className={`flex items-start gap-1.5 text-[12px] font-medium ${message.tone === "err" ? "text-rose-600" : "text-emerald-600"}`}>
             {message.tone === "err" ? <TriangleAlert size={13} className="mt-0.5 shrink-0" /> : <CheckCircle2 size={13} className="mt-0.5 shrink-0" />}

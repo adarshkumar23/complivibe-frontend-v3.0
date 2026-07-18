@@ -12,6 +12,7 @@ import { DataIncidentCreateModal } from "@/components/incidents/DataIncidentCrea
 import type { DataIncident } from "@/lib/api/data-observability";
 import { DATA_INCIDENT_TERMINAL_STATUSES } from "@/lib/api/data-observability";
 import { ApiError } from "@/lib/api/client";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import {
   useContainDataIncident,
   useDismissDataIncident,
@@ -37,6 +38,7 @@ function asSeverity(s: string): Severity {
 
 /** Compact row-scoped action bar: investigate / contain / resolve / dismiss / escalate. */
 function IncidentActions({ incident }: { incident: DataIncident }) {
+  const canWriteData = useHasPermission("data:write");
   const [notes, setNotes] = useState("");
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [rowError, setRowError] = useState<string | null>(null);
@@ -85,28 +87,32 @@ function IncidentActions({ incident }: { incident: DataIncident }) {
   return (
     <div className="flex flex-col gap-2">
       {!isTerminal ? (
-        <div className="flex flex-wrap items-center gap-1.5">
-          {incident.status === "new"
-            ? btn("Investigate", "amber", "investigate", () => run("investigate", () => investigate.mutateAsync({ id: incident.id, notes })))
-            : null}
-          {btn("Contain", "blue", "contain", () => run("contain", () => contain.mutateAsync({ id: incident.id, notes })))}
-          {btn("Resolve", "green", "resolve", () => run("resolve", () => resolve.mutateAsync({ id: incident.id, notes })))}
-          {btn("Dismiss", "slate", "dismiss", () => run("dismiss", () => dismiss.mutateAsync({ id: incident.id, notes })))}
-        </div>
+        canWriteData ? (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {incident.status === "new"
+              ? btn("Investigate", "amber", "investigate", () => run("investigate", () => investigate.mutateAsync({ id: incident.id, notes })))
+              : null}
+            {btn("Contain", "blue", "contain", () => run("contain", () => contain.mutateAsync({ id: incident.id, notes })))}
+            {btn("Resolve", "green", "resolve", () => run("resolve", () => resolve.mutateAsync({ id: incident.id, notes })))}
+            {btn("Dismiss", "slate", "dismiss", () => run("dismiss", () => dismiss.mutateAsync({ id: incident.id, notes })))}
+          </div>
+        ) : null
       ) : (
         <StatusBadge label={incident.status === "resolved" ? "Resolved" : "Dismissed"} tone={incident.status === "resolved" ? "good" : "neutral"} />
       )}
 
       {!incident.escalated_to_issue ? (
-        <button
-          type="button"
-          onClick={() => run("escalate", () => escalate.mutateAsync(incident.id))}
-          disabled={anyPending}
-          className="cv-ring-focus inline-flex w-fit items-center gap-1 rounded-full bg-rose-500/12 px-2.5 py-1 text-[11px] font-bold text-rose-700 ring-1 ring-rose-400/25 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {busyAction === "escalate" ? <Loader2 size={11} className="animate-spin" /> : <TriangleAlert size={11} />}
-          Escalate to compliance issue
-        </button>
+        canWriteData ? (
+          <button
+            type="button"
+            onClick={() => run("escalate", () => escalate.mutateAsync(incident.id))}
+            disabled={anyPending}
+            className="cv-ring-focus inline-flex w-fit items-center gap-1 rounded-full bg-rose-500/12 px-2.5 py-1 text-[11px] font-bold text-rose-700 ring-1 ring-rose-400/25 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {busyAction === "escalate" ? <Loader2 size={11} className="animate-spin" /> : <TriangleAlert size={11} />}
+            Escalate to compliance issue
+          </button>
+        ) : null
       ) : (
         <StatusBadge label="Escalated to issue" tone="purple" />
       )}
@@ -126,6 +132,7 @@ function IncidentActions({ incident }: { incident: DataIncident }) {
 }
 
 export function DataIncidentsTable({ data }: { data: IncidentsPageData }) {
+  const canWriteData = useHasPermission("data:write");
   const { dataIncidents, assets } = data;
   const [modalOpen, setModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -156,14 +163,17 @@ export function DataIncidentsTable({ data }: { data: IncidentsPageData }) {
               <option value="dismissed">Dismissed</option>
             </select>
           </div>
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-4 py-2 text-xs font-bold text-white shadow-button transition hover:-translate-y-0.5"
-          >
-            <Plus size={14} strokeWidth={2.6} />
-            Report incident
-          </button>
+          {canWriteData ? (
+            <button
+              type="button"
+              data-testid="report-incident"
+              onClick={() => setModalOpen(true)}
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-4 py-2 text-xs font-bold text-white shadow-button transition hover:-translate-y-0.5"
+            >
+              <Plus size={14} strokeWidth={2.6} />
+              Report incident
+            </button>
+          ) : null}
         </div>
       }
     >

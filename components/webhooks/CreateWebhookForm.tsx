@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Webhook, Loader2, CheckCircle2, TriangleAlert, KeyRound } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { createWebhookEndpoint, WEBHOOK_EVENT_TYPES } from "@/lib/api/webhooks";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { WebhooksData } from "@/lib/hooks/useWebhooks";
 
 function randomSecret(): string {
@@ -13,6 +14,7 @@ function randomSecret(): string {
 }
 
 export function CreateWebhookForm({ data }: { data: WebhooksData }) {
+  const canWriteWebhooks = useHasPermission("webhooks:write");
   const [url, setUrl] = useState("");
   const [name, setName] = useState("");
   const [secret, setSecret] = useState(randomSecret);
@@ -95,15 +97,18 @@ export function CreateWebhookForm({ data }: { data: WebhooksData }) {
             ))}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleCreate}
-          disabled={busy}
-          className="cv-ring-focus inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
-        >
-          {busy ? <Loader2 size={14} className="animate-spin" /> : <Webhook size={14} />}
-          Register endpoint
-        </button>
+        {canWriteWebhooks ? (
+          <button
+            type="button"
+            data-testid="register-webhook"
+            onClick={handleCreate}
+            disabled={busy}
+            className="cv-ring-focus inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
+          >
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <Webhook size={14} />}
+            Register endpoint
+          </button>
+        ) : null}
         {message ? (
           <p
             className={`flex items-start gap-1.5 text-[12px] font-medium ${message.tone === "err" ? "text-rose-600" : "text-emerald-600"}`}

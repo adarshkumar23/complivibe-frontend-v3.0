@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { formatRelativeTime } from "@/lib/utils/format";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { SecurityData } from "@/lib/hooks/useSecurity";
 
 export function SecurityKpis({ data }: { data: SecurityData }) {
@@ -103,6 +104,7 @@ export function ScanJobsPanel({ data }: { data: SecurityData }) {
 
 /** NHI register from GET /api/v1/non-human-identities (+ /summary for KPIs). */
 export function NhiPanel({ data }: { data: SecurityData }) {
+  const canManageIdentity = useHasPermission("identity_governance:manage");
   const { nhi, nhiList } = data;
   const n = nhi.data;
   const list = nhiList.data ?? [];
@@ -116,14 +118,17 @@ export function NhiPanel({ data }: { data: SecurityData }) {
       accent="purple"
       action={
         <>
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
-          >
-            <Plus size={13} strokeWidth={2.6} />
-            Register
-          </button>
+          {canManageIdentity ? (
+            <button
+              type="button"
+              data-testid="register-nhi"
+              onClick={() => setCreateOpen(true)}
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
+            >
+              <Plus size={13} strokeWidth={2.6} />
+              Register
+            </button>
+          ) : null}
           <NhiFormModal open={createOpen} onClose={() => setCreateOpen(false)} />
         </>
       }

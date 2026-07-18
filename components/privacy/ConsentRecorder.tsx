@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { useCreateConsent, useRopaActivities } from "@/lib/hooks/usePrivacy";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { ConsentRecord } from "@/lib/api/privacy";
 
 const inputCls =
@@ -41,6 +42,7 @@ const GUARDIAN_VERIFICATION_METHODS = [
  * POST /api/v1/privacy/consent — the consent KPIs refresh via query invalidation.
  */
 export function ConsentRecorder() {
+  const canWritePrivacy = useHasPermission("privacy:write");
   const activities = useRopaActivities();
   const createConsent = useCreateConsent();
 
@@ -231,15 +233,18 @@ export function ConsentRecorder() {
             </div>
           ) : null}
 
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={createConsent.isPending}
-            className="cv-ring-focus inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
-          >
-            {createConsent.isPending ? <Loader2 size={14} className="animate-spin" /> : <ClipboardPen size={14} />}
-            Record consent
-          </button>
+          {canWritePrivacy ? (
+            <button
+              type="button"
+              data-testid="record-consent"
+              onClick={handleSubmit}
+              disabled={createConsent.isPending}
+              className="cv-ring-focus inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
+            >
+              {createConsent.isPending ? <Loader2 size={14} className="animate-spin" /> : <ClipboardPen size={14} />}
+              Record consent
+            </button>
+          ) : null}
 
           {formError ? <p className="text-[12px] font-medium text-rose-600">{formError}</p> : null}
           {created ? (

@@ -5,12 +5,14 @@ import { Landmark, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { suggestSdfDesignation, confirmSdfDesignation, type SdfSuggestion } from "@/lib/api/privacy";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 
 /**
  * SDF designation workflow (DPDP Rules 2025, Rule 13):
  * backend heuristic suggestion → human confirmation, never auto-designation.
  */
 export function SdfDesignationPanel() {
+  const canConfirmSdf = useHasPermission("org:update");
   const [suggestion, setSuggestion] = useState<SdfSuggestion | null>(null);
   const [busy, setBusy] = useState<"suggest" | "confirm" | null>(null);
   const [confirmed, setConfirmed] = useState<boolean | null>(null);
@@ -76,22 +78,28 @@ export function SdfDesignationPanel() {
               <p className="mt-1.5 text-[11px] leading-relaxed text-cv-slate">{suggestion.rationale}</p>
             ) : null}
             <div className="mt-3 flex gap-2">
-              <button
-                type="button"
-                onClick={() => handleConfirm(true)}
-                disabled={busy != null}
-                className="cv-ring-focus flex-1 rounded-lg bg-amber-500/15 px-3 py-2 text-[12px] font-bold text-amber-700 ring-1 ring-amber-400/30 transition hover:bg-amber-500/25 disabled:opacity-60"
-              >
-                Confirm as SDF
-              </button>
-              <button
-                type="button"
-                onClick={() => handleConfirm(false)}
-                disabled={busy != null}
-                className="cv-ring-focus flex-1 rounded-lg bg-white/70 px-3 py-2 text-[12px] font-bold text-cv-ink ring-1 ring-white/70 transition hover:bg-white disabled:opacity-60"
-              >
-                Confirm not SDF
-              </button>
+              {canConfirmSdf ? (
+                <button
+                  type="button"
+                  data-testid="confirm-sdf"
+                  onClick={() => handleConfirm(true)}
+                  disabled={busy != null}
+                  className="cv-ring-focus flex-1 rounded-lg bg-amber-500/15 px-3 py-2 text-[12px] font-bold text-amber-700 ring-1 ring-amber-400/30 transition hover:bg-amber-500/25 disabled:opacity-60"
+                >
+                  Confirm as SDF
+                </button>
+              ) : null}
+              {canConfirmSdf ? (
+                <button
+                  type="button"
+                  data-testid="confirm-not-sdf"
+                  onClick={() => handleConfirm(false)}
+                  disabled={busy != null}
+                  className="cv-ring-focus flex-1 rounded-lg bg-white/70 px-3 py-2 text-[12px] font-bold text-cv-ink ring-1 ring-white/70 transition hover:bg-white disabled:opacity-60"
+                >
+                  Confirm not SDF
+                </button>
+              ) : null}
             </div>
           </div>
         ) : null}

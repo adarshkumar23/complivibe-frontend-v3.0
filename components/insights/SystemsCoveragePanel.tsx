@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { AiSystem } from "@/lib/api/ai-systems";
 import type { RecommendationWithSystem } from "@/lib/hooks/useInsights";
 import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
@@ -25,6 +26,7 @@ export function SystemsCoveragePanel({
   recommendations: { data: RecommendationWithSystem[] };
   generateMutation: UseMutationResult<AiRiskRecommendation[], unknown, string>;
 }) {
+  const canManageInsights = useHasPermission("ai_governance:write");
   const items = systems.data ?? [];
   const countBySystem = new Map<string, number>();
   for (const rec of recommendations.data) {
@@ -64,15 +66,18 @@ export function SystemsCoveragePanel({
                     {generateMutation.error instanceof Error ? generateMutation.error.message : "Generation failed."}
                   </p>
                 ) : null}
-                <button
-                  type="button"
-                  disabled={isGenerating}
-                  onClick={() => generateMutation.mutate(system.id)}
-                  className="cv-ring-focus mt-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-white/70 px-3 py-1.5 text-[11.5px] font-bold text-cv-ink ring-1 ring-white/70 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <RefreshCw size={12} className={isGenerating ? "animate-spin" : undefined} />
-                  {isGenerating ? "Generating..." : "Generate recommendations"}
-                </button>
+                {canManageInsights ? (
+                  <button
+                    type="button"
+                    data-testid="gen-recommendations"
+                    disabled={isGenerating}
+                    onClick={() => generateMutation.mutate(system.id)}
+                    className="cv-ring-focus mt-auto inline-flex items-center justify-center gap-1.5 rounded-full bg-white/70 px-3 py-1.5 text-[11.5px] font-bold text-cv-ink ring-1 ring-white/70 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <RefreshCw size={12} className={isGenerating ? "animate-spin" : undefined} />
+                    {isGenerating ? "Generating..." : "Generate recommendations"}
+                  </button>
+                ) : null}
               </li>
             );
           })}

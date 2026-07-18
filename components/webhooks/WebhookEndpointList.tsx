@@ -9,10 +9,12 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { formatRelativeTime } from "@/lib/utils/format";
 import { deactivateWebhookEndpoint } from "@/lib/api/webhooks";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { WebhooksData } from "@/lib/hooks/useWebhooks";
 
 /** Registered outbound webhook endpoints from GET /api/v1/compliance/webhook-endpoints. */
 export function WebhookEndpointList({ data }: { data: WebhooksData }) {
+  const canWriteWebhooks = useHasPermission("webhooks:write");
   const { endpoints } = data;
   const list = endpoints.data ?? [];
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -82,7 +84,7 @@ export function WebhookEndpointList({ data }: { data: WebhooksData }) {
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1.5">
                     <StatusBadge label={w.is_active ? "active" : "deactivated"} tone={w.is_active ? "good" : "neutral"} />
-                    {w.is_active ? (
+                    {w.is_active && canWriteWebhooks ? (
                       <button
                         type="button"
                         onClick={() => handleDeactivate(w.id)}

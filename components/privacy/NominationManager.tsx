@@ -6,6 +6,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createNomination, getActiveNomination, type Nomination } from "@/lib/api/privacy";
 import { ApiError } from "@/lib/api/client";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 
 const inputCls =
   "cv-ring-focus w-full rounded-xl bg-white/60 px-3.5 py-2.5 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 placeholder:text-cv-mist focus:outline-none";
@@ -15,6 +16,7 @@ const inputCls =
  * and look up the active nomination by subject identifier.
  */
 export function NominationManager() {
+  const canWritePrivacy = useHasPermission("privacy:write");
   const [subject, setSubject] = useState("");
   const [nomineeName, setNomineeName] = useState("");
   const [nomineeContact, setNomineeContact] = useState("");
@@ -92,15 +94,18 @@ export function NominationManager() {
           <option value="incapacity">Activates on incapacity</option>
         </select>
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={handleCreate}
-            disabled={busy != null}
-            className="cv-ring-focus inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
-          >
-            {busy === "create" ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
-            Register nominee
-          </button>
+          {canWritePrivacy ? (
+            <button
+              type="button"
+              data-testid="register-nominee"
+              onClick={handleCreate}
+              disabled={busy != null}
+              className="cv-ring-focus inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
+            >
+              {busy === "create" ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
+              Register nominee
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={handleLookup}

@@ -10,6 +10,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { BusinessUnitFormModal } from "@/components/enterprise/BusinessUnitFormModal";
 import { AccessCertCampaignModal } from "@/components/enterprise/AccessCertCampaignModal";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
 import type { EnterpriseData } from "@/lib/hooks/useEnterpriseControl";
 
 export function EnterpriseKpis({ data }: { data: EnterpriseData }) {
@@ -94,6 +95,7 @@ export function RecertificationPanel({ data }: { data: EnterpriseData }) {
 
 /** Access certification campaigns from GET /api/v1/access-certifications/campaigns. */
 export function AccessCertPanel({ data }: { data: EnterpriseData }) {
+  const canWriteRecert = useHasPermission("recertification:write");
   const { accessCerts } = data;
   const list = accessCerts.data ?? [];
   const [createOpen, setCreateOpen] = useState(false);
@@ -107,14 +109,17 @@ export function AccessCertPanel({ data }: { data: EnterpriseData }) {
       className="h-full"
       action={
         <>
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
-          >
-            <Plus size={13} strokeWidth={2.6} />
-            New campaign
-          </button>
+          {canWriteRecert ? (
+            <button
+              type="button"
+              data-testid="new-accesscert-campaign"
+              onClick={() => setCreateOpen(true)}
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
+            >
+              <Plus size={13} strokeWidth={2.6} />
+              New campaign
+            </button>
+          ) : null}
           <AccessCertCampaignModal open={createOpen} onClose={() => setCreateOpen(false)} />
         </>
       }
@@ -146,6 +151,12 @@ export function AccessCertPanel({ data }: { data: EnterpriseData }) {
 
 /** Business units from GET /api/v1/compliance/business-units, with create. */
 export function BusinessUnitsPanel({ data }: { data: EnterpriseData }) {
+  // Business-unit create requires org-admin (backend does require_permission
+  // "compliance:write" AND _require_org_admin -> role in {owner, admin}). org:update
+  // is held by exactly {owner, admin}, so it is the correct org-admin proxy here --
+  // compliance:write alone (which compliance_manager also holds) would show the
+  // button to a CM who then gets a 403 "Org admin role required".
+  const canManageBusinessUnits = useHasPermission("org:update");
   const { businessUnits } = data;
   const list = businessUnits.data ?? [];
   const [createOpen, setCreateOpen] = useState(false);
@@ -159,14 +170,17 @@ export function BusinessUnitsPanel({ data }: { data: EnterpriseData }) {
       className="h-full"
       action={
         <>
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
-          >
-            <Plus size={13} strokeWidth={2.6} />
-            New unit
-          </button>
+          {canManageBusinessUnits ? (
+            <button
+              type="button"
+              data-testid="new-business-unit"
+              onClick={() => setCreateOpen(true)}
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-tile transition hover:opacity-90"
+            >
+              <Plus size={13} strokeWidth={2.6} />
+              New unit
+            </button>
+          ) : null}
           <BusinessUnitFormModal open={createOpen} onClose={() => setCreateOpen(false)} businessUnits={list} />
         </>
       }
