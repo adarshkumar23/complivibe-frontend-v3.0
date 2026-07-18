@@ -1,34 +1,16 @@
 "use client";
 
 import { Handle, Position, type NodeProps } from "reactflow";
-import {
-  ShieldCheck,
-  Building2,
-  ScrollText,
-  FileCheck2,
-  FileStack,
-  TriangleAlert,
-  type LucideIcon
-} from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { iconForKind, type NodeKind } from "./nodeIcons";
 
 export type TrustGraphNodeData = {
   label: string;
-  kind: "root-risk" | "control" | "vendor" | "obligation" | "evidence" | "policy" | "dependency-risk";
+  kind: NodeKind;
   status?: string | null;
   health?: "healthy" | "degraded" | "critical" | "unknown";
   caption?: string;
   isRoot?: boolean;
-};
-
-const KIND_ICON: Record<TrustGraphNodeData["kind"], LucideIcon> = {
-  "root-risk": TriangleAlert,
-  "dependency-risk": TriangleAlert,
-  control: ShieldCheck,
-  vendor: Building2,
-  obligation: ScrollText,
-  evidence: FileCheck2,
-  policy: FileStack
 };
 
 const KIND_TONE: Record<TrustGraphNodeData["kind"], string> = {
@@ -49,7 +31,7 @@ const HEALTH_DOT: Record<NonNullable<TrustGraphNodeData["health"]>, string> = {
 };
 
 export function TrustGraphNode({ data }: NodeProps<TrustGraphNodeData>) {
-  const Icon = KIND_ICON[data.kind];
+  const Icon = iconForKind(data.kind);
   return (
     <div
       className={cn(

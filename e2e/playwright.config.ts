@@ -21,6 +21,8 @@ export default defineConfig({
   },
   projects: [
     { name: "setup", testMatch: /auth\.setup\.ts/ },
+    // Pure Node render test (no browser, no backend, no auth dependency).
+    { name: "iconguard", testMatch: /iconguard\.spec\.ts/ },
     ...PERSONAS.map((p) => ({
       name: p.key,
       // Per-persona: route smoke, hidden-button gating matrix, stub pages, and the
