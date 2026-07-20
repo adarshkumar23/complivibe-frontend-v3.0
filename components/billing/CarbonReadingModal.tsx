@@ -17,9 +17,9 @@ const selectCls =
 const SCOPES = ["scope1", "scope2", "scope3"] as const;
 
 /**
- * Manual emissions reading entry (POST /api/v1/carbon-accounting/readings).
- * Ingest authenticates via an org API key which the UI provisions on demand
- * (POST /api/v1/carbon-accounting/api-key) — see ingestCarbonReading.
+ * Manual emissions reading entry (POST /api/v1/carbon-accounting/readings/manual).
+ * Authenticates via the signed-in user's session (cookie + CSRF) and the
+ * carbon_accounting:write permission — no machine ingest key touches the browser.
  * Scope 3 readings must carry one of the 15 GHG Protocol categories.
  */
 export function CarbonReadingModal({ open, onClose }: { open: boolean; onClose: () => void }) {

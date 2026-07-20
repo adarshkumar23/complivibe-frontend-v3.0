@@ -31,12 +31,11 @@ async function handler(request: NextRequest, { params }: { params: Promise<{ pat
     headers.set("x-csrf-token", csrfToken);
   }
 
-  // Carbon-accounting ingest authenticates via this key instead of the bearer token
-  // (POST /api/v1/carbon-accounting/readings).
-  const carbonKey = request.headers.get("x-complivibe-key");
-  if (carbonKey) {
-    headers.set("x-complivibe-key", carbonKey);
-  }
+  // NOTE: the X-CompliVibe-Key (carbon ingest) header is deliberately NOT forwarded.
+  // The interactive UI now records readings via the session-authenticated
+  // /carbon-accounting/readings/manual endpoint, so no machine ingest key is ever
+  // held in the browser or sent through this proxy. That key stays a backend-only
+  // credential for external/automated ingest posted directly to the API.
 
   // Forward the real client IP so the backend's org IP allowlist and session/audit
   // records see the end user, not this proxy's loopback address. CF-Connecting-IP is

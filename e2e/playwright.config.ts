@@ -23,6 +23,9 @@ export default defineConfig({
     { name: "setup", testMatch: /auth\.setup\.ts/ },
     // Pure Node render test (no browser, no backend, no auth dependency).
     { name: "iconguard", testMatch: /iconguard\.spec\.ts/ },
+    // Pure filesystem guard (no browser, no backend): the carbon ingest key must
+    // never reappear in client source or the built client bundle.
+    { name: "carbonkeyguard", testMatch: /carbonkeyguard\.spec\.ts/ },
     ...PERSONAS.map((p) => ({
       name: p.key,
       // Per-persona: route smoke, hidden-button gating matrix, stub pages, and the

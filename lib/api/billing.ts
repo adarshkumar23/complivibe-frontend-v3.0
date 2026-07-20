@@ -1,4 +1,4 @@
-import { apiFetch, ApiError, type ApiErrorPayload } from "@/lib/api/client";
+import { apiFetch } from "@/lib/api/client";
 
 /**
  * Billing + Carbon accounting API — typed against the live backend schema
@@ -104,20 +104,7 @@ export function setUsageSpendCap(payload: SpendCapPayload) {
   });
 }
 
-// ── POST /api/v1/carbon-accounting/api-key ──────────────────────────────────
-/**
- * Provisions (or rotates) this org's carbon ingest API key. The readings
- * endpoint authenticates ONLY via X-CompliVibe-Key — not the bearer token —
- * so the UI provisions a key once and keeps it in local storage.
- */
-export function provisionCarbonApiKey() {
-  return apiFetch<{ api_key: string; header_name: string }>("/api/v1/carbon-accounting/api-key", {
-    method: "POST",
-    body: JSON.stringify({})
-  });
-}
-
-// ── POST /api/v1/carbon-accounting/readings (CarbonEmissionsReadingIngest) ──
+// ── POST /api/v1/carbon-accounting/readings/manual (CarbonEmissionsReadingIngest) ──
 /** GHG Protocol Scope 3 categories accepted for new ingests (backend rejects "unspecified_legacy"). */
 export const SCOPE3_CATEGORIES = [
   "purchased_goods_and_services",
@@ -162,51 +149,21 @@ export type CarbonReading = {
   ingested_at: string;
 };
 
-const CARBON_KEY_STORAGE = "cv_carbon_key";
-
 /**
- * Raw fetch for the readings ingest: it must NOT go through apiFetch because
- * apiFetch treats any 401 on a token-bearing request as an expired session and
- * redirects to /login — a stale ingest key would log the user out. Instead we
- * send only X-CompliVibe-Key, and on 401 provision a fresh key (bearer-authed)
- * and retry once.
+ * Interactive reading entry for the signed-in user. Authenticates via the normal
+ * session (httpOnly cookie + CSRF, handled by apiFetch) against the session-authed
+ * /readings/manual endpoint, so NO machine ingest key is ever provisioned into,
+ * cached in (localStorage), or transmitted from the browser. The machine ingest-key
+ * header and the key-authed /readings endpoint remain backend-only, for
+ * external/automated ingest.
+ *
+ * A 401 here now correctly means the user's session expired, so apiFetch's
+ * redirect-to-login is the right behaviour (previously avoided because a stale
+ * ingest key would have logged the user out).
  */
-async function postReading(key: string, payload: CarbonReadingPayload): Promise<CarbonReading> {
-  const response = await fetch("/api/proxy/api/v1/carbon-accounting/readings", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-CompliVibe-Key": key },
-    body: JSON.stringify(payload),
-    cache: "no-store"
-  });
-  let body: unknown;
-  try {
-    body = await response.json();
-  } catch {
-    body = undefined;
-  }
-  if (!response.ok) {
-    const typed = (body || {}) as ApiErrorPayload;
-    const detail = typeof typed.detail === "string" ? typed.detail : undefined;
-    throw new ApiError(typed.message || detail || `Request failed with status ${response.status}`, response.status, typed);
-  }
-  return body as CarbonReading;
-}
-
 export async function ingestCarbonReading(payload: CarbonReadingPayload): Promise<CarbonReading> {
-  let key = typeof window !== "undefined" ? localStorage.getItem(CARBON_KEY_STORAGE) : null;
-  if (!key) {
-    key = (await provisionCarbonApiKey()).api_key;
-    localStorage.setItem(CARBON_KEY_STORAGE, key);
-  }
-  try {
-    return await postReading(key, payload);
-  } catch (err) {
-    // Stale/rotated key → provision a new one and retry exactly once.
-    if (err instanceof ApiError && err.status === 401) {
-      const fresh = (await provisionCarbonApiKey()).api_key;
-      localStorage.setItem(CARBON_KEY_STORAGE, fresh);
-      return postReading(fresh, payload);
-    }
-    throw err;
-  }
+  return apiFetch<CarbonReading>("/api/v1/carbon-accounting/readings/manual", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
 }
