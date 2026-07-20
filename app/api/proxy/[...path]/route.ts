@@ -38,6 +38,16 @@ async function handler(request: NextRequest, { params }: { params: Promise<{ pat
     headers.set("x-complivibe-key", carbonKey);
   }
 
+  // Forward the real client IP so the backend's org IP allowlist and session/audit
+  // records see the end user, not this proxy's loopback address. CF-Connecting-IP is
+  // set by the Cloudflare edge and cannot be spoofed by the client (the edge rejects
+  // client-supplied values), so it is the trustworthy source. We deliberately do NOT
+  // forward a client-supplied X-Forwarded-For, which would be attacker-controlled.
+  const cfConnectingIp = request.headers.get("cf-connecting-ip");
+  if (cfConnectingIp) {
+    headers.set("cf-connecting-ip", cfConnectingIp);
+  }
+
   const init: RequestInit = {
     method: request.method,
     headers,
