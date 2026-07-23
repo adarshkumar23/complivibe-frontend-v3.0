@@ -1,43 +1,96 @@
 # Production Deploy Runbook (Frontend)
 
-## Deploying the current demo/staging host today: use `scripts/deploy.sh`
+## Deploy architecture: release directories + `current` symlink
 
-The demo instance on this box has historically been started by hand with a
-bare `nohup ... npm start &`. That pattern is how a stale build can end up
-silently serving forever: someone merges to `main`, but the running process
-is never restarted, and nothing notices — the old build still returns 200s
-for every route, so there's no visible symptom at all. This is exactly what
-happened in an earlier walkthrough.
+This box serves the frontend with a long-running `next start`. `next start`
+reads `.next/` from its working directory and holds `BUILD_ID` in memory.
+The old deploy ran `next build` **inside the live working directory**, which
+rewrites `.next/` in place under the running server — mid-build the directory
+is inconsistent (old chunks deleted, manifests half-written) so live requests
+throw `ENOENT` / `Cannot find module './NNNN.js'`, and afterwards the on-disk
+`BUILD_ID` no longer matches the one in memory. **That took prod down once.**
 
-**`scripts/deploy.sh [port] [systemd-unit-name]` is now the single supported
-way to ship a build to this host.** It does not just build-and-restart and
-hope; it verifies the restart actually worked:
+The service therefore no longer runs from the git repo. It runs from a
+`current` symlink under a separate deploy root, and every build happens in a
+fresh release directory that is only swapped in once it has fully built:
 
-1. Installs deps, runs `tsc --noEmit` and `next build` (the same two gates
-   as CI) — a broken build never touches the running process.
-2. Restarts the process (via `systemctl restart <unit>` if you pass a unit
-   name, otherwise it finds and kills whatever's bound to `port` using `ss`
-   and starts a fresh `npm start` in its place).
-3. Polls `GET /api/version` (`app/api/version/route.ts`) on the restarted
-   process and **fails the deploy** if the reported `gitSha` doesn't match
-   the commit that was just built. This is the part that actually closes
-   the staleness hole: it is no longer possible for a deploy to "succeed"
-   while the old build keeps running underneath it.
+```
+/home/ubuntu/complivibe-frontend/          ← deploy root (NOT the git repo)
+├── releases/<sha>-<ts>/    ← a git worktree at that commit, built here (own .next + node_modules)
+├── current -> releases/<sha>-<ts>          ← atomically swapped symlink the service runs from
+├── shared/frontend.env                     ← prod env, OUTSIDE the git repo (see "Env" below)
+└── previous-release                        ← path of the prior release, for one-command rollback
+```
 
-Recommended for real hosting on this box: install
-`deploy/complivibe-frontend.service` as a systemd unit
-(`sudo cp deploy/complivibe-frontend.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable complivibe-frontend`),
-then always deploy with `scripts/deploy.sh 3000 complivibe-frontend` — this
-also gets you automatic restart-on-crash (`Restart=always`), which the old
-manual `nohup` process never had.
+The systemd unit (`deploy/complivibe-frontend.service`, installed to
+`/etc/systemd/system/`) has `WorkingDirectory=/home/ubuntu/complivibe-frontend/current`.
+`systemctl restart` re-resolves that symlink, so a restart picks up whichever
+release `current` names.
 
-If you don't want to install the systemd unit yet, `scripts/deploy.sh 3000`
-(no second argument) still works standalone in manual mode.
+**Guarantees:** (a) a build never mutates what's being served — it builds in a
+brand-new release dir; (b) a failed build never reaches the swap, so prod is
+left byte-for-byte untouched; (c) rollback is an instant symlink swap back.
 
-Verify at any time which build is actually live with `curl
-http://<host>/api/version` — compare its `gitSha` against `git rev-parse
-HEAD` on the box. A mismatch means the last deploy didn't use
-`scripts/deploy.sh`, or the deploy is stale.
+## Deploying: `scripts/deploy.sh`
+
+**`scripts/deploy.sh [ref] [port] [systemd-unit]` is the single supported way
+to ship a build.** Defaults: `ref=HEAD`, `port=3000`, `unit=complivibe-frontend`.
+
+```bash
+cd /home/ubuntu/complivibe-frontend-v3.0-phase-a
+git fetch && git checkout main && git pull       # get the commit you want live
+scripts/deploy.sh                                 # build HEAD → swap → restart → verify
+```
+
+What it does:
+
+1. `git worktree add releases/<sha>` at the target commit, then `npm ci`,
+   `tsc --noEmit`, `next build` **in that release dir** (same two gates as CI).
+   A broken build aborts here, tears down the partial release, and leaves
+   `current`/prod completely untouched (exit non-zero).
+2. Atomically repoints `current` → the new release (`rename(2)` on the
+   symlink) and `systemctl restart`s the unit.
+3. Polls `GET /api/version` and **fails the deploy** unless the running
+   process reports the exact `gitSha` just built — closing the staleness hole
+   (`NEXT_PUBLIC_GIT_SHA` is baked in at build time by this script).
+4. Prunes old releases, keeping the newest `KEEP_RELEASES` (default 3).
+
+To validate the pipeline without touching :3000, deploy to a spare port with
+no systemd unit: `scripts/deploy.sh HEAD 3001 ''` (builds + serves a throwaway
+`next start` on 3001).
+
+Verify which build is live at any time: `curl http://127.0.0.1:3000/api/version`
+— compare `gitSha` to `git rev-parse HEAD`.
+
+## Rollback: `scripts/rollback.sh`
+
+Every deploy leaves the prior release on disk and records its path in
+`previous-release`, so rollback is a symlink swap + restart — **seconds, no
+rebuild**:
+
+```bash
+scripts/rollback.sh                       # → previous-release, unit complivibe-frontend
+# or to a specific release:
+ls -1dt /home/ubuntu/complivibe-frontend/releases/*/     # list what's available
+scripts/rollback.sh complivibe-frontend /home/ubuntu/complivibe-frontend/releases/<sha>-<ts>
+```
+
+It repoints `current`, restarts, and verifies `/api/version` reports the
+rolled-back commit.
+
+## Env: prod config lives OUTSIDE the git repo
+
+`NEXT_PUBLIC_*` is inlined at **build** time, and `next dev`/`next build`
+auto-load `.env.local` from the working directory. Historically a `.env.local`
+in the repo pointed at the prod backend (`127.0.0.1:8000`), so a stray dev
+command in that dir hit the **prod DB** (it once created 4 stray orgs).
+
+Prod build/runtime config therefore lives only in
+`/home/ubuntu/complivibe-frontend/shared/frontend.env` — sourced by
+`scripts/deploy.sh` at build time and loaded by systemd at runtime, never in
+the source tree. The repo ships `.env.local.example` only; **do not** create a
+`.env.local` pointing at `127.0.0.1:8000` in the repo. For real local dev, run
+a local backend and point at it explicitly.
 
 ## Status: real (Vercel) production pipeline built, NOT activated
 

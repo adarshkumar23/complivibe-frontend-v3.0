@@ -1,19 +1,27 @@
 [Unit]
-Description=CompliVibe Frontend (Next.js)
-After=network.target
+Description=CompliVibe Next.js Frontend
+After=network.target complivibe-backend.service
 
 [Service]
 Type=simple
 User=ubuntu
 Group=ubuntu
-WorkingDirectory=/home/ubuntu/complivibe-frontend-v3.0-phase-a
-EnvironmentFile=-/home/ubuntu/complivibe-frontend-v3.0-phase-a/.env.local
-# scripts/deploy.sh writes the deployed commit's SHA/build time into this
-# file immediately before each restart -- do not hardcode them here.
-EnvironmentFile=-/home/ubuntu/complivibe-frontend-v3.0-phase-a/deploy/current-version.env
-ExecStart=/usr/bin/npm start -- -p 3000
+# Runs from the `current` symlink, NEVER the git repo. scripts/deploy.sh builds
+# a fresh releases/<sha>/ worktree and atomically repoints `current` at it, so a
+# build can never mutate what this process is serving. systemd resolves the
+# symlink at (re)start, so a restart picks up whichever release `current` names.
+WorkingDirectory=/home/ubuntu/complivibe-frontend/current
+# Prod env lives OUTSIDE the git repo so a dev `next dev`/`next build` in the
+# source tree cannot inherit it (that once created stray orgs in the prod DB).
+EnvironmentFile=-/home/ubuntu/complivibe-frontend/shared/frontend.env
+# Written by scripts/deploy.sh into each release; carries the deployed SHA so
+# GET /api/version reports the running commit.
+EnvironmentFile=-/home/ubuntu/complivibe-frontend/current/deploy/current-version.env
+ExecStart=/usr/bin/npx next start -p 3000 -H 127.0.0.1
 Restart=always
 RestartSec=5
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
