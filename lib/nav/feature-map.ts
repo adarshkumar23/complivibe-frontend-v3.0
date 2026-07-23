@@ -14,11 +14,15 @@ export const LOCKED_ROUTE_FEATURES: { prefix: string; feature: string }[] = [
   { prefix: "/dashboard/ai-monitoring", feature: "ai_governance_module" },
   { prefix: "/dashboard/drift", feature: "ai_governance_module" },
   { prefix: "/dashboard/agents", feature: "ai_governance_module" },
-  // Intelligence / analytics
+  { prefix: "/dashboard/ai-bom", feature: "ai_governance_module" },
+  // Advanced reporting (exports)
+  { prefix: "/dashboard/exports", feature: "advanced_reporting" },
+  // Intelligence / analytics (incl. KRI / risk appetite)
   { prefix: "/dashboard/trust-graph", feature: "advanced_analytics" },
   { prefix: "/dashboard/insights", feature: "advanced_analytics" },
   { prefix: "/dashboard/score-explainer", feature: "advanced_analytics" },
   { prefix: "/dashboard/simulation", feature: "advanced_analytics" },
+  { prefix: "/dashboard/risk-appetite", feature: "advanced_analytics" },
   // Data governance (covers /data-observability and /data-observability/lineage)
   { prefix: "/dashboard/data-observability", feature: "data_governance" },
   // Integrations
