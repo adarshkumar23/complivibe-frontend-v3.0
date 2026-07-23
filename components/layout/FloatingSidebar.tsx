@@ -58,6 +58,15 @@ import { useAuthStore } from "@/store/auth-store";
 import { logout as logoutRequest } from "@/lib/api/auth";
 import { useQuery } from "@tanstack/react-query";
 import { getBillingStatus } from "@/lib/api/billing";
+import { usePlan } from "@/lib/hooks/usePlan";
+import { featureForPath } from "@/lib/nav/feature-map";
+
+// How locked (premium, plan-gated) nav items appear to a Free org:
+//  "show" -> render with a lock badge, routing to the upgrade page (advertises
+//            the feature + drives conversion -- recommended default).
+//  "hide" -> omit the nav item entirely.
+// Flip this one constant to switch the whole sidebar's behaviour.
+const LOCKED_NAV_MODE: "show" | "hide" = "show";
 
 // Plans whose feature set already includes the full AI governance suite — the
 // "Unlock full AI governance suite" upsell is meaningless for these tiers.
@@ -146,6 +155,9 @@ function SidebarBody() {
   // Enterprise/usage-flex orgs on first paint).
   const { data: billing } = useQuery({ queryKey: ["billing-status"], queryFn: getBillingStatus });
   const showUpgradeCard = Boolean(billing) && !FULL_SUITE_PLANS.includes(billing!.plan);
+  // Plan-feature gate for nav items (shares the ["billing-status"] cache, so the
+  // Stage-2 redeem invalidation clears locks here instantly).
+  const { hasFeature } = usePlan();
 
   const logout = () => {
     void logoutRequest().catch(() => {});
@@ -178,21 +190,31 @@ function SidebarBody() {
         {NAV.map((item) => {
           const Icon = item.icon;
           const isActive = isNavItemActive(item, pathname);
+          // Category-C premium routes carry a required feature; Category-B/D
+          // routes return null here and stay fully navigable.
+          const feature = featureForPath(item.href);
+          const locked = feature ? !hasFeature(feature) : false;
+          if (locked && LOCKED_NAV_MODE === "hide") return null;
+          const target = locked ? "/dashboard/billing" : item.href;
           return (
             <button
               key={item.label}
               type="button"
               aria-current={isActive ? "page" : undefined}
+              data-locked={locked ? "true" : undefined}
+              title={locked ? "Premium feature — upgrade to unlock" : undefined}
               onClick={() => {
                 setSidebarOpen(false);
-                router.push(item.href);
+                router.push(target);
               }}
               className={cn(
                 "group relative flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold outline-none transition",
                 "focus-visible:ring-2 focus-visible:ring-cv-blue focus-visible:ring-offset-2 focus-visible:ring-offset-white",
                 isActive
                   ? "text-white [filter:drop-shadow(0_1px_2px_rgba(15,23,42,0.45))]"
-                  : "text-cv-slate hover:bg-white/60 hover:text-cv-ink"
+                  : locked
+                    ? "text-cv-mist hover:bg-white/40 hover:text-cv-slate"
+                    : "text-cv-slate hover:bg-white/60 hover:text-cv-ink"
               )}
             >
               {isActive ? (
@@ -210,7 +232,8 @@ function SidebarBody() {
               >
                 <Icon size={17} strokeWidth={2.2} />
               </span>
-              <span className="relative z-10">{item.label}</span>
+              <span className="relative z-10 flex-1 text-left">{item.label}</span>
+              {locked ? <Lock size={13} className="relative z-10 shrink-0 text-cv-mist" aria-label="Locked — upgrade to unlock" /> : null}
             </button>
           );
         })}
