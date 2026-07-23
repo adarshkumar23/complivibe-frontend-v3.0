@@ -6,6 +6,8 @@ import { Modal } from "@/components/ui/Modal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useCreatePolicy, useApplyPolicyTemplate, usePolicyUsers, usePolicies } from "@/lib/hooks/usePolicies";
 import { POLICY_TYPES, type PolicyCreatePayload, type PolicyType } from "@/lib/api/policies";
+import { ApiError } from "@/lib/api/client";
+import { EntitlementBanner } from "@/components/common/EntitlementBanner";
 import { cn } from "@/lib/utils/cn";
 
 const inputCls =
@@ -328,11 +330,15 @@ export function PolicyFormModal({
           {mode === "template" ? "Create from template" : "Create policy"}
         </button>
 
-        {formError ? (
-          <p className="text-[12px] font-medium text-rose-600" data-testid="policy-form-error">
-            {formError}
-          </p>
-        ) : null}
+        {(() => {
+          const mutErr = createPolicy.error ?? applyTemplate.error;
+          if (mutErr instanceof ApiError) return <EntitlementBanner error={mutErr} />;
+          return formError ? (
+            <p className="text-[12px] font-medium text-rose-600" data-testid="policy-form-error">
+              {formError}
+            </p>
+          ) : null;
+        })()}
       </div>
     </Modal>
   );

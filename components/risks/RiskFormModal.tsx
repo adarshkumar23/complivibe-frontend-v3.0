@@ -15,6 +15,7 @@ import {
   type TreatmentStrategy
 } from "@/lib/api/risks";
 import { ApiError } from "@/lib/api/client";
+import { EntitlementBanner } from "@/components/common/EntitlementBanner";
 import { useCreateRisk, useOrgUsers, useUpdateRisk } from "@/lib/hooks/useRisks";
 
 const labelCls = "text-[11px] font-bold uppercase tracking-[0.12em] text-cv-slate";
@@ -278,11 +279,15 @@ export function RiskFormModal({ open, onClose, risk }: RiskFormModalProps) {
           ) : null}
         </div>
 
-        {error ? (
-          <p role="alert" className="rounded-xl bg-rose-500/10 px-3.5 py-2.5 text-xs font-semibold text-rose-600 ring-1 ring-rose-400/25">
-            {error}
-          </p>
-        ) : null}
+        {(() => {
+          const mutErr = createRisk.error ?? updateRisk.error;
+          if (mutErr instanceof ApiError) return <EntitlementBanner error={mutErr} />;
+          return error ? (
+            <p role="alert" className="rounded-xl bg-rose-500/10 px-3.5 py-2.5 text-xs font-semibold text-rose-600 ring-1 ring-rose-400/25">
+              {error}
+            </p>
+          ) : null;
+        })()}
 
         <div className="mt-1 flex items-center justify-end gap-2.5">
           <button

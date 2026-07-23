@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BrainCircuit, Loader2, PencilLine, ShieldAlert } from "lucide-react";
+import { BrainCircuit, Loader2, PencilLine } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import {
   AI_SYSTEM_TYPES,
@@ -11,6 +11,7 @@ import {
 } from "@/lib/api/ai-systems";
 import { useCreateAiSystem, useUpdateAiSystem } from "@/lib/hooks/useAiSystems";
 import { ApiError } from "@/lib/api/client";
+import { EntitlementBanner } from "@/components/common/EntitlementBanner";
 
 const inputBase =
   "w-full rounded-2xl bg-white/65 px-3.5 py-2.5 text-sm text-cv-ink placeholder:text-cv-mist ring-1 ring-white/70 transition focus:outline-none focus:ring-2 focus:ring-cv-blue/45";
@@ -36,7 +37,6 @@ export function AiSystemFormModal({ open, onClose, system }: Props) {
   const pending = create.isPending || update.isPending;
   const rawError = (isEdit ? update.error : create.error) ?? null;
   const err = rawError instanceof ApiError ? rawError : null;
-  const featureGated = err?.status === 403;
 
   const [name, setName] = useState("");
   const [systemType, setSystemType] = useState<(typeof AI_SYSTEM_TYPES)[number]>("internal_model");
@@ -274,20 +274,7 @@ export function AiSystemFormModal({ open, onClose, system }: Props) {
             {formError}
           </p>
         ) : null}
-        {err ? (
-          featureGated ? (
-            <div className="flex items-start gap-2.5 rounded-2xl bg-amber-500/10 px-3.5 py-2.5 ring-1 ring-amber-400/25">
-              <ShieldAlert size={15} className="mt-0.5 shrink-0 text-amber-600" />
-              <p className="text-xs leading-relaxed text-amber-700">
-                <span className="font-bold">Plan upgrade required.</span> {err.message}
-              </p>
-            </div>
-          ) : (
-            <p className="rounded-2xl bg-rose-500/10 px-3.5 py-2.5 text-xs font-semibold text-rose-600 ring-1 ring-rose-400/25">
-              {err.message}
-            </p>
-          )
-        ) : null}
+        <EntitlementBanner error={err} />
 
         <div className="flex items-center justify-end gap-2.5 pt-1">
           <button

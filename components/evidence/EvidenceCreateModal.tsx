@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FilePlus2, Loader2, Paperclip, ShieldAlert, Upload, Link as LinkIcon } from "lucide-react";
+import { FilePlus2, Loader2, Paperclip, Upload, Link as LinkIcon } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { ApiError } from "@/lib/api/client";
+import { EntitlementBanner } from "@/components/common/EntitlementBanner";
 import { EVIDENCE_ALLOWED_EXTENSIONS, EVIDENCE_MAX_UPLOAD_BYTES, type Evidence } from "@/lib/api/evidence";
 import { useCreateEvidence, useUploadEvidenceFile, useLinkEvidenceControl } from "@/lib/hooks/useEvidence";
 import { useControls } from "@/lib/hooks/useControls";
@@ -55,7 +56,6 @@ export function EvidenceCreateModal({
   const [uploading, setUploading] = useState(false);
 
   const err = [upload.error, create.error, link.error].find((e) => e instanceof ApiError) as ApiError | undefined;
-  const featureGated = err?.status === 403;
   const busy = create.isPending || uploading || link.isPending;
 
   function resetAndClose() {
@@ -285,16 +285,7 @@ export function EvidenceCreateModal({
         {formError ? (
           <p className="rounded-2xl bg-rose-500/10 px-3.5 py-2.5 text-xs font-semibold text-rose-600 ring-1 ring-rose-400/25">{formError}</p>
         ) : null}
-        {err ? (
-          featureGated ? (
-            <div className="flex items-start gap-2.5 rounded-2xl bg-amber-500/10 px-3.5 py-2.5 ring-1 ring-amber-400/25">
-              <ShieldAlert size={15} className="mt-0.5 shrink-0 text-amber-600" />
-              <p className="text-xs leading-relaxed text-amber-700"><span className="font-bold">Plan upgrade required.</span> {err.message}</p>
-            </div>
-          ) : (
-            <p className="rounded-2xl bg-rose-500/10 px-3.5 py-2.5 text-xs font-semibold text-rose-600 ring-1 ring-rose-400/25">{err.message}</p>
-          )
-        ) : null}
+        <EntitlementBanner error={err} />
 
         <div className="flex items-center justify-end gap-2.5 pt-1">
           <button type="button" onClick={resetAndClose} className="cv-ring-focus rounded-full bg-white/70 px-4 py-2 text-xs font-semibold text-cv-ink ring-1 ring-white/70 transition hover:bg-white">

@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link2, Loader2, ShieldAlert } from "lucide-react";
+import { Link2, Loader2 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { ApiError } from "@/lib/api/client";
+import { EntitlementBanner } from "@/components/common/EntitlementBanner";
 import {
   CONTROL_TYPES,
   CONTROL_CRITICALITIES,
@@ -100,7 +101,6 @@ export function MapObligationModal({
       : mapMut.error instanceof ApiError
         ? mapMut.error
         : null;
-  const featureGated = err?.status === 403;
   const pending = createControlMut.isPending || mapMut.isPending;
 
   function resetAndClose() {
@@ -370,20 +370,7 @@ export function MapObligationModal({
             {formError}
           </p>
         ) : null}
-        {err ? (
-          featureGated ? (
-            <div className="flex items-start gap-2.5 rounded-2xl bg-amber-500/10 px-3.5 py-2.5 ring-1 ring-amber-400/25">
-              <ShieldAlert size={15} className="mt-0.5 shrink-0 text-amber-600" />
-              <p className="text-xs leading-relaxed text-amber-700">
-                <span className="font-bold">Plan upgrade required.</span> {err.message}
-              </p>
-            </div>
-          ) : (
-            <p className="rounded-2xl bg-rose-500/10 px-3.5 py-2.5 text-xs font-semibold text-rose-600 ring-1 ring-rose-400/25">
-              {err.message}
-            </p>
-          )
-        ) : null}
+        <EntitlementBanner error={err} />
 
         <div className="flex items-center justify-end gap-2.5 pt-1">
           <button

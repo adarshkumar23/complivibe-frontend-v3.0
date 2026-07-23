@@ -1,8 +1,24 @@
 type ValidationItem = { msg?: string; loc?: (string | number)[] };
 
+// Structured `detail` object the backend returns for entitlement errors
+// (feature_not_in_plan / record_cap_reached) and other HTTPException(detail={...})
+// cases. Distinct from a plain-string RBAC detail ("Missing required permission: ...").
+export type StructuredDetail = {
+  error?: string;
+  message?: string;
+  upgrade_url?: string;
+  // record_cap_reached extras
+  resource?: string;
+  cap?: number;
+  current_count?: number;
+  // feature_not_in_plan extras
+  feature?: string;
+  current_plan?: string;
+};
+
 export type ApiErrorPayload = {
   message?: string;
-  detail?: string | ValidationItem[];
+  detail?: string | ValidationItem[] | StructuredDetail;
   error?: string;
   statusCode?: number;
 };
@@ -67,12 +83,17 @@ function toProxyPath(path: string): string {
 
 function errorMessage(status: number, payload?: ApiErrorPayload): string {
   if (payload?.message) return payload.message;
+  const detail = payload?.detail;
   // FastAPI 422 returns `detail` as an array of validation items; flatten to a readable string.
-  if (Array.isArray(payload?.detail)) {
-    const msgs = payload.detail.map((item) => item?.msg).filter(Boolean);
+  if (Array.isArray(detail)) {
+    const msgs = detail.map((item) => item?.msg).filter(Boolean);
     if (msgs.length) return msgs.join(". ");
-  } else if (typeof payload?.detail === "string" && payload.detail) {
-    return payload.detail;
+  } else if (typeof detail === "string" && detail) {
+    return detail;
+  } else if (detail && typeof detail === "object" && typeof detail.message === "string" && detail.message) {
+    // Structured HTTPException detail, e.g. entitlement errors:
+    // {"detail":{"error":"feature_not_in_plan","message":"...","upgrade_url":"..."}}
+    return detail.message;
   }
   return payload?.error || `Request failed with status ${status}`;
 }
