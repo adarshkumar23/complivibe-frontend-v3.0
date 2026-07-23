@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, TriangleAlert } from "lucide-react";
 import { RiskFormModal } from "@/components/risks/RiskFormModal";
 import { useHasPermission } from "@/lib/hooks/usePermissions";
+import { ResourceUsageChip } from "@/components/common/ResourceUsageChip";
 
 export function RisksHeader() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -26,16 +27,19 @@ export function RisksHeader() {
         </p>
       </div>
 
-      {canCreateRisk ? (
-        <button
-          type="button"
-          onClick={() => setCreateOpen(true)}
-          className="cv-ring-focus inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-cv-brand px-5 py-2.5 text-[13px] font-semibold text-white shadow-tile transition hover:opacity-90 sm:self-auto"
-        >
-          <Plus size={15} strokeWidth={2.6} />
-          New Risk
-        </button>
-      ) : null}
+      <div className="flex shrink-0 items-center gap-2.5 self-start sm:self-auto">
+        <ResourceUsageChip resource="risks" />
+        {canCreateRisk ? (
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="cv-ring-focus inline-flex items-center gap-2 rounded-full bg-cv-brand px-5 py-2.5 text-[13px] font-semibold text-white shadow-tile transition hover:opacity-90"
+          >
+            <Plus size={15} strokeWidth={2.6} />
+            New Risk
+          </button>
+        ) : null}
+      </div>
 
       <RiskFormModal open={createOpen} onClose={() => setCreateOpen(false)} />
     </div>

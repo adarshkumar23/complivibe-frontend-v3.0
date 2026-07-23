@@ -19,6 +19,11 @@ export type PlanUtils = {
   plan: string | undefined;
   isTrial: boolean;
   trialDaysRemaining: number | null;
+  trialEndsAt: string | null;
+  // True when the org is on Free but previously had a trial (trial_ends_at is
+  // set and in the past) -- i.e. it LAPSED from trial. Distinct from a
+  // never-trialed Free org (trial_ends_at null).
+  lapsedFromTrial: boolean;
   isReady: boolean;
   hasFeature: (flag: string) => boolean;
   recordUsage: BillingStatus["record_usage"];
@@ -31,10 +36,15 @@ export function usePlan(): PlanUtils {
   const { data, isSuccess } = useBillingStatusQuery();
   return useMemo(() => {
     const features = (data?.features ?? {}) as Record<string, unknown>;
+    const trialEndsAt = data?.trial_ends_at ?? null;
+    const lapsedFromTrial =
+      data?.plan === "free" && !data?.is_trial && !!trialEndsAt && new Date(trialEndsAt).getTime() < Date.now();
     return {
       plan: data?.plan,
       isTrial: Boolean(data?.is_trial),
       trialDaysRemaining: data?.trial_days_remaining ?? null,
+      trialEndsAt,
+      lapsedFromTrial,
       isReady: isSuccess,
       // Before the status loads, treat features as AVAILABLE so entitled users
       // (the majority) never flash a lock. Locks only render once we know the plan.

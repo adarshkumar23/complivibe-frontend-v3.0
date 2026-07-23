@@ -182,6 +182,10 @@ export default function LoginPage() {
             <Link href="/register" className="font-semibold text-cv-blue hover:text-cv-purple">
               Sign up
             </Link>
+            {" · "}
+            <Link href="/pricing" className="font-semibold text-cv-blue hover:text-cv-purple">
+              See pricing
+            </Link>
           </p>
           <p className="mt-3 text-center text-[11px] text-cv-mist">
             Secured by CompliVibe · Your session is protected by a secure, HTTP-only cookie.

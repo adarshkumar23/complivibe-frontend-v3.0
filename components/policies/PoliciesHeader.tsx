@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, ScrollText } from "lucide-react";
 import { PolicyFormModal } from "@/components/policies/PolicyFormModal";
 import { useHasPermission } from "@/lib/hooks/usePermissions";
+import { ResourceUsageChip } from "@/components/common/ResourceUsageChip";
 
 export function PoliciesHeader() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -27,17 +28,20 @@ export function PoliciesHeader() {
             for audit.
           </p>
         </div>
-        {canCreatePolicy ? (
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            data-testid="new-policy"
-            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90"
-          >
-            <Plus size={15} strokeWidth={2.6} />
-            New policy
-          </button>
-        ) : null}
+        <div className="flex items-center gap-2.5">
+          <ResourceUsageChip resource="policies" />
+          {canCreatePolicy ? (
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              data-testid="new-policy"
+              className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-4 py-2.5 text-[13px] font-bold text-white shadow-tile transition hover:opacity-90"
+            >
+              <Plus size={15} strokeWidth={2.6} />
+              New policy
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <PolicyFormModal open={createOpen} onClose={() => setCreateOpen(false)} />

@@ -7,6 +7,7 @@ import { BottomModeSwitcher } from "@/components/layout/BottomModeSwitcher";
 import { Logo } from "@/components/ui/Logo";
 import { useAuthStore } from "@/store/auth-store";
 import { RouteFeatureGuard } from "@/components/common/RouteFeatureGuard";
+import { TrialBanner } from "@/components/common/TrialBanner";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -37,6 +38,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <DashboardShell>
+      <TrialBanner />
       <RouteFeatureGuard>{children}</RouteFeatureGuard>
       <BottomModeSwitcher />
     </DashboardShell>

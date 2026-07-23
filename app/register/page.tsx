@@ -202,6 +202,10 @@ export default function RegisterPage() {
             <Link href="/login" className="font-semibold text-cv-blue hover:text-cv-purple">
               Sign in
             </Link>
+            {" · "}
+            <Link href="/pricing" className="font-semibold text-cv-blue hover:text-cv-purple">
+              See pricing
+            </Link>
           </p>
         </div>
       </motion.div>

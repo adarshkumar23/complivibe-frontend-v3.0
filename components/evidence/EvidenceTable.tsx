@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
+import { ResourceUsageChip } from "@/components/common/ResourceUsageChip";
 import { formatDate } from "@/lib/utils/format";
 import type { EvidenceData } from "@/lib/hooks/useEvidence";
 import { useHasPermission } from "@/lib/hooks/usePermissions";
@@ -61,6 +62,7 @@ export function EvidenceTable({ data, onCreate, onSelect }: { data: EvidenceData
               {list.length} items
             </span>
           ) : null}
+          <ResourceUsageChip resource="evidence" />
           {onCreate && canWriteEvidence ? (
             <button
               type="button"

@@ -8,6 +8,7 @@ import { SeverityBadge } from "@/components/ui/SeverityBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
+import { ResourceUsageChip } from "@/components/common/ResourceUsageChip";
 import type { Severity } from "@/lib/api/types";
 import type { Control } from "@/lib/api/controls";
 import type { ControlsData } from "@/lib/hooks/useControls";
@@ -74,6 +75,7 @@ export function ControlsTable({
               {list.length} controls
             </span>
           ) : null}
+          <ResourceUsageChip resource="controls" />
           {onCreate && canWriteControls ? (
             <button
               type="button"
