@@ -8,6 +8,7 @@ import {
   getInvoices,
   getCarbonDashboard,
   ingestCarbonReading,
+  redeemTrialCode,
   setUsageSpendCap,
   type CarbonReadingPayload,
   type SpendCapPayload
@@ -32,6 +33,26 @@ export function useSetSpendCap() {
     mutationFn: (payload: SpendCapPayload) => setUsageSpendCap(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["billing-usage"] });
+    }
+  });
+}
+
+/** POST /api/v1/billing/redeem-trial-code — on success the org becomes Trial
+ * with all features unlocked. We invalidate every entitlement-bearing cache so
+ * the UI immediately reflects the new plan/features without a manual reload:
+ * billing status (plan/features/record_usage), plans, usage, and permissions. */
+export function useRedeemTrialCode() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (code: string) => redeemTrialCode(code.trim()),
+    onSuccess: (status) => {
+      // Seed the fresh status so consumers update instantly, then invalidate to
+      // refetch anything else that depends on entitlement.
+      queryClient.setQueryData(["billing-status"], status);
+      queryClient.invalidateQueries({ queryKey: ["billing-status"] });
+      queryClient.invalidateQueries({ queryKey: ["billing-plans"] });
+      queryClient.invalidateQueries({ queryKey: ["billing-usage"] });
+      queryClient.invalidateQueries({ queryKey: ["my-permissions"] });
     }
   });
 }

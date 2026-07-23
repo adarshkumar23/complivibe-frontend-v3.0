@@ -68,3 +68,24 @@ export function parseEntitlementError(error: unknown): EntitlementError | null {
   }
   return { kind: "other", message: error.message };
 }
+
+/**
+ * Map a failed trial-code redemption to a distinct, user-meaningful message.
+ * Each backend rejection code means something different to the user.
+ */
+export function redeemRejectionMessage(error: unknown): string {
+  if (!(error instanceof ApiError)) return "Unable to reach the server. Please try again.";
+  const detail = structuredDetail(error);
+  switch (detail?.error) {
+    case "invalid_code":
+      return "That code isn't valid. Double-check it for typos and try again.";
+    case "code_already_used":
+      return "This code has already been redeemed and can't be used again.";
+    case "already_trialed":
+      return "Your organization has already used its free trial. Only one trial is allowed per organization.";
+    case "not_eligible":
+      return "You're already on a paid plan — no trial needed.";
+    default:
+      return error.message || "We couldn't redeem that code. Please try again.";
+  }
+}

@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { motion, type Variants } from "framer-motion";
-import { CreditCard, Leaf, PiggyBank } from "lucide-react";
+import { CreditCard, Leaf, PiggyBank, Ticket } from "lucide-react";
 import { BillingKpis } from "@/components/billing/BillingKpis";
 import { PlanComparison } from "@/components/billing/PlanComparison";
 import { CarbonPanel } from "@/components/billing/CarbonPanel";
 import { SpendCapModal } from "@/components/billing/SpendCapModal";
 import { CarbonReadingModal } from "@/components/billing/CarbonReadingModal";
+import { RedeemTrialCodeModal } from "@/components/billing/RedeemTrialCodeModal";
+import { FreePlanUsage } from "@/components/billing/FreePlanUsage";
 import { useBilling } from "@/lib/hooks/useBilling";
 import { useHasPermission } from "@/lib/hooks/usePermissions";
 
@@ -22,6 +24,9 @@ export default function BillingPage() {
   const canRecordCarbon = useHasPermission("carbon_accounting:write");
   const [capOpen, setCapOpen] = useState(false);
   const [readingOpen, setReadingOpen] = useState(false);
+  const [redeemOpen, setRedeemOpen] = useState(false);
+  // Only a Free org has a trial to redeem (trial/paid orgs already have access).
+  const canRedeemTrial = data.status.data?.plan === "free";
 
   return (
     <div className="space-y-7">
@@ -43,6 +48,17 @@ export default function BillingPage() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2.5 self-start sm:self-auto">
+            {canRedeemTrial ? (
+              <button
+                type="button"
+                data-testid="open-redeem-trial"
+                onClick={() => setRedeemOpen(true)}
+                className="cv-ring-focus inline-flex items-center gap-2 rounded-full bg-white/60 px-4 py-2.5 text-[13px] font-semibold text-cv-ink ring-1 ring-white/70 transition hover:bg-white"
+              >
+                <Ticket size={15} strokeWidth={2.4} />
+                Redeem trial code
+              </button>
+            ) : null}
             {canSetSpendCap ? (
               <button
                 type="button"
@@ -70,11 +86,18 @@ export default function BillingPage() {
 
         <SpendCapModal open={capOpen} onClose={() => setCapOpen(false)} usage={data.usage.data} />
         <CarbonReadingModal open={readingOpen} onClose={() => setReadingOpen(false)} />
+        <RedeemTrialCodeModal open={redeemOpen} onClose={() => setRedeemOpen(false)} />
       </motion.div>
 
       <motion.div variants={fade} custom={1} initial="hidden" animate="show">
         <BillingKpis data={data} />
       </motion.div>
+
+      {canRedeemTrial ? (
+        <motion.div variants={fade} custom={1.5} initial="hidden" animate="show">
+          <FreePlanUsage status={data.status.data} />
+        </motion.div>
+      ) : null}
 
       <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">

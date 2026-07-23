@@ -15,10 +15,24 @@ export type BillingStatus = {
   subscription_ends_at: string | null;
   renewal_days_remaining: number | null;
   features: Record<string, unknown>;
+  // Current per-resource counts for the capped core resources, so the UI can
+  // show "3 of 5 used". Pairs with features.record_caps (the limit).
+  record_usage?: Partial<Record<"policies" | "controls" | "evidence" | "risks", number>>;
 };
 
 export function getBillingStatus() {
   return apiFetch<BillingStatus>("/api/v1/billing/status");
+}
+
+// ── POST /api/v1/billing/redeem-trial-code ──────────────────────────────────
+/** Redeem a single-use trial code. Returns the refreshed billing status
+ * (plan="trial") on success; throws ApiError with a structured detail.error
+ * (invalid_code / code_already_used / already_trialed / not_eligible) otherwise. */
+export function redeemTrialCode(code: string) {
+  return apiFetch<BillingStatus>("/api/v1/billing/redeem-trial-code", {
+    method: "POST",
+    body: JSON.stringify({ code }),
+  });
 }
 
 // ── GET /api/v1/billing/plans ───────────────────────────────────────────────

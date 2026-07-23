@@ -22,6 +22,21 @@ export function login(input: LoginInput) {
   });
 }
 
+export type RegisterInput = {
+  email: string;
+  password: string;
+  organization_name: string;
+};
+
+/** Self-registration. Creates the user + a new organization (which lands on the
+ * FREE plan, active) and establishes the session, exactly like login. */
+export function register(input: RegisterInput) {
+  return apiFetch<LoginResponse>("/api/v1/auth/register", {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
 /** Clears the httpOnly session cookie server-side and revokes the backing session. */
 export function logout() {
   return apiFetch<{ message: string }>("/api/v1/auth/logout", { method: "POST" });
