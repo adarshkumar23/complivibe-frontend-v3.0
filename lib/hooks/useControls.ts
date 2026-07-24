@@ -7,9 +7,12 @@ import {
   getControlTestsSummary,
   getFrameworkCoverageMatrix,
   createControl,
+  updateControl,
+  archiveControl,
   mapControlToObligation,
   linkControlToPolicy,
   type ControlCreateInput,
+  type ControlUpdateInput,
   type ControlObligationMapInput
 } from "@/lib/api/controls";
 import { getActiveFrameworks } from "@/lib/api/frameworks";
@@ -49,6 +52,32 @@ export function useCreateControl() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: ControlCreateInput) => createControl(body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["controls"] });
+      qc.invalidateQueries({ queryKey: ["control-gaps"] });
+      qc.invalidateQueries({ queryKey: ["control-tests-summary"] });
+    }
+  });
+}
+
+/** PATCH /api/v1/controls/{id} (edit) */
+export function useUpdateControl() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ controlId, body }: { controlId: string; body: ControlUpdateInput }) => updateControl(controlId, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["controls"] });
+      qc.invalidateQueries({ queryKey: ["control-gaps"] });
+      qc.invalidateQueries({ queryKey: ["control-tests-summary"] });
+    }
+  });
+}
+
+/** PATCH /api/v1/controls/{id}/archive (retire) */
+export function useArchiveControl() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (controlId: string) => archiveControl(controlId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["controls"] });
       qc.invalidateQueries({ queryKey: ["control-gaps"] });

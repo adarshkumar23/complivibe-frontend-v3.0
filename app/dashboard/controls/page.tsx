@@ -8,6 +8,7 @@ import { ControlsTable } from "@/components/controls/ControlsTable";
 import { ControlTestHealth } from "@/components/controls/ControlTestHealth";
 import { CoverageGapPanel } from "@/components/controls/CoverageGapPanel";
 import { ControlCreateModal } from "@/components/controls/ControlCreateModal";
+import { ControlEditModal } from "@/components/controls/ControlEditModal";
 import {
   MapObligationModal,
   type ObligationPreset,
@@ -15,7 +16,11 @@ import {
 } from "@/components/controls/MapObligationModal";
 import { LinkPolicyModal } from "@/components/controls/LinkPolicyModal";
 import { AttachEvidenceModal } from "@/components/evidence/AttachEvidenceModal";
-import { useControls } from "@/lib/hooks/useControls";
+import { Modal } from "@/components/ui/Modal";
+import { Archive, Loader2 } from "lucide-react";
+import { ApiError } from "@/lib/api/client";
+import { EntitlementBanner } from "@/components/common/EntitlementBanner";
+import { useControls, useArchiveControl } from "@/lib/hooks/useControls";
 import type { Control } from "@/lib/api/controls";
 
 const fade: Variants = {
@@ -32,6 +37,19 @@ export default function ControlsPage() {
   const [controlPreset, setControlPreset] = useState<ControlPreset | null>(null);
   const [policyControl, setPolicyControl] = useState<ControlPreset | null>(null);
   const [attachEvidenceControl, setAttachEvidenceControl] = useState<Control | null>(null);
+  const [editControl, setEditControl] = useState<Control | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<Control | null>(null);
+  const archive = useArchiveControl();
+
+  async function confirmArchive() {
+    if (!archiveTarget) return;
+    try {
+      await archive.mutateAsync(archiveTarget.id);
+      setArchiveTarget(null);
+    } catch {
+      // surfaced via archive.error
+    }
+  }
 
   function toControlPreset(c: Control): ControlPreset {
     return { controlId: c.id, title: c.title, controlCode: c.control_code };
@@ -81,6 +99,8 @@ export default function ControlsPage() {
           <ControlsTable
             data={data}
             onCreate={() => setCreateOpen(true)}
+            onEdit={(c) => setEditControl(c)}
+            onArchive={(c) => setArchiveTarget(c)}
             onLinkObligation={openMapForControl}
             onLinkPolicy={(c) => setPolicyControl(toControlPreset(c))}
             onAttachEvidence={(c) => setAttachEvidenceControl(c)}
@@ -92,6 +112,40 @@ export default function ControlsPage() {
       </motion.div>
 
       <ControlCreateModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <ControlEditModal control={editControl} onClose={() => setEditControl(null)} />
+      <Modal
+        open={archiveTarget != null}
+        onClose={() => setArchiveTarget(null)}
+        title="Archive control"
+        subtitle="This retires the control from the active register"
+        icon={Archive}
+        accent="amber"
+        widthClassName="max-w-md"
+      >
+        <div className="space-y-4" data-testid="control-archive-confirm">
+          <p className="text-[13px] text-cv-slate">
+            Archive <span className="font-semibold text-cv-ink">{archiveTarget?.title}</span>? It will be marked
+            archived and removed from the active register. Controls are never hard-deleted — this preserves the audit
+            trail and can be reviewed later.
+          </p>
+          <EntitlementBanner error={archive.error instanceof ApiError ? archive.error : null} />
+          <div className="flex items-center justify-end gap-2.5">
+            <button type="button" onClick={() => setArchiveTarget(null)} className="cv-ring-focus rounded-full bg-white/70 px-4 py-2 text-xs font-semibold text-cv-ink ring-1 ring-white/70 transition hover:bg-white">
+              Cancel
+            </button>
+            <button
+              type="button"
+              data-testid="control-archive-confirm-btn"
+              onClick={confirmArchive}
+              disabled={archive.isPending}
+              className="cv-ring-focus inline-flex items-center gap-2 rounded-full bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-button transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {archive.isPending ? <Loader2 size={13} className="animate-spin" /> : <Archive size={13} />}
+              Archive control
+            </button>
+          </div>
+        </div>
+      </Modal>
       <MapObligationModal
         open={mapOpen}
         onClose={() => {

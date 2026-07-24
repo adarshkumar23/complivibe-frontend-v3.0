@@ -57,6 +57,36 @@ export function createControl(body: ControlCreateInput) {
   return apiFetch<Control>("/api/v1/controls", { method: "POST", body: JSON.stringify(body) });
 }
 
+// ── PATCH /api/v1/controls/{id} (edit) + /archive (retire) ──────────────────
+export const CONTROL_STATUSES = [
+  "not_started",
+  "in_progress",
+  "implemented",
+  "needs_review",
+  "failed",
+  "not_applicable"
+] as const;
+
+export type ControlUpdateInput = {
+  title?: string;
+  description?: string | null;
+  status?: (typeof CONTROL_STATUSES)[number];
+  criticality?: (typeof CONTROL_CRITICALITIES)[number];
+  owner_user_id?: string | null;
+  testing_procedure?: string | null;
+  implementation_notes?: string | null;
+};
+
+export function updateControl(controlId: string, body: ControlUpdateInput) {
+  return apiFetch<Control>(`/api/v1/controls/${controlId}`, { method: "PATCH", body: JSON.stringify(body) });
+}
+
+/** PATCH /api/v1/controls/{id}/archive — retires the control (status -> archived).
+ * The product has no hard-delete for controls (archive-only, audit trail). */
+export function archiveControl(controlId: string) {
+  return apiFetch<Control>(`/api/v1/controls/${controlId}/archive`, { method: "PATCH" });
+}
+
 // ── POST /api/v1/controls/{control_id}/obligations ──────────────────────────
 export const OBLIGATION_MAPPING_TYPES = ["satisfies", "partially_satisfies", "supports", "related"] as const;
 

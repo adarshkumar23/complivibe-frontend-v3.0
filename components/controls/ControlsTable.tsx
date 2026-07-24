@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, ShieldCheck, Shield, Plus, Link2, FileText, Paperclip } from "lucide-react";
+import { Search, ShieldCheck, Shield, Plus, Link2, FileText, Paperclip, Pencil, Archive } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SeverityBadge } from "@/components/ui/SeverityBadge";
@@ -30,12 +30,16 @@ function statusTone(status: string): "good" | "warn" | "bad" | "neutral" {
 export function ControlsTable({
   data,
   onCreate,
+  onEdit,
+  onArchive,
   onLinkObligation,
   onLinkPolicy,
   onAttachEvidence
 }: {
   data: ControlsData;
   onCreate?: () => void;
+  onEdit?: (control: Control) => void;
+  onArchive?: (control: Control) => void;
   onLinkObligation?: (control: Control) => void;
   onLinkPolicy?: (control: Control) => void;
   onAttachEvidence?: (control: Control) => void;
@@ -54,6 +58,9 @@ export function ControlsTable({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return list.filter((c) => {
+      // Archived controls are retired — keep them out of the active register unless
+      // explicitly filtered to that status. (Archive is not a hard delete.)
+      if (status === "all" && c.status === "archived") return false;
       if (status !== "all" && c.status !== status) return false;
       if (!q) return true;
       return [c.title, c.control_code, c.control_type, c.description]
@@ -148,8 +155,30 @@ export function ControlsTable({
                       <StatusBadge label={c.status.replaceAll("_", " ")} tone={statusTone(c.status)} />
                     </div>
                   </div>
-                  {onLinkObligation || onLinkPolicy || (onAttachEvidence && canWriteEvidence) ? (
-                    <div className="mt-2 flex items-center gap-2">
+                  {onLinkObligation || onLinkPolicy || (onAttachEvidence && canWriteEvidence) || (canWriteControls && (onEdit || onArchive)) ? (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      {onEdit && canWriteControls ? (
+                        <button
+                          type="button"
+                          data-testid={`control-edit-${c.id}`}
+                          onClick={() => onEdit(c)}
+                          className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1.5 text-[11px] font-semibold text-cv-ink ring-1 ring-white/70 transition hover:bg-white"
+                        >
+                          <Pencil size={11} strokeWidth={2.6} />
+                          Edit
+                        </button>
+                      ) : null}
+                      {onArchive && canWriteControls && c.status !== "archived" ? (
+                        <button
+                          type="button"
+                          data-testid={`control-archive-${c.id}`}
+                          onClick={() => onArchive(c)}
+                          className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1.5 text-[11px] font-semibold text-cv-slate ring-1 ring-white/70 transition hover:bg-white hover:text-rose-600"
+                        >
+                          <Archive size={11} strokeWidth={2.6} />
+                          Archive
+                        </button>
+                      ) : null}
                       {onLinkObligation ? (
                         <button
                           type="button"
