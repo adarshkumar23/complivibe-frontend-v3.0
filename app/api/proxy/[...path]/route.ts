@@ -63,24 +63,43 @@ async function handler(request: NextRequest, { params }: { params: Promise<{ pat
 
   try {
     const response = await fetch(targetUrl, init);
-    const text = await response.text();
-    const responseHeaders = new Headers({
-      "content-type": response.headers.get("content-type") || "application/json"
+    // Read the body as raw bytes, NOT text(): text() decodes as UTF-8 and corrupts any
+    // binary download (PDF/DOCX/OSCAL/audit-evidence exports). ArrayBuffer round-trips
+    // JSON, text, AND binary byte-for-byte. (Mirrors the request-side arrayBuffer fix.)
+    const buf = await response.arrayBuffer();
+    // Forward the upstream headers so downloads keep their Content-Type AND
+    // Content-Disposition (filename) -- the old code rebuilt headers from scratch and
+    // dropped everything except content-type. Skip:
+    //  - set-cookie: re-added below via getSetCookie() (a plain copy comma-joins them,
+    //    and Expires dates contain commas);
+    //  - content-encoding/content-length/transfer-encoding: fetch already DECODED the
+    //    body, so these are now stale and would corrupt it / mislead the client.
+    const STRIP = new Set([
+      "set-cookie",
+      "content-encoding",
+      "content-length",
+      "transfer-encoding",
+      "connection"
+    ]);
+    const responseHeaders = new Headers();
+    response.headers.forEach((value, key) => {
+      if (!STRIP.has(key.toLowerCase())) responseHeaders.set(key, value);
     });
-    // response.headers.get("set-cookie") would incorrectly comma-join multiple cookies
-    // (Expires dates themselves contain commas); getSetCookie() preserves each one.
+    if (!responseHeaders.has("content-type")) {
+      responseHeaders.set("content-type", "application/json");
+    }
     const setCookies = response.headers.getSetCookie?.() ?? [];
     for (const cookieValue of setCookies) {
       responseHeaders.append("set-cookie", cookieValue);
     }
     // 204 No Content / 205 Reset Content / 304 Not Modified are "null body status"
-    // codes: the Response/NextResponse constructor throws if given ANY body (even the
-    // empty string), which the bare catch below then masks as a generic 502. Delete
-    // and other no-content-success endpoints legitimately return 204, so pass a null
-    // body (never `text`) for these statuses while still forwarding headers/cookies.
+    // codes: the Response/NextResponse constructor throws if given ANY body (even an
+    // empty buffer), which the bare catch below then masks as a generic 502. Delete and
+    // other no-content-success endpoints legitimately return 204, so pass a null body
+    // (never `buf`) for these statuses while still forwarding headers/cookies.
     const isNullBodyStatus =
       response.status === 204 || response.status === 205 || response.status === 304;
-    return new NextResponse(isNullBodyStatus ? null : text, {
+    return new NextResponse(isNullBodyStatus ? null : buf, {
       status: response.status,
       headers: responseHeaders
     });
