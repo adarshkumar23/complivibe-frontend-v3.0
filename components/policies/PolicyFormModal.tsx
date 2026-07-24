@@ -76,51 +76,70 @@ export function PolicyFormModal({
   // Backend requires the owner to be an ACTIVE org member.
   const activeUsers = (users.data ?? []).filter((u) => u.is_active);
 
-  function handleSubmit() {
+  // Reset local form state and close. Mirrors ControlCreateModal.resetAndClose so
+  // the modal returns to a clean slate on every close (not just re-open).
+  function resetAndClose() {
+    setMode("blank");
+    setTemplateId("");
+    setTitle("");
+    setPolicyType("other");
+    setOwnerUserId("");
+    setDescription("");
+    setEffectiveDate("");
+    setReviewDueDate("");
+    setContent("");
     setFormError(null);
-    if (mode === "template") {
-      if (!templateId) {
-        setFormError("Pick a template to start from.");
-        return;
-      }
-      applyTemplate.mutate(
-        { templateId, overrideTitle: title.trim() || null },
-        {
-          onSuccess: () => onClose(),
-          onError: (err: Error) => setFormError(err.message || "The backend rejected this template apply.")
+    createPolicy.reset();
+    applyTemplate.reset();
+    onClose();
+  }
+
+  // Imperative await + resetAndClose (mirrors ControlCreateModal). This closes the
+  // modal in the same awaited flow as the successful mutation, instead of relying
+  // on react-query's mutate() onSuccess callback -- which is skipped if the modal
+  // unmounts before the mutation settles (e.g. a slow list-invalidation refetch
+  // under load), the failure mode the sweep observed.
+  async function handleSubmit() {
+    setFormError(null);
+    try {
+      if (mode === "template") {
+        if (!templateId) {
+          setFormError("Pick a template to start from.");
+          return;
         }
-      );
-      return;
-    }
-    if (!title.trim()) {
-      setFormError("Title is required.");
-      return;
-    }
-    if (!ownerUserId) {
-      setFormError("Select an owner — the backend requires an active org member.");
-      return;
-    }
-    const payload: PolicyCreatePayload = {
-      title: title.trim(),
-      policy_type: policyType,
-      owner_user_id: ownerUserId,
-      description: description.trim() || null,
-      effective_date: effectiveDate || null,
-      review_due_date: reviewDueDate || null
-    };
-    createPolicy.mutate(
-      { payload, initialContent: content },
-      {
-        onSuccess: () => onClose(),
-        onError: (err: Error) => setFormError(err.message || "The backend rejected this policy.")
+        await applyTemplate.mutateAsync({ templateId, overrideTitle: title.trim() || null });
+      } else {
+        if (!title.trim()) {
+          setFormError("Title is required.");
+          return;
+        }
+        if (!ownerUserId) {
+          setFormError("Select an owner — the backend requires an active org member.");
+          return;
+        }
+        const payload: PolicyCreatePayload = {
+          title: title.trim(),
+          policy_type: policyType,
+          owner_user_id: ownerUserId,
+          description: description.trim() || null,
+          effective_date: effectiveDate || null,
+          review_due_date: reviewDueDate || null
+        };
+        await createPolicy.mutateAsync({ payload, initialContent: content });
       }
-    );
+      resetAndClose();
+    } catch (err) {
+      // ApiError is surfaced via the EntitlementBanner below; anything else here.
+      if (!(err instanceof ApiError)) {
+        setFormError((err as Error)?.message || "The backend rejected this request.");
+      }
+    }
   }
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={resetAndClose}
       title="New policy"
       subtitle="Draft a governance policy from scratch or a system template"
       icon={FilePlus2}
