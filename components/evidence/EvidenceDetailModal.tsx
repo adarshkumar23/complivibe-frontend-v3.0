@@ -1,16 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Download, FileText, Loader2, Sparkles, Unlink, UserCheck } from "lucide-react";
+import { Download, FileText, Loader2, Sparkles, Unlink, UserCheck, Upload } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { ApiError } from "@/lib/api/client";
 import { formatDate } from "@/lib/utils/format";
-import { getEvidenceFileUrl } from "@/lib/api/evidence";
-import { useEvidenceDetail, useEvidenceAiAssessment, useUnlinkEvidenceControl } from "@/lib/hooks/useEvidence";
+import { getEvidenceFileUrl, EVIDENCE_ALLOWED_EXTENSIONS, EVIDENCE_MAX_UPLOAD_BYTES } from "@/lib/api/evidence";
+import { useEvidenceDetail, useEvidenceAiAssessment, useUnlinkEvidenceControl, useUploadEvidenceFile } from "@/lib/hooks/useEvidence";
 import { useHasPermission } from "@/lib/hooks/usePermissions";
+
+function fileExt(name: string): string {
+  const dot = name.lastIndexOf(".");
+  return dot >= 0 ? name.slice(dot).toLowerCase() : "";
+}
 
 type Tone = "good" | "warn" | "bad" | "info" | "neutral" | "purple" | "teal";
 
@@ -41,11 +46,35 @@ export function EvidenceDetailModal({ evidenceId, open, onClose }: { evidenceId:
   const detail = useEvidenceDetail(evidenceId);
   const assessment = useEvidenceAiAssessment(evidenceId);
   const unlink = useUnlinkEvidenceControl();
+  const upload = useUploadEvidenceFile();
   const canWrite = useHasPermission("evidence:write");
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [attachError, setAttachError] = useState<string | null>(null);
 
   const ev = detail.data;
+
+  async function onAttach(e: React.ChangeEvent<HTMLInputElement>) {
+    setAttachError(null);
+    const f = e.target.files?.[0] ?? null;
+    e.target.value = ""; // allow re-selecting the same file after an error
+    if (!f || !evidenceId) return;
+    const ext = fileExt(f.name);
+    if (!EVIDENCE_ALLOWED_EXTENSIONS.includes(ext as (typeof EVIDENCE_ALLOWED_EXTENSIONS)[number])) {
+      setAttachError(`File type "${ext || "(none)"}" is not allowed. Permitted: ${EVIDENCE_ALLOWED_EXTENSIONS.join(", ")}.`);
+      return;
+    }
+    if (f.size > EVIDENCE_MAX_UPLOAD_BYTES) {
+      setAttachError(`File is too large (${(f.size / 1_048_576).toFixed(1)} MB). Maximum is ${(EVIDENCE_MAX_UPLOAD_BYTES / 1_048_576).toFixed(0)} MB.`);
+      return;
+    }
+    try {
+      await upload.mutateAsync({ evidenceId, file: f });
+      await detail.refetch();
+    } catch (err) {
+      setAttachError(err instanceof ApiError ? err.message : "Could not upload the file.");
+    }
+  }
 
   async function onDownload() {
     if (!evidenceId) return;
@@ -91,7 +120,9 @@ export function EvidenceDetailModal({ evidenceId, open, onClose }: { evidenceId:
                   {ev.external_reference_url}
                 </a>
               ) : (
-                <span className="text-cv-mist">No file or URL attached</span>
+                <span data-testid="evidence-no-file" className="inline-flex items-center gap-1.5 font-semibold text-amber-700">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" /> No file attached
+                </span>
               )}
             </div>
             {ev.file_name ? (
@@ -105,8 +136,30 @@ export function EvidenceDetailModal({ evidenceId, open, onClose }: { evidenceId:
                 {downloading ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} strokeWidth={2.6} />}
                 Download
               </button>
+            ) : !ev.external_reference_url && canWrite ? (
+              <label
+                data-testid="evidence-attach-file"
+                className="cv-ring-focus inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-cv-brand-soft px-3 py-1.5 text-[11px] font-semibold text-cv-blue ring-1 ring-blue-400/25 transition hover:bg-cv-brand-soft/80 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-70"
+              >
+                {upload.isPending ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} strokeWidth={2.6} />}
+                {upload.isPending ? "Uploading…" : "Attach file"}
+                <input
+                  type="file"
+                  className="hidden"
+                  accept={EVIDENCE_ALLOWED_EXTENSIONS.join(",")}
+                  disabled={upload.isPending}
+                  onChange={onAttach}
+                />
+              </label>
             ) : null}
           </div>
+          {!ev.file_name && !ev.external_reference_url ? (
+            <p className="text-[11px] text-amber-700/80">
+              This is a metadata-only record — no file has been attached yet.
+              {canWrite ? " Use “Attach file” above to add one." : null}
+            </p>
+          ) : null}
+          {attachError ? <p className="text-[11px] font-semibold text-rose-600">{attachError}</p> : null}
           {downloadError ? <p className="text-[11px] font-semibold text-rose-600">{downloadError}</p> : null}
 
           {/* HUMAN review verdict — authoritative */}

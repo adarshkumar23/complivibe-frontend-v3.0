@@ -54,9 +54,15 @@ export function EvidenceCreateModal({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [formError, setFormError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  // The metadata record persists across a failed file upload (the backend keeps it
+  // as a valid metadata-only item). We hold onto it so a retry re-uploads to the
+  // SAME record instead of creating a duplicate orphan.
+  const [createdEvidence, setCreatedEvidence] = useState<Evidence | null>(null);
+  const [fileUploadFailed, setFileUploadFailed] = useState(false);
 
   const err = [upload.error, create.error, link.error].find((e) => e instanceof ApiError) as ApiError | undefined;
   const busy = create.isPending || uploading || link.isPending;
+  const isRetry = createdEvidence !== null && fileUploadFailed;
 
   function resetAndClose() {
     setTitle("");
@@ -70,6 +76,8 @@ export function EvidenceCreateModal({
     setSelected(new Set());
     setFormError(null);
     setUploading(false);
+    setCreatedEvidence(null);
+    setFileUploadFailed(false);
     create.reset();
     upload.reset();
     link.reset();
@@ -107,33 +115,53 @@ export function EvidenceCreateModal({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
-    if (title.trim().length < 3) {
-      setFormError("Give the evidence a title (at least 3 characters).");
-      return;
-    }
-    if (attachMode === "url" && !url.trim()) {
-      setFormError("Enter the external reference URL, or switch to file upload.");
-      return;
+    // On a retry we're only re-attempting the file upload against the existing
+    // record, so skip the create-time field validation.
+    if (!createdEvidence) {
+      if (title.trim().length < 3) {
+        setFormError("Give the evidence a title (at least 3 characters).");
+        return;
+      }
+      if (attachMode === "url" && !url.trim()) {
+        setFormError("Enter the external reference URL, or switch to file upload.");
+        return;
+      }
     }
     try {
-      const created = await create.mutateAsync({
-        title: title.trim(),
-        evidence_type: evidenceType,
-        description: description.trim() || null,
-        external_reference_url: attachMode === "url" ? url.trim() || null : null,
-        valid_from: validFrom || null,
-        valid_until: validUntil || null,
-      });
+      // Reuse the already-created metadata record on a retry so a failed upload can
+      // never leave (or duplicate) an orphaned item.
+      let created = createdEvidence;
+      if (!created) {
+        created = await create.mutateAsync({
+          title: title.trim(),
+          evidence_type: evidenceType,
+          description: description.trim() || null,
+          external_reference_url: attachMode === "url" ? url.trim() || null : null,
+          valid_from: validFrom || null,
+          valid_until: validUntil || null,
+        });
+        setCreatedEvidence(created);
+      }
 
       if (attachMode === "file" && file) {
         setUploading(true);
         try {
           await upload.mutateAsync({ evidenceId: created.id, file });
+        } catch {
+          // The metadata record is intentionally KEPT by the backend as a valid
+          // (metadata-only) item -- do NOT silently orphan it. Surface the failure
+          // explicitly and switch to retry-upload mode (see fileUploadFailed banner
+          // + the "Retry file upload" button); the record can also be completed
+          // later from its detail view. Stop here: no linking, no close.
+          setFileUploadFailed(true);
+          return; // upload.error is surfaced via `err`
         } finally {
           setUploading(false);
         }
       }
 
+      // Reaching here means either no file was requested or the upload succeeded.
+      setFileUploadFailed(false);
       const controlIds = presetControlId ? [presetControlId] : [...selected];
       for (const controlId of controlIds) {
         await link.mutateAsync({ evidenceId: created.id, controlId });
@@ -142,7 +170,7 @@ export function EvidenceCreateModal({
       onCreated?.(created);
       resetAndClose();
     } catch {
-      // surfaced below via err
+      // create/link errors surfaced below via err
     }
   }
 
@@ -285,11 +313,21 @@ export function EvidenceCreateModal({
         {formError ? (
           <p className="rounded-2xl bg-rose-500/10 px-3.5 py-2.5 text-xs font-semibold text-rose-600 ring-1 ring-rose-400/25">{formError}</p>
         ) : null}
-        <EntitlementBanner error={err} />
+        {isRetry ? (
+          <div data-testid="evidence-upload-failed" className="rounded-2xl bg-amber-500/10 px-3.5 py-2.5 ring-1 ring-amber-400/30">
+            <p className="text-xs font-bold text-amber-700">Metadata saved — the file upload failed</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-amber-700/90">
+              “{createdEvidence?.title}” was saved, but its file could not be uploaded
+              {err?.message ? <> ({err.message})</> : null}. Retry the upload below (this won’t create a duplicate), or
+              close to keep it as a metadata-only record — you can attach the file later from the evidence’s detail view.
+            </p>
+          </div>
+        ) : null}
+        <EntitlementBanner error={isRetry ? undefined : err} />
 
         <div className="flex items-center justify-end gap-2.5 pt-1">
           <button type="button" onClick={resetAndClose} className="cv-ring-focus rounded-full bg-white/70 px-4 py-2 text-xs font-semibold text-cv-ink ring-1 ring-white/70 transition hover:bg-white">
-            Cancel
+            {isRetry ? "Keep as metadata-only" : "Cancel"}
           </button>
           <button
             type="submit"
@@ -298,7 +336,7 @@ export function EvidenceCreateModal({
             className="cv-ring-focus inline-flex items-center gap-2 rounded-full bg-cv-brand px-4 py-2 text-xs font-bold text-white shadow-button transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
           >
             {busy ? <Loader2 size={13} className="animate-spin" /> : null}
-            Create evidence
+            {isRetry ? "Retry file upload" : "Create evidence"}
           </button>
         </div>
       </form>
