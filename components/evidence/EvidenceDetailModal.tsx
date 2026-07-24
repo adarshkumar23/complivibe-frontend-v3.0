@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Download, FileText, Loader2, Sparkles, Unlink, UserCheck, Upload } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -61,21 +61,30 @@ export function EvidenceDetailModal({ evidenceId, open, onClose }: { evidenceId:
   const [attachError, setAttachError] = useState<string | null>(null);
   const [reviewNotes, setReviewNotes] = useState("");
   const [reviewFormError, setReviewFormError] = useState<string | null>(null);
+  // Synchronous in-flight guard: `review.isPending` only flips on the NEXT render, so a
+  // rapid double-click (or any duplicate trigger) can fire two POSTs — and two verdict
+  // POSTs mean two audit entries for one human action. This ref rejects the second call
+  // synchronously, within the same tick, before a duplicate mutation can start.
+  const reviewInFlight = useRef(false);
 
   const ev = detail.data;
 
   async function onReview(reviewStatus: EvidenceReviewStatus) {
     if (!evidenceId) return;
+    if (reviewInFlight.current) return; // a verdict is already submitting — no-op the duplicate
     setReviewFormError(null);
     if (reviewStatus === "rejected" && !reviewNotes.trim()) {
       setReviewFormError("A note is required to reject evidence.");
       return;
     }
+    reviewInFlight.current = true;
     try {
       await review.mutateAsync({ evidenceId, reviewStatus, reviewNotes });
       setReviewNotes("");
     } catch {
       // ApiError surfaced via EntitlementBanner below
+    } finally {
+      reviewInFlight.current = false;
     }
   }
 

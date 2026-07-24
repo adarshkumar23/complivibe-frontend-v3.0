@@ -122,21 +122,41 @@ export function ControlsTable({
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               aria-label="Filter controls by status"
+              data-testid="controls-status-filter"
               className="cv-ring-focus rounded-full bg-white/60 px-3.5 py-2 text-[13px] font-medium text-cv-ink ring-1 ring-white/70 focus:outline-none"
             >
-              <option value="all">All statuses</option>
+              <option value="all">Active (all)</option>
               <option value="not_started">Not started</option>
               <option value="in_progress">In progress</option>
               <option value="implemented">Implemented</option>
+              <option value="archived">Archived</option>
             </select>
           </div>
+
+          {status === "archived" ? (
+            <div
+              data-testid="controls-archived-note"
+              className="rounded-2xl bg-amber-50/70 px-4 py-3 text-[12px] text-amber-800 ring-1 ring-amber-200/70"
+            >
+              Archived controls are retained for the audit trail and kept out of the active register. Archiving is
+              terminal — a control cannot be restored from archived; reinstate by creating a new control. (Enabling
+              in-place restore requires a backend un-archive endpoint.)
+            </div>
+          ) : null}
 
           {filtered.length === 0 ? (
             <EmptyState compact icon={Search} title="No controls match" description="Try adjusting search or filters." />
           ) : (
             <ul className="space-y-2.5">
               {filtered.map((c) => (
-                <li key={c.id} className="rounded-2xl bg-white/55 px-3.5 py-3 ring-1 ring-white/70 transition hover:bg-white/85">
+                <li
+                  key={c.id}
+                  data-testid={`control-row-${c.id}`}
+                  data-status={c.status}
+                  className={`rounded-2xl px-3.5 py-3 ring-1 ring-white/70 transition hover:bg-white/85 ${
+                    c.status === "archived" ? "bg-white/35 opacity-70" : "bg-white/55"
+                  }`}
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-[13px] font-semibold leading-snug text-cv-ink">

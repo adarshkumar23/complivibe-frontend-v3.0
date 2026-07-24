@@ -73,7 +73,14 @@ async function handler(request: NextRequest, { params }: { params: Promise<{ pat
     for (const cookieValue of setCookies) {
       responseHeaders.append("set-cookie", cookieValue);
     }
-    return new NextResponse(text, {
+    // 204 No Content / 205 Reset Content / 304 Not Modified are "null body status"
+    // codes: the Response/NextResponse constructor throws if given ANY body (even the
+    // empty string), which the bare catch below then masks as a generic 502. Delete
+    // and other no-content-success endpoints legitimately return 204, so pass a null
+    // body (never `text`) for these statuses while still forwarding headers/cookies.
+    const isNullBodyStatus =
+      response.status === 204 || response.status === 205 || response.status === 304;
+    return new NextResponse(isNullBodyStatus ? null : text, {
       status: response.status,
       headers: responseHeaders
     });

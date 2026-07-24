@@ -235,7 +235,7 @@ export function KriCreateModal({ open, onClose }: { open: boolean; onClose: () =
         </div>
 
         {formError ? (
-          <p className="rounded-2xl bg-rose-500/10 px-3.5 py-2.5 text-xs font-semibold text-rose-600 ring-1 ring-rose-400/25">
+          <p data-testid="kri-form-error" className="rounded-2xl bg-rose-500/10 px-3.5 py-2.5 text-xs font-semibold text-rose-600 ring-1 ring-rose-400/25">
             {formError}
           </p>
         ) : null}
@@ -251,6 +251,7 @@ export function KriCreateModal({ open, onClose }: { open: boolean; onClose: () =
           </button>
           <button
             type="submit"
+            data-testid="kri-form-submit"
             disabled={create.isPending}
             className="cv-ring-focus inline-flex items-center gap-2 rounded-full bg-cv-brand px-4 py-2 text-xs font-bold text-white shadow-button transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
           >

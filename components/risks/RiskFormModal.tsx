@@ -124,6 +124,18 @@ export function RiskFormModal({ open, onClose, risk }: RiskFormModalProps) {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    // Explicit client validation with an inline message. Previously the form relied
+    // ONLY on the native `required`/`minLength` constraints, which block submit with a
+    // browser bubble but leave no in-DOM feedback — so an invalid submit read as a
+    // silent no-op (no POST, no visible error). Validate here and surface `error`.
+    if (title.trim().length < 3) {
+      setError("Title is required (at least 3 characters).");
+      return;
+    }
+    if (!Number.isInteger(likelihood) || likelihood < 1 || likelihood > 5 || !Number.isInteger(impact) || impact < 1 || impact > 5) {
+      setError("Likelihood and impact must each be set on the 1–5 scale.");
+      return;
+    }
     try {
       if (isEdit && risk) {
         // PATCH is partial — send only the fields that actually changed.
@@ -167,7 +179,9 @@ export function RiskFormModal({ open, onClose, risk }: RiskFormModalProps) {
       icon={isEdit ? SquarePen : ShieldAlert}
       accent="red"
     >
-      <form onSubmit={submit} className="flex flex-col gap-4">
+      {/* noValidate: JS validation above is the single, in-DOM feedback path (no silent
+          native-only bubble). The `required`/`minLength` attrs stay for a11y semantics. */}
+      <form onSubmit={submit} noValidate className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="risk-title" className={labelCls}>
             Title
@@ -283,7 +297,7 @@ export function RiskFormModal({ open, onClose, risk }: RiskFormModalProps) {
           const mutErr = createRisk.error ?? updateRisk.error;
           if (mutErr instanceof ApiError) return <EntitlementBanner error={mutErr} />;
           return error ? (
-            <p role="alert" className="rounded-xl bg-rose-500/10 px-3.5 py-2.5 text-xs font-semibold text-rose-600 ring-1 ring-rose-400/25">
+            <p role="alert" data-testid="risk-form-error" className="rounded-xl bg-rose-500/10 px-3.5 py-2.5 text-xs font-semibold text-rose-600 ring-1 ring-rose-400/25">
               {error}
             </p>
           ) : null;
@@ -299,6 +313,7 @@ export function RiskFormModal({ open, onClose, risk }: RiskFormModalProps) {
           </button>
           <button
             type="submit"
+            data-testid="risk-form-submit"
             disabled={mutation.isPending}
             className="cv-ring-focus inline-flex items-center gap-2 rounded-full bg-cv-brand px-5 py-2 text-[13px] font-semibold text-white shadow-tile transition hover:opacity-90 disabled:opacity-60"
           >
