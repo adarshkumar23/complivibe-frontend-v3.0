@@ -7,6 +7,7 @@ import { AuditPackKpis } from "@/components/audit-pack/AuditPackKpis";
 import { AuditPackLibrary } from "@/components/audit-pack/AuditPackLibrary";
 import { EngagementWorkspace } from "@/components/audit-pack/EngagementWorkspace";
 import { ReadinessChecklist } from "@/components/audit-pack/ReadinessChecklist";
+import { AuditPackExportPanel } from "@/components/audit-pack/AuditPackExportPanel";
 import { useAuditPack } from "@/lib/hooks/useAuditPack";
 
 const fade: Variants = {
@@ -34,8 +35,9 @@ export default function AuditPackPage() {
         <div className="lg:col-span-2">
           <AuditPackLibrary data={data} selectedId={selectedId} onSelect={setSelectedId} />
         </div>
-        <div>
+        <div className="space-y-4">
           <ReadinessChecklist data={data} />
+          <AuditPackExportPanel />
         </div>
       </motion.div>
 
