@@ -7,10 +7,17 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import { ApiError } from "@/lib/api/client";
+import { EntitlementBanner } from "@/components/common/EntitlementBanner";
 import { formatDate } from "@/lib/utils/format";
-import { getEvidenceFileUrl, EVIDENCE_ALLOWED_EXTENSIONS, EVIDENCE_MAX_UPLOAD_BYTES } from "@/lib/api/evidence";
-import { useEvidenceDetail, useEvidenceAiAssessment, useUnlinkEvidenceControl, useUploadEvidenceFile } from "@/lib/hooks/useEvidence";
+import { getEvidenceFileUrl, EVIDENCE_ALLOWED_EXTENSIONS, EVIDENCE_MAX_UPLOAD_BYTES, type EvidenceReviewStatus } from "@/lib/api/evidence";
+import { useEvidenceDetail, useEvidenceAiAssessment, useUnlinkEvidenceControl, useUploadEvidenceFile, useReviewEvidence } from "@/lib/hooks/useEvidence";
 import { useHasPermission } from "@/lib/hooks/usePermissions";
+
+const REVIEW_ACTIONS: { status: EvidenceReviewStatus; label: string; tone: string }[] = [
+  { status: "verified", label: "Verify", tone: "bg-emerald-600 hover:bg-emerald-500" },
+  { status: "needs_review", label: "Needs more info", tone: "bg-amber-600 hover:bg-amber-500" },
+  { status: "rejected", label: "Reject", tone: "bg-rose-600 hover:bg-rose-500" },
+];
 
 function fileExt(name: string): string {
   const dot = name.lastIndexOf(".");
@@ -47,12 +54,30 @@ export function EvidenceDetailModal({ evidenceId, open, onClose }: { evidenceId:
   const assessment = useEvidenceAiAssessment(evidenceId);
   const unlink = useUnlinkEvidenceControl();
   const upload = useUploadEvidenceFile();
+  const review = useReviewEvidence();
   const canWrite = useHasPermission("evidence:write");
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [attachError, setAttachError] = useState<string | null>(null);
+  const [reviewNotes, setReviewNotes] = useState("");
+  const [reviewFormError, setReviewFormError] = useState<string | null>(null);
 
   const ev = detail.data;
+
+  async function onReview(reviewStatus: EvidenceReviewStatus) {
+    if (!evidenceId) return;
+    setReviewFormError(null);
+    if (reviewStatus === "rejected" && !reviewNotes.trim()) {
+      setReviewFormError("A note is required to reject evidence.");
+      return;
+    }
+    try {
+      await review.mutateAsync({ evidenceId, reviewStatus, reviewNotes });
+      setReviewNotes("");
+    } catch {
+      // ApiError surfaced via EntitlementBanner below
+    }
+  }
 
   async function onAttach(e: React.ChangeEvent<HTMLInputElement>) {
     setAttachError(null);
@@ -168,9 +193,44 @@ export function EvidenceDetailModal({ evidenceId, open, onClose }: { evidenceId:
               <UserCheck size={13} className="text-cv-slate" />
               <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-cv-slate">Human review status</span>
             </div>
-            <StatusBadge label={ev.review_status.replaceAll("_", " ")} tone={reviewTone(ev.review_status)} />
+            <span data-testid="evidence-review-status" data-status={ev.review_status} className="inline-flex">
+              <StatusBadge label={ev.review_status.replaceAll("_", " ")} tone={reviewTone(ev.review_status)} />
+            </span>
             <p className="mt-1.5 text-[11px] text-cv-mist">Set by a human reviewer — the authoritative verdict.</p>
             {ev.review_notes ? <p className="mt-1 text-[12px] text-cv-slate">{ev.review_notes}</p> : null}
+
+            {canWrite ? (
+              <div className="mt-3 border-t border-cv-ink/10 pt-3" data-testid="evidence-review-controls">
+                <label htmlFor="evidence-review-notes" className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-cv-mist">
+                  Reviewer note <span className="font-medium normal-case tracking-normal">(required to reject)</span>
+                </label>
+                <textarea
+                  id="evidence-review-notes"
+                  value={reviewNotes}
+                  onChange={(e) => setReviewNotes(e.target.value)}
+                  rows={2}
+                  placeholder="Why this verdict? (visible on the record)"
+                  className="w-full rounded-2xl bg-white/65 px-3 py-2 text-[12px] text-cv-ink placeholder:text-cv-mist ring-1 ring-white/70 focus:outline-none focus:ring-2 focus:ring-cv-blue/45"
+                />
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {REVIEW_ACTIONS.map((a) => (
+                    <button
+                      key={a.status}
+                      type="button"
+                      data-testid={`evidence-review-${a.status}`}
+                      disabled={review.isPending}
+                      onClick={() => onReview(a.status)}
+                      className={`cv-ring-focus inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold text-white shadow-button transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 ${a.tone}`}
+                    >
+                      {review.isPending ? <Loader2 size={11} className="animate-spin" /> : null}
+                      {a.label}
+                    </button>
+                  ))}
+                </div>
+                {reviewFormError ? <p className="mt-1.5 text-[11px] font-semibold text-rose-600">{reviewFormError}</p> : null}
+                <EntitlementBanner error={review.error instanceof ApiError ? review.error : null} />
+              </div>
+            ) : null}
           </div>
 
           {/* AI assessment — SUGGESTION, visually distinct (dashed indigo) */}

@@ -11,7 +11,9 @@ import {
   uploadEvidenceFile,
   linkEvidenceControl,
   unlinkEvidenceControl,
+  reviewEvidence,
   type EvidenceCreateInput,
+  type EvidenceReviewStatus,
 } from "@/lib/api/evidence";
 
 export function useEvidence() {
@@ -85,6 +87,19 @@ export function useUnlinkEvidenceControl() {
     onSuccess: (_r, vars) => {
       qc.invalidateQueries({ queryKey: ["evidence", vars.evidenceId] });
       qc.invalidateQueries({ queryKey: ["evidence"] });
+    },
+  });
+}
+
+export function useReviewEvidence() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ evidenceId, reviewStatus, reviewNotes }: { evidenceId: string; reviewStatus: EvidenceReviewStatus; reviewNotes?: string | null }) =>
+      reviewEvidence(evidenceId, reviewStatus, reviewNotes),
+    onSuccess: (_r, vars) => {
+      qc.invalidateQueries({ queryKey: ["evidence", vars.evidenceId] });
+      qc.invalidateQueries({ queryKey: ["evidence"] });
+      qc.invalidateQueries({ queryKey: ["evidence-readiness"] });
     },
   });
 }

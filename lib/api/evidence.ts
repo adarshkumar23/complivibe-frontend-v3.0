@@ -109,6 +109,19 @@ export function linkEvidenceControl(evidenceId: string, controlId: string, ratio
   });
 }
 
+// ── POST /api/v1/evidence/{id}/review (set the HUMAN review verdict) ─────────
+// review_status is the authoritative human verdict; "rejected" requires notes
+// (backend 400s otherwise). Distinct from the AI assessment SUGGESTION.
+export const EVIDENCE_REVIEW_STATUSES = ["verified", "rejected", "needs_review"] as const;
+export type EvidenceReviewStatus = (typeof EVIDENCE_REVIEW_STATUSES)[number];
+
+export function reviewEvidence(evidenceId: string, reviewStatus: EvidenceReviewStatus, reviewNotes?: string | null) {
+  return apiFetch<Evidence>(`/api/v1/evidence/${evidenceId}/review`, {
+    method: "POST",
+    body: JSON.stringify({ review_status: reviewStatus, review_notes: reviewNotes?.trim() || null }),
+  });
+}
+
 export function unlinkEvidenceControl(evidenceId: string, controlId: string) {
   return apiFetch<EvidenceControlLink>(`/api/v1/evidence/${evidenceId}/controls/${controlId}`, { method: "DELETE" });
 }
