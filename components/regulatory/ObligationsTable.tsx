@@ -1,13 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, ListChecks, FileText } from "lucide-react";
+import { Search, ListChecks, FileText, Gavel } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
 import type { RegulatoryData } from "@/lib/hooks/useRegulatory";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
+import { ObligationDecisionModal, type DecisionObligation } from "@/components/regulatory/ObligationDecisionModal";
 
 function applicabilityTone(status: string | null | undefined): "good" | "warn" | "bad" | "neutral" | "info" {
   switch (status) {
@@ -39,9 +41,12 @@ function implementationTone(status: string | null | undefined): "good" | "warn" 
 export function ObligationsTable({ data }: { data: RegulatoryData }) {
   const { obligations, applicability, frameworkId } = data;
   const list = useMemo(() => obligations.data ?? [], [obligations.data]);
+  // Deciding applicability writes obligation state (frameworks:activate on the backend).
+  const canDecide = useHasPermission("frameworks:activate");
 
   const [query, setQuery] = useState("");
   const [appFilter, setAppFilter] = useState("all");
+  const [decision, setDecision] = useState<DecisionObligation | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -145,6 +150,25 @@ export function ObligationsTable({ data }: { data: RegulatoryData }) {
                         {app === "applicable" && impl ? (
                           <StatusBadge label={impl.replaceAll("_", " ")} tone={implementationTone(impl)} />
                         ) : null}
+                        {canDecide ? (
+                          <button
+                            type="button"
+                            data-testid={`obligation-decide-${o.id}`}
+                            onClick={() =>
+                              setDecision({
+                                id: o.id,
+                                title: o.title,
+                                reference_code: o.reference_code,
+                                applicability_status: app,
+                                implementation_status: impl
+                              })
+                            }
+                            className="cv-ring-focus mt-0.5 inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-semibold text-cv-ink ring-1 ring-white/70 transition hover:bg-white"
+                          >
+                            <Gavel size={11} strokeWidth={2.6} />
+                            {app && app !== "unknown" ? "Change decision" : "Decide"}
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   </li>
@@ -154,6 +178,7 @@ export function ObligationsTable({ data }: { data: RegulatoryData }) {
           )}
         </div>
       )}
+      <ObligationDecisionModal obligation={decision} onClose={() => setDecision(null)} />
     </SectionCard>
   );
 }

@@ -1,14 +1,32 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   getFrameworkCatalog,
   getActiveFrameworks,
   getFrameworkObligations,
-  getApplicabilitySummary
+  getApplicabilitySummary,
+  updateObligationState
 } from "@/lib/api/frameworks";
 import { getDeadlines, getDeadlineSummary } from "@/lib/api/compliance";
+
+export const OBLIGATION_APPLICABILITY_STATUSES = ["pending", "applicable", "not_applicable", "needs_review"] as const;
+export const OBLIGATION_IMPLEMENTATION_STATUSES = ["not_started", "in_progress", "implemented", "blocked"] as const;
+
+/** PATCH /api/v1/obligations/{id}/state — set the org's applicability/implementation
+ * decision for an obligation. Gated at the call site on frameworks:activate. */
+export function useUpdateObligationState() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ obligationId, body }: { obligationId: string; body: { applicability_status?: string; implementation_status?: string; owner_user_id?: string; justification?: string } }) =>
+      updateObligationState(obligationId, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["reg-obligations"] });
+      qc.invalidateQueries({ queryKey: ["reg-applicability"] });
+    }
+  });
+}
 
 export function useRegulatory() {
   const catalog = useQuery({ queryKey: ["reg-catalog"], queryFn: getFrameworkCatalog });
