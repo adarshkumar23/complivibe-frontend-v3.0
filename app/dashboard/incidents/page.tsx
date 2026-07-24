@@ -5,6 +5,7 @@ import { AlertOctagon, Database, ShieldAlert, Siren } from "lucide-react";
 import { RegistryKpi } from "@/components/ui/RegistryKpi";
 import { DataIncidentsTable } from "@/components/incidents/DataIncidentsTable";
 import { IssuesTable } from "@/components/incidents/IssuesTable";
+import { BreachPanel } from "@/components/incidents/BreachPanel";
 import { useIncidentsPageData } from "@/lib/hooks/useIncidentsPage";
 
 const fade: Variants = {
@@ -84,6 +85,10 @@ export default function IncidentsPage() {
 
       <motion.div variants={fade} custom={3} initial="hidden" animate="show">
         <IssuesTable data={data} />
+      </motion.div>
+
+      <motion.div variants={fade} custom={4} initial="hidden" animate="show">
+        <BreachPanel issues={data.issues.data ?? []} />
       </motion.div>
     </div>
   );
