@@ -6,6 +6,7 @@ import { Modal } from "@/components/ui/Modal";
 import { ApiError } from "@/lib/api/client";
 import { EntitlementBanner } from "@/components/common/EntitlementBanner";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SSO_PROVIDERS, SSO_PROVIDER_LABELS, type SsoProvider } from "@/lib/api/settings";
 import type { SettingsData } from "@/lib/hooks/useSettings";
 import {
   usePutAiConfiguration,
@@ -173,20 +174,21 @@ export function SsoConfigModal({ open, onClose, data }: { open: boolean; onClose
   const toggle = useActivateSsoConfig();
   const del = useDeleteSsoConfig();
   const test = useTestSsoConfig();
+  const [provider, setProvider] = useState<SsoProvider>("okta");
   const [entityId, setEntityId] = useState("");
   const [ssoUrl, setSsoUrl] = useState("");
   const [sloUrl, setSloUrl] = useState("");
   const [cert, setCert] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [testMsg, setTestMsg] = useState<string | null>(null);
-  useEffect(() => { if (open) { setEntityId(""); setSsoUrl(""); setSloUrl(""); setCert(""); setFormError(null); setTestMsg(null); create.reset(); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (open) { setProvider("okta"); setEntityId(""); setSsoUrl(""); setSloUrl(""); setCert(""); setFormError(null); setTestMsg(null); create.reset(); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const err = (create.error ?? toggle.error ?? del.error) instanceof ApiError ? ((create.error ?? toggle.error ?? del.error) as ApiError) : null;
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
     if (!entityId.trim() || !ssoUrl.trim() || !cert.trim()) { setFormError("Entity ID, SSO URL, and certificate are required."); return; }
-    try { await create.mutateAsync({ provider: "saml", entity_id: entityId.trim(), sso_url: ssoUrl.trim(), slo_url: sloUrl.trim() || null, certificate: cert.trim() }); onClose(); } catch { /* err */ }
+    try { await create.mutateAsync({ provider, entity_id: entityId.trim(), sso_url: ssoUrl.trim(), slo_url: sloUrl.trim() || null, certificate: cert.trim() }); onClose(); } catch { /* err */ }
   }
 
   return (
@@ -213,6 +215,14 @@ export function SsoConfigModal({ open, onClose, data }: { open: boolean; onClose
         </div>
       ) : (
         <form onSubmit={onCreate} className="space-y-3" data-testid="sso-create-form">
+          <div>
+            <label htmlFor="sso-provider" className={labelBase}>Identity provider</label>
+            <select id="sso-provider" data-testid="sso-provider" value={provider} onChange={(e) => setProvider(e.target.value as SsoProvider)} className={inputBase}>
+              {SSO_PROVIDERS.map((p) => (
+                <option key={p} value={p}>{SSO_PROVIDER_LABELS[p]}</option>
+              ))}
+            </select>
+          </div>
           <div><label htmlFor="sso-entity" className={labelBase}>Entity ID (IdP issuer)</label><input id="sso-entity" value={entityId} onChange={(e) => setEntityId(e.target.value)} className={inputBase} /></div>
           <div><label htmlFor="sso-url" className={labelBase}>SSO URL</label><input id="sso-url" value={ssoUrl} onChange={(e) => setSsoUrl(e.target.value)} placeholder="https://idp.example.com/sso" className={inputBase} /></div>
           <div><label htmlFor="sso-slo" className={labelBase}>SLO URL (optional)</label><input id="sso-slo" value={sloUrl} onChange={(e) => setSloUrl(e.target.value)} className={inputBase} /></div>

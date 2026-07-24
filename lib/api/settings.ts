@@ -130,8 +130,20 @@ export function putAiConfiguration(body: AiConfigInput) {
 }
 
 // ── SAML SSO config writes (org:update) ─────────────────────────────────────
+// Must match the backend ck_sso_configs_provider constraint / SSOConfigCreate
+// validator (app/auth/schemas/sso.py). Sending anything else is a 422.
+export const SSO_PROVIDERS = ["okta", "azure_ad", "google", "adfs", "saml2"] as const;
+export type SsoProvider = (typeof SSO_PROVIDERS)[number];
+export const SSO_PROVIDER_LABELS: Record<SsoProvider, string> = {
+  okta: "Okta",
+  azure_ad: "Azure AD",
+  google: "Google Workspace",
+  adfs: "AD FS",
+  saml2: "Generic SAML 2.0"
+};
+
 export type SsoConfigInput = {
-  provider: string;
+  provider: SsoProvider;
   entity_id: string;
   sso_url: string;
   slo_url?: string | null;
