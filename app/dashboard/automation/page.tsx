@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { motion, type Variants } from "framer-motion";
 import { AutomationHeader } from "@/components/automation/AutomationHeader";
 import { AutomationKpis } from "@/components/automation/AutomationKpis";
 import { AutomationRulesTable } from "@/components/automation/AutomationRulesTable";
 import { AutomationRunHistory } from "@/components/automation/AutomationRunHistory";
+import { AutomationRuleModal } from "@/components/automation/AutomationRuleModal";
 import { useAutomation } from "@/lib/hooks/useAutomation";
+import type { AutomationRule } from "@/lib/api/automation";
 
 const fade: Variants = {
   hidden: { opacity: 0, y: 14 },
@@ -14,6 +17,8 @@ const fade: Variants = {
 
 export default function AutomationPage() {
   const data = useAutomation();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editRule, setEditRule] = useState<AutomationRule | null>(null);
 
   return (
     <div className="space-y-7">
@@ -27,12 +32,15 @@ export default function AutomationPage() {
 
       <motion.div variants={fade} custom={2} initial="hidden" animate="show" className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <AutomationRulesTable data={data} />
+          <AutomationRulesTable data={data} onCreate={() => setCreateOpen(true)} onEdit={(r) => setEditRule(r)} />
         </div>
         <div>
           <AutomationRunHistory data={data} />
         </div>
       </motion.div>
+
+      <AutomationRuleModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <AutomationRuleModal open={editRule != null} onClose={() => setEditRule(null)} rule={editRule} />
     </div>
   );
 }

@@ -1,18 +1,59 @@
 "use client";
 
-import { Plug } from "lucide-react";
+import { useState } from "react";
+import { Plug, Loader2, Power } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SkeletonRows } from "@/components/ui/LoadingSkeleton";
-import type { IntegrationsData } from "@/lib/hooks/useIntegrations";
+import { ApiError } from "@/lib/api/client";
+import { useHasPermission } from "@/lib/hooks/usePermissions";
+import { type IntegrationsData, useDisableConnector } from "@/lib/hooks/useIntegrations";
+import { type ConnectorCatalogEntry } from "@/lib/api/integrations";
+import { ConnectorConfigModal } from "@/components/integrations/ConnectorConfigModal";
 
-/** Connector catalog from GET /api/v1/connectors/catalog, with enabled state. */
+function ConnectorAction({ connector, isEnabled, onConnect }: { connector: ConnectorCatalogEntry; isEnabled: boolean; onConnect: (c: ConnectorCatalogEntry) => void }) {
+  const disable = useDisableConnector();
+  const [error, setError] = useState<string | null>(null);
+  async function onDisable() {
+    setError(null);
+    try { await disable.mutateAsync(connector.id); } catch (e) { setError(e instanceof ApiError ? e.message : "Action failed."); }
+  }
+  return (
+    <div className="mt-2 flex flex-col gap-1">
+      {isEnabled ? (
+        <button
+          type="button"
+          data-testid={`connector-disable-${connector.id}`}
+          disabled={disable.isPending}
+          onClick={onDisable}
+          className="cv-ring-focus inline-flex w-fit items-center gap-1.5 rounded-full bg-white/70 px-3 py-1.5 text-[11px] font-bold text-cv-slate ring-1 ring-white/70 shadow-button transition hover:-translate-y-0.5 hover:text-rose-600 disabled:opacity-60"
+        >
+          {disable.isPending ? <Loader2 size={11} className="animate-spin" /> : <Power size={11} strokeWidth={2.6} />} Disable
+        </button>
+      ) : (
+        <button
+          type="button"
+          data-testid={`connector-enable-${connector.id}`}
+          onClick={() => onConnect(connector)}
+          className="cv-ring-focus inline-flex w-fit items-center gap-1.5 rounded-full bg-cv-brand px-3 py-1.5 text-[11px] font-bold text-white shadow-button transition hover:-translate-y-0.5"
+        >
+          <Power size={11} strokeWidth={2.6} /> Connect
+        </button>
+      )}
+      {error ? <span className="text-[10px] font-semibold text-rose-600">{error}</span> : null}
+    </div>
+  );
+}
+
+/** Connector catalog from GET /api/v1/connectors/catalog, with enabled state + connect action. */
 export function ProviderStatusGrid({ data }: { data: IntegrationsData }) {
   const { catalog, enabled } = data;
   const list = catalog.data ?? [];
+  const canWrite = useHasPermission("connectors:write");
   const enabledIds = new Set((enabled.data ?? []).map((e) => (e.connector_id as string) ?? e.id));
+  const [connectTarget, setConnectTarget] = useState<ConnectorCatalogEntry | null>(null);
 
   return (
     <SectionCard
@@ -50,10 +91,12 @@ export function ProviderStatusGrid({ data }: { data: IntegrationsData }) {
               {c.description ? (
                 <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-cv-slate">{c.description}</p>
               ) : null}
+              {canWrite ? <ConnectorAction connector={c} isEnabled={enabledIds.has(c.id)} onConnect={setConnectTarget} /> : null}
             </div>
           ))}
         </div>
       )}
+      <ConnectorConfigModal connector={connectTarget} onClose={() => setConnectTarget(null)} />
     </SectionCard>
   );
 }

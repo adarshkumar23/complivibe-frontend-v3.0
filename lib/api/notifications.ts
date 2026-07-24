@@ -35,3 +35,14 @@ export type NotificationPreference = {
 export function getNotificationPreferences() {
   return apiFetch<NotificationPreference[]>("/api/v1/preferences/notifications");
 }
+
+// ── PUT /api/v1/preferences/notifications/{notification_type} ────────────────
+export function updateNotificationPreference(
+  notificationType: string,
+  body: { channel: string; is_enabled: boolean; min_severity?: string | null }
+) {
+  return apiFetch<NotificationPreference>(`/api/v1/preferences/notifications/${encodeURIComponent(notificationType)}`, {
+    method: "PUT",
+    body: JSON.stringify(body)
+  });
+}

@@ -33,6 +33,20 @@ export function getEnabledConnectors() {
   return apiFetch<EnabledConnector[]>("/api/v1/connectors/enabled");
 }
 
+// ── POST /api/v1/connectors/{id}/enable | /disable (connectors:write) ────────
+// config_values_json is optional; enabling with no config just marks the connector
+// enabled for the org (no secrets, no Vault). Supplying credential-shaped values
+// encrypts them at rest -- that path needs the secrets backend and 503s if unset.
+export function enableConnector(connectorId: string, configValuesJson?: Record<string, unknown> | null) {
+  return apiFetch<EnabledConnector>(`/api/v1/connectors/${connectorId}/enable`, {
+    method: "POST",
+    body: JSON.stringify({ config_values_json: configValuesJson ?? null })
+  });
+}
+export function disableConnector(connectorId: string) {
+  return apiFetch<EnabledConnector>(`/api/v1/connectors/${connectorId}/disable`, { method: "POST" });
+}
+
 // ── GET /api/v1/issue-sync/connections ──────────────────────────────────────
 export type IssueSyncConnection = {
   id: string;

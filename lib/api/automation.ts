@@ -40,6 +40,41 @@ export function getAutomationRules() {
   return apiFetch<AutomationRule[]>("/api/v1/automation/rules");
 }
 
+// ── POST/PATCH /api/v1/automation/rules — enums mirror the backend
+// (app/services/automation_service.py ALLOWED_* + schemas/automation.py) ─────
+export const AUTOMATION_TRIGGERS = ["manual_scan", "scheduled_placeholder", "entity_state_change_placeholder"] as const;
+export const AUTOMATION_CONDITIONS = [
+  "risk_critical_without_control",
+  "risk_without_owner",
+  "risk_review_overdue",
+  "control_without_evidence",
+  "control_needs_review",
+  "evidence_expired",
+  "evidence_needs_review",
+  "obligation_applicable_without_control",
+  "task_overdue"
+] as const;
+export const AUTOMATION_ACTIONS = ["create_task", "queue_email_reminder", "create_task_and_queue_email"] as const;
+export const AUTOMATION_PRIORITIES = ["low", "normal", "high", "urgent"] as const;
+export const AUTOMATION_STATUSES = ["active", "inactive"] as const;
+
+export type AutomationRuleInput = {
+  name: string;
+  description?: string | null;
+  trigger_type: (typeof AUTOMATION_TRIGGERS)[number];
+  condition_type: (typeof AUTOMATION_CONDITIONS)[number];
+  action_type: (typeof AUTOMATION_ACTIONS)[number];
+  priority: (typeof AUTOMATION_PRIORITIES)[number];
+  status: (typeof AUTOMATION_STATUSES)[number];
+};
+
+export function createAutomationRule(body: AutomationRuleInput) {
+  return apiFetch<AutomationRule>("/api/v1/automation/rules", { method: "POST", body: JSON.stringify(body) });
+}
+export function updateAutomationRule(ruleId: string, body: Partial<AutomationRuleInput>) {
+  return apiFetch<AutomationRule>(`/api/v1/automation/rules/${ruleId}`, { method: "PATCH", body: JSON.stringify(body) });
+}
+
 // ── GET /api/v1/automation/executions ───────────────────────────────────────
 export type AutomationExecution = {
   id: string;
