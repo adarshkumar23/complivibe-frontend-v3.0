@@ -69,7 +69,7 @@ export function ControlKpis({ data, onMapGap }: { data: ControlsData; onMapGap?:
             : undefined
         }
         loading={tests.isLoading}
-        unavailableHint="Test summary unavailable"
+        unavailableHint={data.testsLocked ? "Premium — Audit & Assurance" : "Test summary unavailable"}
       />
     </div>
   );

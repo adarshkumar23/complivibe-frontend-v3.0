@@ -17,13 +17,27 @@ import {
 } from "@/lib/api/controls";
 import { getActiveFrameworks } from "@/lib/api/frameworks";
 import { getPolicies } from "@/lib/api/policies";
+import { usePlan } from "@/lib/hooks/usePlan";
 
 export function useControls() {
+  // Control Test Health is gated by the paid `audit_assurance` feature. Fire the
+  // summary request ONLY once the plan is known AND entitled, so a Free user never
+  // calls GET /control-tests/summary (which 403s and surfaces as a red console
+  // error). `isReady` gates out the pre-load window where hasFeature optimistically
+  // returns true; entitled users still load the real summary the moment status resolves.
+  const { hasFeature, isReady } = usePlan();
+  const testsEntitled = isReady && hasFeature("audit_assurance");
+  const testsLocked = isReady && !hasFeature("audit_assurance");
+
   const controls = useQuery({ queryKey: ["controls"], queryFn: () => getControls() });
   const gaps = useQuery({ queryKey: ["control-gaps"], queryFn: getControlGapsSummary });
-  const tests = useQuery({ queryKey: ["control-tests-summary"], queryFn: getControlTestsSummary });
+  const tests = useQuery({
+    queryKey: ["control-tests-summary"],
+    queryFn: getControlTestsSummary,
+    enabled: testsEntitled,
+  });
 
-  return { controls, gaps, tests };
+  return { controls, gaps, tests, testsLocked };
 }
 
 export type ControlsData = ReturnType<typeof useControls>;

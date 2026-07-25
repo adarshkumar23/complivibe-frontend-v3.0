@@ -1,6 +1,7 @@
 "use client";
 
-import { FlaskConical } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, FlaskConical, Lock } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { DonutChart, type DonutSegment } from "@/components/charts/DonutChart";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -20,6 +21,30 @@ export function ControlTestHealth({ data }: { data: ControlsData }) {
         { label: "Needs review", value: t.latest_needs_review, color: "#F59E0B" }
       ].filter((s) => s.value > 0)
     : [];
+
+  // Feature-locked (Free plan): the summary request is skipped entirely in
+  // useControls, so show a compact locked state instead of a failed request.
+  if (data.testsLocked) {
+    return (
+      <SectionCard title="Control Test Health" subtitle="Latest automated + manual test outcomes" icon={FlaskConical} accent="purple">
+        <div className="flex flex-col items-center gap-3 px-2 py-6 text-center" data-testid="control-tests-locked">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500/15 ring-1 ring-amber-400/30">
+            <Lock size={18} className="text-amber-600" />
+          </div>
+          <p className="text-[13px] font-semibold text-cv-ink">Audit &amp; Assurance is a premium feature</p>
+          <p className="text-[12px] text-cv-slate">
+            Control test health tracking is available on paid plans. Upgrade to prove your controls keep working.
+          </p>
+          <Link
+            href="/dashboard/billing"
+            className="cv-ring-focus inline-flex items-center gap-1.5 rounded-full bg-cv-brand px-3.5 py-1.5 text-[12px] font-bold text-white shadow-button transition hover:-translate-y-0.5"
+          >
+            View plans <ArrowUpRight size={13} />
+          </Link>
+        </div>
+      </SectionCard>
+    );
+  }
 
   return (
     <SectionCard title="Control Test Health" subtitle="Latest automated + manual test outcomes" icon={FlaskConical} accent="purple">
